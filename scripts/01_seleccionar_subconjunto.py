@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Paso 1a — Elegir el subconjunto de 250 estudios con semilla fija.
+"""Paso 1a. Elegir el subconjunto de 250 estudios con semilla fija.
 
 Uso:
     python scripts/01_seleccionar_subconjunto.py data/manifests/clinical_tcia.csv

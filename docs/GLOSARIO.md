@@ -126,3 +126,39 @@ entrada**, **cuello de botella**, **codificador/decodificador**, **atención cru
 V)**, **pérdida Dice + entropía cruzada**, **precisión mixta**, **checkpoint**, **ventana
 deslizante**, **Dice**, **HD95**, **FPV/FNV**, **bootstrap**. Cada uno se agrega aquí con su
 analogía cuando se implemente.
+
+---
+
+## Agregados el 2026-09-03 (tarde) · Entorno y cuadernos
+
+**Cuaderno (notebook, `.ipynb`).** Un documento donde se alternan celdas de texto y
+celdas de código, y el código se ejecuta ahí mismo mostrando su salida debajo.
+Analogía: el cuaderno de laboratorio donde al lado de cada cálculo escribes por qué lo
+hiciste y qué salió. *Para la defensa:* los cuadernos son la explicación paso a paso;
+el código "de verdad" vive en `src/petct` y se prueba con `pytest`, para que un
+cuaderno mal ejecutado no rompa el proyecto.
+
+**Kernel.** El proceso de Python que ejecuta las celdas del cuaderno. En VS Code se
+elige el kernel del entorno virtual `.venv` para que encuentre los paquetes instalados.
+
+**Entorno virtual (`.venv`).** Una carpeta con su propia copia de Python y sus
+paquetes, separada del resto del computador. Analogía: una caja de herramientas por
+proyecto, para que las versiones de uno no rompan al otro.
+
+**CUDA.** La plataforma de NVIDIA que PyTorch usa para calcular en la GPU. Es lo que
+tiene Colab. Es el camino más maduro para redes 3D.
+
+**MPS (Metal Performance Shaders).** La puerta de PyTorch al chip gráfico de los Mac con
+chip M. Funciona para desarrollar y entrenar cosas medianas; algunas operaciones 3D
+todavía caen a la CPU y no hay tanta madurez como en CUDA. *Para la defensa:* "el
+desarrollo y las pruebas cortas se hicieron en un Mac con MPS; los entrenamientos
+completos, en Colab con CUDA; los tiempos de cada uno están en la bitácora".
+
+**Memoria unificada.** En los Mac con chip M la CPU y la GPU comparten la misma RAM.
+Ventaja: la GPU puede usar mucha memoria (no está limitada a los 16 GB de una T4).
+Desventaja: el sistema y la GPU compiten por ella.
+
+**MIP (proyección de intensidad máxima).** La "foto" clásica del PET: para cada línea
+que atraviesa el cuerpo se toma el vóxel más brillante y se dibuja en 2D. Sirve para ver
+de un vistazo dónde hay captación alta y si las lesiones anotadas caen sobre zonas
+calientes. Se calcula con `suv.max(axis=1)` para la vista coronal.

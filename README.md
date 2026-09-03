@@ -1,7 +1,7 @@
 # Segmentación de lesiones en FDG-PET/CT: fusión temprana vs intermedia con atención cruzada
 
 Mini-proyecto del curso **BME423 – Procesamiento de imágenes médicas** (Universidad de Valparaíso, 2º semestre 2026).
-Autor: **Sebastián Inostroza** — Tecnólogo Médico, Doctorado en Ingeniería y Ciencias de la Salud.
+Autor: **Sebastián Inostroza**, Tecnólogo Médico, Doctorado en Ingeniería y Ciencias de la Salud.
 
 ## De qué se trata
 
@@ -38,7 +38,7 @@ data/manifests/           listas de pacientes/series (sí van al repo)
 data/raw|interim|processed  datos (NO van al repo; ver data/README.md)
 docs/                     glosario, figuras, notas
 report/                   informe LaTeX y PDFs entregados
-notebooks/                exploración
+notebooks/                cuadernos comentados, uno por paso (se regeneran con build_notebooks.py)
 ```
 
 ## Requisitos e instalación
@@ -53,8 +53,14 @@ pip install -r requirements.txt
 python -m pytest tests -q          # debe imprimir "8 passed"
 ```
 
-El entrenamiento (Paso 3 en adelante) corre en Google Colab con `torch` y `monai`; los
-notebooks de Colab estarán en `notebooks/`.
+En el Mac se abre la carpeta en VS Code con la extensión de Jupyter y se eligen el
+kernel `.venv`. Los cuadernos de `notebooks/` se ejecutan ahí; los módulos de `src/petct`
+son los mismos que usan los scripts y las pruebas.
+
+Dónde corre cada etapa: los pasos 1, 2 y 5 (datos, preprocesamiento, evaluación) corren en
+el Mac. Los entrenamientos con presupuesto completo (pasos 3 y 4) corren en Google Colab con
+`torch` y `monai`; en el Mac, PyTorch usa el chip gráfico de Apple (`mps`) para pruebas
+cortas. `notebooks/00_entorno.ipynb` revisa qué tiene cada máquina.
 
 ## Acceso a los datos
 
@@ -77,7 +83,8 @@ Lesions.* Sci Data 2022;9:601. doi:10.1038/s41597-022-01718-3.
 
 | Paso | Script / notebook | Estado |
 |---|---|---|
-| 1 | `scripts/01…03` datos, SUV, NIfTI | listo y probado con fantoma sintético |
+| 0 | `notebooks/00_entorno.ipynb` revisión del entorno | listo |
+| 1 | `notebooks/01_datos_suv_conversion.ipynb` y `scripts/01…03` | listo y probado con fantoma sintético |
 | 2 | preprocesamiento y referencia clásica | pendiente |
 | 3 | modelo A (fusión temprana), Colab | pendiente |
 | 4 | modelos B y C (fusión intermedia) | pendiente |

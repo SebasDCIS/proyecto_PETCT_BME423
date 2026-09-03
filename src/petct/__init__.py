@@ -1,4 +1,4 @@
-"""petct — Segmentación de lesiones en FDG-PET/CT (mini-proyecto BME423, UV, 2026).
+"""petct: segmentación de lesiones en FDG-PET/CT (mini-proyecto BME423, UV, 2026).
 
 Módulos:
     suv         cálculo del SUV desde etiquetas DICOM

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Paso 1c — Convertir cada estudio DICOM (CT + PT + SEG) a NIfTI con SUV y CTres.
+"""Paso 1c. Convertir cada estudio DICOM (CT + PT + SEG) a NIfTI con SUV y CTres.
 
 Uso:
     python scripts/03_convertir_a_nifti.py --raw data/raw --series-csv data/manifests/series_tcia.csv --out data/interim/nifti

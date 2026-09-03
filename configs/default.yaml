@@ -1,7 +1,7 @@
 # Configuración central del proyecto. Todo script lee de aquí para que
 # "cambiar un número" ocurra en un solo lugar y quede en el historial de git.
 
-proyecto: "Segmentación de lesiones FDG-PET/CT — fusión temprana vs intermedia con atención cruzada"
+proyecto: "Segmentación de lesiones FDG-PET/CT: fusión temprana vs intermedia con atención cruzada"
 semilla: 423
 
 datos:

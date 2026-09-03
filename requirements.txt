@@ -10,6 +10,10 @@ scikit-image>=0.22
 matplotlib>=3.8
 tqdm>=4.66
 pytest>=8.0
+psutil>=5.9
+# Notebooks en VS Code (kernel de Jupyter) y regeneración de los .ipynb:
+ipykernel>=6.29
+nbformat>=5.10
 # Descarga desde TCIA (solo en el computador con red):
 tcia_utils>=2.0
 # Aprendizaje profundo (Paso 3 en adelante; en Colab ya vienen torch y CUDA):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Paso 1b — Descargar desde TCIA las series CT, PT y SEG del subconjunto.
+"""Paso 1b. Descargar desde TCIA las series CT, PT y SEG del subconjunto.
 
 Uso (en tu computador, con red):
     pip install tcia_utils
