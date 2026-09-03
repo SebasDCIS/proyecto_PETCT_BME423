@@ -97,6 +97,13 @@ En el paciente sintético, el umbral solo da Dice 0,03 y FPV 983 mL (marca encé
 
 Python 3.12.13 (venv dentro del proyecto), macOS 26.6.2, arm64. numpy 2.5.2, scipy 1.18.1,
 pandas 3.0.5, pydicom 3.0.2, SimpleITK 2.5.6, nibabel 5.4.2, scikit-image 0.26.0,
-matplotlib 3.11.1, pytest 9.1.1, tcia_utils instalado. torch y monai todavía no
-instalados (se instalan para el Paso 3). Las 17 pruebas pasan en el Mac. Falta anotar
-RAM, disco libre y si PyTorch ve `mps`.
+matplotlib 3.11.1, pytest 9.1.1, tcia_utils instalado, torch 2.14.0, monai 1.6.0.
+PyTorch ve `mps` (GPU de Apple, memoria unificada). RAM: 24 GB. Disco libre: 596 GB de
+926 GB. Las 17 pruebas pasan en el Mac.
+
+Decisión con estos números: el disco alcanza de sobra para los 250 estudios en DICOM
+(~100 GB) y sus derivados. Con 24 GB de memoria unificada, el Mac sirve para desarrollar
+y para entrenamientos cortos con parches de 96³ y lote 2; si el modelo completo cabe
+en el tiempo de una noche se decide con una medición de velocidad (iteraciones por
+segundo en `mps` contra la T4 de Colab), que se agrega como parte del Paso 3. Mientras
+no exista esa medición, el plan sigue siendo Colab para los entrenamientos completos.
