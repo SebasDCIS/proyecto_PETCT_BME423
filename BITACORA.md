@@ -69,15 +69,26 @@ Los pasos 1, 2 y 5 corren en el Mac (lectura DICOM, SUV, remuestreo, referencia 
 - Paso 1 con datos reales (CSV clínico, `scripts/01`, `scripts/02 --limit 3`, `scripts/03`, revisión en `01_datos_suv_conversion.ipynb` sección 5).
 - Push a GitHub.
 
-## 2026-09-03 (noche). El repositorio se muda fuera de la nube
+## 2026-09-03 (noche). Paso 2: preprocesamiento, métricas y referencia clásica
 
-El repositorio vivía en la carpeta del curso dentro de OneDrive. Se movió a
-`~/Proyectos/proyecto_PETCT_BME423` (disco local del Mac) con `mv`, conservando los dos
-commits. Motivo: en proyectos anteriores trabajar sobre carpetas sincronizadas dio
-problemas, y aquí además van a vivir unos 100 GB de DICOM, el entorno virtual y los
-checkpoints, que una nube intentaría sincronizar. Documentos y Escritorio se
-descartaron por la misma razón (suelen estar en iCloud). La carpeta de OneDrive queda
-solo para material del curso y los PDF entregados.
+**Qué se hizo**
 
-Se agregó `.venv/` al `.gitignore`. Desde ahora, entorno virtual, datos y modelos se
-crean dentro de esta carpeta local.
+- `src/petct/preprocess.py`: remuestreo a 3 mm isotrópicos (lineal para imágenes, vecino más cercano para máscaras), ventana de tejido blando −200/300 HU a [0, 1], SUV/30 con tope, máscara del cuerpo desde el CT (umbral −500 HU, componente más grande, relleno de huecos corte a corte), recorte a la caja del cuerpo, y guardado en un `.npz` por estudio. Muestreo de parches 96³ con 70 % de centros sobre lesión.
+- `src/petct/metrics.py`: Dice, FPV y FNV con las definiciones del script oficial de autoPET (componentes conexas con 26 vecinos), más MTV y SUVmax.
+- `src/petct/classical.py`: referencia clásica en cuatro pasos (umbral SUV ≥ 2,5; apertura con bola de radio 1; volumen mínimo 0,5 mL; exclusión de componentes dentro de máscaras de órganos). Mientras no haya máscaras del CT, dos reglas provisionales ubican encéfalo y vejiga por posición y volumen.
+- `scripts/04_preprocesar.py` y `scripts/05_referencia_clasica.py`; cuaderno `02_preprocesamiento_referencia_clasica.ipynb` con un paciente sintético a 3 mm (encéfalo SUV 7, vejiga SUV 25, hígado 2,2, dos lesiones).
+- Pruebas: 9 nuevas (17 en total). Con el fantoma del Paso 1, la esfera de 3,05 mL sale en 3,13 mL a 3 mm y la referencia clásica la recupera con Dice > 0,8 y FPV = FNV = 0.
+
+**Resultado que vale la pena guardar**
+
+En el paciente sintético, el umbral solo da Dice 0,03 y FPV 983 mL (marca encéfalo y vejiga); apertura y tamaño mínimo no cambian nada; la exclusión anatómica lleva el FPV a 0 y el Dice a 0,97. Es la hipótesis del proyecto en miniatura: sin anatomía no hay especificidad.
+
+**Decisiones**
+
+- Las máscaras de órganos heurísticas son un andamio. Para el análisis por órgano del informe se usarán máscaras del CT (TotalSegmentator en modo rápido corre en CPU; se evaluará su tiempo en el Mac cuando haya estudios reales).
+- Volúmenes a 3 mm y `float16` en disco: un paciente entero ocupa 20 a 30 MB.
+
+**Pendiente**
+
+- Paso 1 con datos reales (sigue pendiente de la descarga).
+- Cuando haya `.npz` reales: correr `scripts/05` y registrar aquí la tabla de la referencia clásica. Ese es el primer número del informe.

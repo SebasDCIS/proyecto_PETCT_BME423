@@ -162,3 +162,60 @@ Desventaja: el sistema y la GPU compiten por ella.
 que atraviesa el cuerpo se toma el vóxel más brillante y se dibuja en 2D. Sirve para ver
 de un vistazo dónde hay captación alta y si las lesiones anotadas caen sobre zonas
 calientes. Se calcula con `suv.max(axis=1)` para la vista coronal.
+
+
+---
+
+## Paso 2 · Preprocesamiento, métricas y referencia clásica
+
+**Vóxel isotrópico.** Vóxel con el mismo tamaño en las tres direcciones (3 × 3 × 3 mm).
+Analogía: ladrillos cúbicos en vez de ladrillos alargados; una esfera se ve como esfera y
+no como huevo. *Para la defensa:* las convoluciones 3D asumen que un desplazamiento de un
+vóxel significa lo mismo en x, y, z.
+
+**Ventaneo HU.** Recortar el rango del CT a un intervalo (−200 a 300 HU) y llevarlo a
+[0, 1]. Es exactamente la ventana de tejido blando de la consola. *Para la defensa:* es
+una operación puntual (módulo 3 del curso); no cambia la forma, solo el contraste.
+
+**Tope del SUV (clip).** SUV/30, y todo lo que pasa de 30 se queda en 1. La vejiga y los
+riñones no dominan la escala. *Para la defensa:* el SUV real se recupera multiplicando por
+30; las métricas se calculan siempre con SUV real.
+
+**Máscara del cuerpo.** Todo lo que no es aire en el CT, componente más grande (elimina
+la camilla), con huecos rellenados. Sirve para recortar y para que los parches "de fondo"
+caigan dentro del paciente.
+
+**Componente conexa.** Un grupo de vóxeles encendidos que se tocan (aquí, por caras,
+aristas o vértices: 26 vecinos). Analogía: las islas de un archipiélago. Todo el
+análisis de falsos positivos y negativos se hace por isla, no por vóxel.
+
+**Apertura morfológica.** Erosión seguida de dilatación con un elemento estructurante
+(una bola de radio 1). Borra islas más chicas que la bola y separa islas unidas por un
+puente delgado. Módulo 9 del curso.
+
+**Parche 3D y muestreo sesgado.** Cubo de 96³ vóxeles recortado del estudio. Con
+probabilidad 0,7 se centra en un vóxel de lesión. Analogía: para enseñar a alguien a
+reconocer una especie rara de ave no le muestras el bosque entero al azar; le muestras
+muchos árboles donde sí está el ave y algunos donde no.
+
+**Dice.** `2 |A ∩ B| / (|A| + |B|)`. 1 es perfecto, 0 es nada. Solo se calcula donde hay
+lesión anotada. *Para la defensa:* es sensible al tamaño; una lesión de 8 vóxeles con dos
+vóxeles corridos ya baja mucho el Dice.
+
+**FPV (false positive volume).** Mililitros de islas predichas que no tocan ninguna
+lesión anotada. Lo que la red inventó. **FNV (false negative volume).** Mililitros de
+lesiones anotadas que ninguna predicción tocó. Lo que la red no vio. *Para la defensa:*
+son las métricas del reto porque un radiólogo puede corregir un borde impreciso, pero no
+una lesión inventada en el cerebro ni una que falta.
+
+**MTV.** Volumen tumoral metabólico: mililitros de la máscara. **SUVmax.** El vóxel más
+caliente dentro de la máscara. Son los biomarcadores que un falso positivo distorsiona.
+
+**Referencia clásica (baseline).** La receta sin red: umbral, apertura, tamaño mínimo,
+exclusión anatómica. *Para la defensa:* "en el paciente sintético el umbral solo da FPV
+de casi un litro; la exclusión anatómica lo lleva a cero. Los modelos con CT intentan
+aprender esa regla en vez de codificarla a mano."
+
+**Máscaras heurísticas de órganos.** Reglas provisionales (posición relativa en el eje
+z, volumen, SUV máximo) para encéfalo y vejiga. Se reemplazan por segmentación del CT
+(TotalSegmentator) cuando haya estudios reales.

@@ -32,6 +32,10 @@ src/petct/                paquete Python
   suv.py                  cálculo del SUV desde etiquetas DICOM
   convert.py              DICOM (CT, PT, SEG) → NIfTI (CT, PET, SUV, CTres, SEG)
   tcia.py                 subconjunto reproducible + descarga desde TCIA
+  preprocess.py           3 mm isotrópicos, ventana HU, tope SUV, recorte al cuerpo, parches
+  classical.py            referencia clásica: umbral SUV + morfología + exclusión anatómica
+  metrics.py              Dice, FPV, FNV (definiciones de autoPET), MTV, SUVmax
+  device.py               cuda / mps / cpu
 scripts/                  pasos numerados, uno por etapa
 tests/                    pruebas con un fantoma DICOM sintético (sin datos reales)
 data/manifests/           listas de pacientes/series (sí van al repo)
@@ -75,6 +79,8 @@ Los datos no se suben al repositorio. Para reproducir:
    → `data/manifests/subconjunto.csv` (250 estudios, semilla 423, partición por paciente).
 3. `python scripts/02_descargar_tcia.py --limit 3` para probar, luego sin `--limit` (≈ 100 GB en DICOM).
 4. `python scripts/03_convertir_a_nifti.py` → `data/interim/nifti/<paciente>/<estudio>/{CT,PET,SUV,CTres,SEG}.nii.gz`.
+5. `python scripts/04_preprocesar.py` → `data/processed/*.npz` (3 mm, recortado, escalado).
+6. `python scripts/05_referencia_clasica.py` → `results/referencia_clasica.csv`.
 
 Cita del dataset: Gatidis S, et al. *A whole-body FDG-PET/CT Dataset with manually annotated Tumor
 Lesions.* Sci Data 2022;9:601. doi:10.1038/s41597-022-01718-3.
@@ -85,7 +91,7 @@ Lesions.* Sci Data 2022;9:601. doi:10.1038/s41597-022-01718-3.
 |---|---|---|
 | 0 | `notebooks/00_entorno.ipynb` revisión del entorno | listo |
 | 1 | `notebooks/01_datos_suv_conversion.ipynb` y `scripts/01…03` | listo y probado con fantoma sintético |
-| 2 | preprocesamiento y referencia clásica | pendiente |
+| 2 | `notebooks/02_preprocesamiento_referencia_clasica.ipynb`, `scripts/04`, `scripts/05` | listo y probado con fantomas |
 | 3 | modelo A (fusión temprana), Colab | pendiente |
 | 4 | modelos B y C (fusión intermedia) | pendiente |
 | 5 | evaluación y análisis por órgano | pendiente |

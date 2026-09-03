@@ -233,5 +233,165 @@ MIP, y cualquier decisión que hayas tomado (por ejemplo, excluir un estudio con
 etiquetas incompletas). Con eso el Paso 1 queda cerrado y se abre el Paso 2."""),
 ]
 
+
+# ============================================================ 02 · preprocesamiento y referencia clásica
+nb02 = [
+("md", """# 02 · Preprocesamiento y referencia clásica
+
+Este cuaderno cubre el Paso 2. Toma los NIfTI del Paso 1 y los deja en la forma en que
+la red los va a mirar, y después construye la referencia clásica: una segmentación sin
+ninguna red, con las herramientas del curso (umbral, morfología, componentes conexas),
+medida con las métricas oficiales de autoPET. Ese número es el piso. Si un modelo no lo
+supera, algo está mal en el modelo, no en la idea.
+
+Como en el cuaderno anterior, todo corre primero sobre fantomas que se fabrican aquí
+mismo; la última sección se activa sola cuando hay estudios reales."""),
+("code", """import sys, tempfile
+from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
+
+RAIZ = Path.cwd().resolve().parent if Path.cwd().name == "notebooks" else Path.cwd()
+sys.path.insert(0, str(RAIZ / "src")); sys.path.insert(0, str(RAIZ / "tests"))
+from petct.convert import convert_study
+from petct.preprocess import preprocess_study, load_study, sample_patch, window_ct, scale_suv, body_mask
+from petct.classical import classical_segmentation, heuristic_organ_masks, threshold_suv, clean_mask
+from petct.metrics import evaluate_study
+import synthetic
+ML = 0.027   # mL por vóxel a 3 mm: 0.3 cm x 0.3 cm x 0.3 cm
+print("raíz:", RAIZ)"""),
+("md", """## 1. Ventaneo del CT y tope del SUV
+
+Las dos operaciones puntuales del paso. El ventaneo es lo mismo que hace la consola
+cuando eliges "ventana de tejido blando": todo lo que está bajo −200 HU se vuelve 0,
+todo lo que pasa de 300 HU se vuelve 1, y el medio queda lineal. La red no necesita
+distinguir hueso cortical de hueso esponjoso, pero sí grasa de músculo de agua.
+
+El SUV se divide por 30 y se recorta a 1. Sin ese tope, la vejiga (que llega a SUV 50
+o más) obligaría a comprimir todo el resto del cuerpo en el primer 5 % de la escala."""),
+("code", """hu = np.linspace(-1000, 1500, 500)
+suv = np.linspace(0, 60, 500)
+fig, ax = plt.subplots(1, 2, figsize=(9, 3))
+ax[0].plot(hu, window_ct(hu)); ax[0].set_xlabel("HU"); ax[0].set_ylabel("valor de entrada"); ax[0].set_title("ventana de tejido blando")
+ax[0].axvspan(-200, 300, alpha=.1)
+ax[1].plot(suv, scale_suv(suv)); ax[1].set_xlabel("SUV"); ax[1].set_title("SUV / 30 con tope")
+ax[1].axvline(2.5, ls="--", c="gray"); ax[1].text(3, .5, "umbral 2,5", color="gray")
+plt.tight_layout(); plt.show()"""),
+("md", """## 2. El fantoma del Paso 1 pasa por el preprocesamiento
+
+`preprocess_study` remuestrea a 3 mm isotrópicos (el PET del fantoma tenía vóxeles de
+4 × 4 × 2 mm), calcula la máscara del cuerpo desde el CT, recorta a la caja que contiene
+al paciente y guarda un `.npz` con `suv`, `ct`, `seg` y `body` alineados. Ese archivo es
+lo que leerán los parches y los modelos: un estudio de 250 se abre en milisegundos."""),
+("code", """root = Path(tempfile.mkdtemp(prefix="p2_"))
+synthetic.make_phantom(root)
+convert_study(root, root / "nifti")
+info = preprocess_study(root / "nifti", root / "proc" / "fantoma.npz")
+vol = load_study(root / "proc" / "fantoma.npz")
+print("forma tras remuestrear y recortar (z, y, x):", vol["suv"].shape)
+print(f"vóxeles de lesión: {info['lesion_voxels']}  ≈ {info['lesion_voxels']*ML:.2f} mL (esfera de 9 mm: 3.05 mL)")
+print(f"fracción del volumen que es cuerpo: {vol['body'].mean():.2f}")"""),
+("md", """## 3. Parches sesgados a lesiones
+
+La red no ve el cuerpo entero: ve cubos de 96³ vóxeles (29 cm de lado a 3 mm). Si los
+cubos se eligieran al azar, la mayoría no tendría ni un vóxel de lesión (las lesiones son
+menos del 1 % del cuerpo) y la red aprendería que la respuesta correcta es siempre
+"nada". Por eso el 70 % de los parches se centra en un vóxel de lesión y el 30 % en un
+vóxel cualquiera del cuerpo. En el fantoma usamos cubos chicos para poder dibujarlos."""),
+("code", """rng = np.random.default_rng(423)
+con = sum(sample_patch(vol, (16, 16, 16), p_lesion=0.7, rng=rng)["with_lesion"] for _ in range(200))
+print(f"de 200 parches con p_lesion = 0.7, {con} contienen lesión")
+p = sample_patch(vol, (16, 16, 16), p_lesion=1.0, rng=rng)
+z = p["seg"].sum(axis=(1, 2)).argmax()
+fig, ax = plt.subplots(1, 3, figsize=(9, 3))
+ax[0].imshow(p["ct"][z], cmap="gray", vmin=0, vmax=1); ax[0].set_title("canal CT [0,1]")
+ax[1].imshow(p["suv"][z], cmap="inferno", vmin=0, vmax=0.3); ax[1].set_title("canal SUV [0,1]")
+ax[2].imshow(p["seg"][z], cmap="gray"); ax[2].set_title("máscara")
+for a in ax: a.axis("off")
+plt.tight_layout(); plt.show()"""),
+("md", """## 4. La referencia clásica, con un fantoma más parecido a un paciente
+
+Para ver lo que el umbral hace mal hace falta un cuerpo con órganos calientes. Este
+fantoma se arma directo en NumPy, ya a 3 mm: un cilindro de 60 cm de alto con fondo SUV
+1, un "encéfalo" de SUV 7 arriba, una "vejiga" de SUV 25 abajo, un "hígado" de SUV 2,2
+(justo bajo el umbral) y dos lesiones, una de SUV 6 y otra de SUV 4.
+
+La receta clásica tiene cuatro pasos y conviene mirar cada uno por separado: umbral,
+apertura morfológica, tamaño mínimo y exclusión anatómica. Los tres primeros son lo que
+un físico médico habría hecho hace veinte años. El cuarto es el que decide el resultado y
+depende de tener máscaras de órganos; mientras no las tengamos, dos reglas provisionales
+buscan el encéfalo (la componente caliente grande más alta) y la vejiga (la componente
+muy intensa más baja)."""),
+("code", """def paciente_sintetico():
+    Z, Y, X = 200, 100, 100                     # 60 x 30 x 30 cm a 3 mm
+    zz, yy, xx = np.mgrid[:Z, :Y, :X]
+    body = ((yy - 50) / 45) ** 2 + ((xx - 50) / 45) ** 2 <= 1
+    suv = np.where(body, 1.0, 0.0)
+    def esfera(c, r): return (zz - c[0]) ** 2 + (yy - c[1]) ** 2 + (xx - c[2]) ** 2 <= r ** 2
+    suv[esfera((15, 50, 50), 20)] = 7.0          # encéfalo: ~900 mL
+    suv[esfera((170, 50, 50), 10)] = 25.0        # vejiga: ~110 mL
+    higado = esfera((90, 45, 35), 18); suv[higado] = 2.2
+    seg = np.zeros_like(body)
+    for c, r, s in (((70, 50, 65), 5, 6.0), ((120, 40, 50), 3, 4.0)):
+        m = esfera(c, r); suv[m] = s; seg |= m
+    return suv, body, seg
+
+suv_p, body_p, seg_p = paciente_sintetico()
+print(f"lesiones anotadas: {seg_p.sum()*ML:.1f} mL")
+
+etapas = {}
+etapas["1 umbral 2,5"] = threshold_suv(suv_p) & body_p
+etapas["2+3 apertura y tamaño"] = clean_mask(etapas["1 umbral 2,5"], 1, 0.5, ML)
+etapas["4 exclusión anatómica"] = classical_segmentation(suv_p, body_p, ML)
+for nombre, m in etapas.items():
+    r = evaluate_study(m, seg_p, suv_p, ML)
+    print(f"{nombre:26s} Dice={r['dice']:.3f}  FPV={r['fpv_ml']:7.1f} mL  FNV={r['fnv_ml']:.1f} mL  MTV pred={r['mtv_pred_ml']:.1f} mL")"""),
+("md", """Léelo como un radiólogo: el umbral solo marca el encéfalo y la vejiga como tumor y el
+MTV se dispara a más de mil mililitros. La apertura y el tamaño mínimo no cambian nada,
+porque esos órganos son grandes y compactos. Solo la exclusión anatómica baja el FPV a
+cero. Esa es la hipótesis del proyecto entero, dicha con reglas fijas: la anatomía es lo
+que separa captación fisiológica de patológica. Los modelos B y C intentan que la red
+aprenda esa regla sola a partir del CT."""),
+("code", """organos = heuristic_organ_masks(suv_p, body_p, ML)
+mip = suv_p.max(axis=1)
+fig, ax = plt.subplots(1, 3, figsize=(10, 6))
+ax[0].imshow(mip, cmap="gray_r", vmin=0, vmax=8, aspect="auto"); ax[0].set_title("MIP SUV")
+ax[1].imshow(mip, cmap="gray_r", vmin=0, vmax=8, aspect="auto"); ax[1].contour(etapas["1 umbral 2,5"].max(axis=1), levels=[.5], colors="red"); ax[1].set_title("umbral 2,5 (rojo)")
+ax[2].imshow(mip, cmap="gray_r", vmin=0, vmax=8, aspect="auto")
+for nombre, m in organos.items():
+    ax[2].contour(m.max(axis=1), levels=[.5], colors="orange")
+ax[2].contour(etapas["4 exclusión anatómica"].max(axis=1), levels=[.5], colors="cyan"); ax[2].set_title("órganos (naranja) y resultado (cian)")
+for a in ax: a.axis("off")
+plt.tight_layout(); plt.show()"""),
+("md", """## 5. Con estudios reales
+
+Se activa cuando `data/processed` tiene archivos `.npz` (salida de `scripts/04`). Corre
+la referencia clásica en todos y muestra la tabla. Con pacientes de verdad hay que
+esperar Dice bajo y FPV alto, incluso con la exclusión heurística: el corazón, los
+riñones y el intestino no están cubiertos por las dos reglas, y las lesiones de SUV 3
+quedan pegadas al hígado. Ese es el punto: documentar cuánto falla la receta clásica y en
+qué órganos, para tener contra qué comparar los modelos."""),
+("code", """import pandas as pd
+proc = sorted((RAIZ / "data/processed").glob("*.npz"))
+if proc:
+    filas = []
+    for f in proc:
+        v = load_study(f); suv_r = v["suv"] * v["suv_top"]
+        pred = classical_segmentation(suv_r, v["body"], ML)
+        r = evaluate_study(pred, v["seg"], suv_r, ML); r["estudio"] = f.stem[:20]; filas.append(r)
+    df = pd.DataFrame(filas).set_index("estudio")
+    display(df.round(2))
+    print("promedio Dice / FPV / FNV:", df[["dice", "fpv_ml", "fnv_ml"]].mean().round(2).to_dict())
+else:
+    print("Todavía no hay estudios procesados. Corre scripts/04_preprocesar.py después del Paso 1.")"""),
+("md", """## Qué registrar en la bitácora
+
+La forma típica de los volúmenes a 3 mm (para dimensionar memoria), cuántos estudios
+fallaron en el preprocesamiento, y la tabla de la referencia clásica con su promedio de
+Dice, FPV y FNV. Ese promedio es el primer número del informe."""),
+]
+
+nb(nb02, HERE / "02_preprocesamiento_referencia_clasica.ipynb")
+
 nb(nb00, HERE / "00_entorno.ipynb")
 nb(nb01, HERE / "01_datos_suv_conversion.ipynb")
