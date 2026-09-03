@@ -92,3 +92,11 @@ En el paciente sintético, el umbral solo da Dice 0,03 y FPV 983 mL (marca encé
 
 - Paso 1 con datos reales (sigue pendiente de la descarga).
 - Cuando haya `.npz` reales: correr `scripts/05` y registrar aquí la tabla de la referencia clásica. Ese es el primer número del informe.
+
+## 2026-09-03 (noche). Entorno del Mac, según `00_entorno.ipynb`
+
+Python 3.12.13 (venv dentro del proyecto), macOS 26.6.2, arm64. numpy 2.5.2, scipy 1.18.1,
+pandas 3.0.5, pydicom 3.0.2, SimpleITK 2.5.6, nibabel 5.4.2, scikit-image 0.26.0,
+matplotlib 3.11.1, pytest 9.1.1, tcia_utils instalado. torch y monai todavía no
+instalados (se instalan para el Paso 3). Las 17 pruebas pasan en el Mac. Falta anotar
+RAM, disco libre y si PyTorch ve `mps`.
