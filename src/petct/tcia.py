@@ -48,7 +48,8 @@ def load_clinical(csv_path: str | Path) -> pd.DataFrame:
         except KeyError:
             out[name] = np.nan
     out["diagnosis"] = out["diagnosis"].str.replace(" ", "_")
-    return out
+    # el CSV de TCIA trae una fila por serie (CT, PT, SEG); nos interesa una por estudio
+    return out.drop_duplicates(["patient_id", "study_uid"]).reset_index(drop=True)
 
 
 # ---------------------------------------------------------------- selección estratificada
