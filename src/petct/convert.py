@@ -44,10 +44,17 @@ def read_dicom_series(folder: str | Path) -> sitk.Image:
 
 
 def _first_dicom_file(folder: str | Path) -> Path:
+    """Primer archivo DICOM de la carpeta. TCIA deja además un LICENSE en cada serie."""
+    import pydicom
+
     for p in sorted(Path(folder).iterdir()):
         if p.is_file() and not p.name.startswith("."):
-            return p
-    raise FileNotFoundError(folder)
+            try:
+                pydicom.dcmread(str(p), stop_before_pixels=True)
+                return p
+            except Exception:
+                continue
+    raise FileNotFoundError(f"sin archivos DICOM en {folder}")
 
 
 # ---------------------------------------------------------------- PET → SUV

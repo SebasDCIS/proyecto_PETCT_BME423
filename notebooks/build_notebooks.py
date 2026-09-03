@@ -395,5 +395,195 @@ Dice, FPV y FNV. Ese promedio es el primer número del informe."""),
 
 nb(nb02, HERE / "02_preprocesamiento_referencia_clasica.ipynb")
 
+
+# ============================================================ 01b · geometría DICOM
+nb01b = [
+("md", """# 01b · Geometría DICOM: posiciones de corte, espaciado y medidas
+
+Este cuaderno desarrolla el punto del Laboratorio 1 ("ordene por `ImagePositionPatient`,
+mida el espaciado efectivo, compárelo con `SliceThickness`, corrija la relación de
+aspecto y cuantifique el error") sobre los datos del proyecto, para PET y CT. El texto
+completo está en `docs/GEOMETRIA_DICOM.md`; aquí se ejecuta.
+
+Corre con lo que haya en `data/raw`. Con tres pacientes ya muestra todo; con los 251 la
+tabla final se convierte en la estadística de la colección. Si no hay datos reales, usa
+el fantoma sintético para que ninguna celda falle."""),
+("code", """import sys, glob, tempfile
+from pathlib import Path
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+import pydicom, SimpleITK as sitk
+
+RAIZ = Path.cwd().resolve().parent if Path.cwd().name == "notebooks" else Path.cwd()
+sys.path.insert(0, str(RAIZ / "src")); sys.path.insert(0, str(RAIZ / "tests"))
+from petct.geometry import series_geometry, index_to_mm, measurement_error_if_aspect_ignored
+import synthetic
+
+series_csv = RAIZ / "data/manifests/series_tcia.csv"
+raw = RAIZ / "data/raw"
+reales = series_csv.exists() and raw.exists() and any(p.is_dir() for p in raw.iterdir())
+if reales:
+    ser = pd.read_csv(series_csv)
+    ser = ser[ser.Modality.isin(["CT", "PT"]) & ser.SeriesInstanceUID.map(lambda u: (raw / str(u)).exists())]
+    carpetas = {(r.PatientID, r.Modality): raw / str(r.SeriesInstanceUID) for _, r in ser.iterrows()}
+    print(f"{len(carpetas)} series reales de {ser.PatientID.nunique()} pacientes")
+else:
+    tmp = Path(tempfile.mkdtemp(prefix="geo_")); synthetic.make_phantom(tmp)
+    carpetas = {("FANTOMA", "CT"): tmp / "CT", ("FANTOMA", "PT"): tmp / "PT"}
+    print("sin datos reales: usando el fantoma sintético")"""),
+("md", """## 1. Leer la cabecera de un corte
+
+Cada archivo DICOM lleva, además de los píxeles, la ficha con su geometría. Cuatro
+atributos bastan para ubicar cualquier píxel en el espacio del paciente: la posición del
+primer píxel (`ImagePositionPatient`), la orientación de filas y columnas
+(`ImageOrientationPatient`), el tamaño del píxel (`PixelSpacing`) y el grosor del corte
+(`SliceThickness`). Miremos el primer archivo de una serie PET y una CT."""),
+("code", """def ficha(folder):
+    f = sorted(p for p in Path(folder).iterdir() if p.suffix == ".dcm")[0]
+    ds = pydicom.dcmread(str(f), stop_before_pixels=True)
+    campos = ["Modality", "PatientPosition", "Rows", "Columns", "PixelSpacing", "SliceThickness",
+              "SpacingBetweenSlices", "ImagePositionPatient", "ImageOrientationPatient",
+              "InstanceNumber", "SliceLocation", "FrameOfReferenceUID"]
+    return {c: ds.get(c, "(ausente)") for c in campos}
+
+for (pid, mod), folder in list(carpetas.items())[:2]:
+    print(f"== {pid} {mod}")
+    for k, v in ficha(folder).items():
+        print(f"   {k:24s} {str(v)[:70]}")"""),
+("md", """`SpacingBetweenSlices` aparece como ausente: la distancia entre cortes no está
+declarada y hay que medirla. `PatientPosition = HFS` (cabeza primero, decúbito supino)
+dice cómo entró el paciente al equipo. Y `FrameOfReferenceUID` es el mismo para PET y CT
+del mismo estudio: comparten origen y ejes, por eso se superponen por milímetros.
+
+## 2. El orden de los cortes
+
+La advertencia del laboratorio es que el orden alfabético no garantiza el orden
+anatómico. Para comprobarlo se lee la posición z de cada archivo en el orden en que
+vienen nombrados. `series_geometry` hace además el ordenamiento correcto: proyecta cada
+posición sobre la normal al plano (producto cruz de los dos vectores de orientación) y
+ordena por ese número."""),
+("code", """def z_por_nombre(folder):
+    zs = []
+    for f in sorted(p for p in Path(folder).iterdir() if p.is_file() and not p.name.startswith(".")):
+        try:
+            zs.append(float(pydicom.dcmread(str(f), stop_before_pixels=True).ImagePositionPatient[2]))
+        except Exception:      # cada carpeta de TCIA trae un archivo LICENSE
+            pass
+    return np.array(zs)
+
+pid0 = list(carpetas)[0][0]
+fig, ax = plt.subplots(1, 2, figsize=(11, 3.6))
+for mod in ("PT", "CT"):
+    z = z_por_nombre(carpetas[(pid0, mod)])
+    ax[0].plot(z, ".", ms=3, label=f"{mod}: {len(z)} archivos")
+    ax[1].plot(np.diff(np.sort(z)), ".", ms=3, label=f"{mod}: {np.diff(np.sort(z)).mean():.2f} mm")
+ax[0].set_xlabel("índice del archivo (orden alfabético)"); ax[0].set_ylabel("z de ImagePositionPatient (mm)"); ax[0].legend(); ax[0].set_title(f"{pid0}: posición real de cada archivo")
+ax[1].set_xlabel("par de cortes consecutivos (ordenados)"); ax[1].set_ylabel("distancia (mm)"); ax[1].legend(); ax[1].set_title("espaciado efectivo"); ax[1].set_ylim(0, None)
+plt.tight_layout(); plt.show()"""),
+("md", """En autoPET el PET viene de los pies a la cabeza y el CT de la cabeza a los pies. El
+nombre y el `InstanceNumber` coinciden entre sí en ambos, así que ninguno sirve como
+criterio general. La única regla robusta es la posición física, y es la que usa SimpleITK
+al leer una serie y la que usa `convert.py`.
+
+## 3. Grosor frente a espaciado
+
+Son dos cosas distintas: el grosor es cuánto tejido promedia cada corte reconstruido; el
+espaciado es cada cuántos milímetros hay un corte. La tabla los pone lado a lado para
+todas las series disponibles, junto con el campo de visión y la relación de aspecto."""),
+("code", """filas = []
+for (pid, mod), folder in carpetas.items():
+    g = series_geometry(folder); g.pop("positions_sorted_mm"); g["patient_id"] = pid; filas.append(g)
+geo = pd.DataFrame(filas)
+cols = ["patient_id", "modality", "n_slices", "rows", "row_spacing_mm", "fov_rows_mm", "slice_thickness_mm",
+        "gap_mean_mm", "gap_min_mm", "gap_max_mm", "uniform", "extent_mm", "order_by_name_ok", "aspect_coronal"]
+geo["solape_mm"] = (geo.slice_thickness_mm - geo.gap_mean_mm).round(2)
+display(geo[cols + ["solape_mm"]].round(3))"""),
+("md", """Lectura: en el PET grosor y espaciado coinciden (3 mm cada 3 mm, contiguos). En el CT
+el grosor es mayor que el espaciado: reconstrucción con solape, habitual en CT
+helicoidal. No es un error de los datos; el error sería usar el grosor para armar el
+volumen. Cuando la colección completa esté descargada, esta tabla dice cuántos CT vienen
+con cada combinación de grosor y espaciado, que es un dato para la sección de materiales
+del informe.
+
+## 4. De índices a milímetros
+
+La ecuación del módulo Image Plane: la posición de la fila i, columna j del corte k es
+el origen del corte más j veces el espaciado de columnas en la dirección de las columnas,
+más i veces el espaciado de filas en la dirección de las filas. Es una transformación
+afín, la misma que guardan SimpleITK (origen, espaciado, dirección) y NIfTI. Un ejemplo
+con la serie PET: el vóxel del centro del primer corte."""),
+("code", """g = series_geometry(carpetas[(pid0, "PT")])
+col_dir, row_dir = np.array(g["iop"][:3]), np.array(g["iop"][3:])
+p = index_to_mm(g["rows"] // 2, g["cols"] // 2, 0, g["origin_first_slice"], g["row_spacing_mm"], g["col_spacing_mm"],
+                col_dir, row_dir, g["normal"], g["gap_mean_mm"])
+print("origen del primer corte (mm):", g["origin_first_slice"])
+print("centro del primer corte (mm): ", p.round(1))
+print("normal al corte:", g["normal"], "→ cada corte siguiente está", g["gap_mean_mm"], "mm más arriba (z crece hacia la cabeza)")"""),
+("md", """## 5. Relación de aspecto y el error que se comete al ignorarla
+
+En una vista coronal o sagital el eje vertical es z. Si se dibuja el arreglo con píxeles
+cuadrados, cada corte ocupa un píxel de alto aunque mida 3 mm. El factor de corrección es
+Δz / Δplano. El error de medida para un segmento vertical es directo: aparece con longitud
+L · Δplano / Δz. Para un segmento oblicuo el error depende del ángulo; la función lo
+calcula para cualquier caso."""),
+("code", """for _, r in geo.iterrows():
+    e90 = measurement_error_if_aspect_ignored(30, 90, r.row_spacing_mm, r.gap_mean_mm)
+    e45 = measurement_error_if_aspect_ignored(30, 45, r.row_spacing_mm, r.gap_mean_mm)
+    print(f"{r.patient_id} {r.modality}: aspecto {r.aspect_coronal:.2f} | un segmento vertical de 30 mm 'mide' {30*(1+e90):.1f} mm ({e90:+.0%}); a 45°, {30*(1+e45):.1f} mm ({e45:+.0%})")
+
+# vistas coronal y sagital con y sin corrección, del primer paciente (desde los NIfTI si existen)
+nii = sorted((RAIZ / "data/interim/nifti").glob(f"{pid0}/*/SUV.nii.gz")) if reales else []
+if nii:
+    suv = sitk.ReadImage(str(nii[0])); ct = sitk.ReadImage(str(nii[0].parent / "CT.nii.gz"))
+    A, C = sitk.GetArrayFromImage(suv), sitk.GetArrayFromImage(ct)
+    sp, sc = suv.GetSpacing(), ct.GetSpacing()
+    fig, ax = plt.subplots(1, 4, figsize=(13, 6))
+    ax[0].imshow(np.flipud(A[:, A.shape[1]//2, :]), cmap="gray_r", vmin=0, vmax=6, aspect=sp[2]/sp[0]); ax[0].set_title(f"PET coronal, aspecto {sp[2]/sp[0]:.2f}")
+    ax[1].imshow(np.flipud(A[:, A.shape[1]//2, :]), cmap="gray_r", vmin=0, vmax=6, aspect=1); ax[1].set_title("PET coronal, aspecto ignorado")
+    ax[2].imshow(np.flipud(C[:, C.shape[1]//2, :]), cmap="gray", vmin=-200, vmax=300, aspect=sc[2]/sc[0]); ax[2].set_title(f"CT coronal, aspecto {sc[2]/sc[0]:.2f}")
+    ax[3].imshow(np.flipud(C[:, C.shape[1]//2, :]), cmap="gray", vmin=-200, vmax=300, aspect=1); ax[3].set_title("CT coronal, aspecto ignorado")
+    for a in ax: a.axis("off")
+    plt.tight_layout(); plt.show()
+else:
+    print("(las vistas coronales se muestran cuando existen los NIfTI del Paso 1)")"""),
+("md", """La cabeza va arriba en las figuras porque se voltea el eje z para dibujar: en el arreglo,
+el índice 0 es el corte más inferior.
+
+## 6. La segmentación es distinta: un solo archivo con muchos frames
+
+El DICOM SEG de autoPET trae los 284 cortes de la máscara como frames de un único objeto,
+cada uno con su propia posición, y con las filas recorridas al revés que el PET
+(`ImageOrientationPatient` 1,0,0,0,−1,0). Si se apilan los frames sin mirar la
+orientación, la máscara queda reflejada. El fantoma sintético reproduce ese caso y la
+conversión lo resuelve ubicando las dos esquinas físicas de cada frame en la grilla del
+PET. Aquí se muestra la cabecera de un SEG real si existe."""),
+("code", """seg_ds = None
+if reales:
+    for d in sorted(p for p in raw.iterdir() if p.is_dir()):
+        dcms = sorted(d.glob("*.dcm"))
+        if len(dcms) == 1:                      # el SEG es un solo archivo multiframe
+            ds = pydicom.dcmread(str(dcms[0]), stop_before_pixels=True)
+            if ds.Modality == "SEG":
+                seg_ds = ds; break
+if seg_ds is not None:
+    sh = seg_ds.SharedFunctionalGroupsSequence[0]
+    fr = seg_ds.PerFrameFunctionalGroupsSequence
+    print("frames:", seg_ds.NumberOfFrames, "| Rows x Cols:", seg_ds.Rows, "x", seg_ds.Columns)
+    print("orientación compartida:", list(sh.PlaneOrientationSequence[0].ImageOrientationPatient))
+    print("PixelSpacing compartido:", list(sh.PixelMeasuresSequence[0].PixelSpacing))
+    print("posición de los 3 primeros frames:", [list(map(float, fg.PlanePositionSequence[0].ImagePositionPatient)) for fg in fr[:3]])
+    print("segmentos:", [s.SegmentLabel for s in seg_ds.SegmentSequence])
+else:
+    print("sin SEG real disponible; ver tests/synthetic.py::write_seg para el caso reproducido")"""),
+("md", """## Qué registrar en la bitácora
+
+Cuando la descarga esté completa: cuántas series CT vienen con cada grosor y espaciado,
+si alguna no es uniforme, cuántos pacientes tienen un campo de visión de CT que no cubre
+los brazos, y si aparece alguna serie con orientación distinta de la axial pura. Esa es
+la descripción geométrica de los datos para el informe."""),
+]
+
+nb(nb01b, HERE / "01b_geometria_dicom.ipynb")
+
 nb(nb00, HERE / "00_entorno.ipynb")
 nb(nb01, HERE / "01_datos_suv_conversion.ipynb")

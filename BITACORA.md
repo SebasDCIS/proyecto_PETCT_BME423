@@ -223,3 +223,13 @@ comparten `FrameOfReferenceUID`. Campo de visión 815 mm (PET) frente a 388 a 44
 (CT), por eso `CTres` rellena con −1024 fuera del CT. Relación de aspecto coronal 1,47
 (PET) y hasta 3,13 (CT); ignorarla acorta las medidas verticales hasta un 68 %. Figura:
 `docs/figuras/geometria_posiciones_y_aspecto.png`.
+
+## 2026-09-04. Cuaderno 01b de geometría, ejecutado con los tres pacientes
+
+`notebooks/01b_geometria_dicom.ipynb` recorre el documento de geometría celda a celda
+sobre lo que haya en `data/raw` (hoy 6 series; se vuelve a ejecutar con los 251). Dos
+detalles que aparecieron al correrlo con datos reales: cada carpeta de serie descargada
+por `tcia_utils` trae un archivo `LICENSE` junto a los DICOM, así que todo lector de
+carpetas ahora salta lo que no sea DICOM; y la posición de los frames del SEG confirma
+la orientación invertida: su y es 237,2 mm, exactamente el origen del PET (−575,3) más
+399 filas por 2,036 mm, es decir, la última fila del PET.
