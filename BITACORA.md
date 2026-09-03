@@ -68,3 +68,16 @@ Los pasos 1, 2 y 5 corren en el Mac (lectura DICOM, SUV, remuestreo, referencia 
 - Correr `00_entorno.ipynb` en el Mac y pegar la salida aquí.
 - Paso 1 con datos reales (CSV clínico, `scripts/01`, `scripts/02 --limit 3`, `scripts/03`, revisión en `01_datos_suv_conversion.ipynb` sección 5).
 - Push a GitHub.
+
+## 2026-09-03 (noche). El repositorio se muda fuera de la nube
+
+El repositorio vivía en la carpeta del curso dentro de OneDrive. Se movió a
+`~/Proyectos/proyecto_PETCT_BME423` (disco local del Mac) con `mv`, conservando los dos
+commits. Motivo: en proyectos anteriores trabajar sobre carpetas sincronizadas dio
+problemas, y aquí además van a vivir unos 100 GB de DICOM, el entorno virtual y los
+checkpoints, que una nube intentaría sincronizar. Documentos y Escritorio se
+descartaron por la misma razón (suelen estar en iCloud). La carpeta de OneDrive queda
+solo para material del curso y los PDF entregados.
+
+Se agregó `.venv/` al `.gitignore`. Desde ahora, entorno virtual, datos y modelos se
+crean dentro de esta carpeta local.
