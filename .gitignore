@@ -16,7 +16,9 @@ checkpoints/
 *.pt
 *.pth
 
-# Python
+# Python (el entorno virtual vive dentro del proyecto pero nunca se sube)
+.venv/
+venv/
 __pycache__/
 *.pyc
 .pytest_cache/
@@ -25,3 +27,7 @@ __pycache__/
 
 # Sistema
 .DS_Store
+
+# Archivos temporales de sincronización
+_sync.zip
+_tmp/
