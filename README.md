@@ -23,6 +23,7 @@ exclusión anatómica).
 
 Documento de definición de tema: [`report/definicion_de_tema.pdf`](report/definicion_de_tema.pdf).
 Bitácora del proyecto: [`BITACORA.md`](BITACORA.md). Glosario con analogías: [`docs/GLOSARIO.md`](docs/GLOSARIO.md).
+Geometría DICOM de los datos (posiciones, espaciado, medidas): [`docs/GEOMETRIA_DICOM.md`](docs/GEOMETRIA_DICOM.md).
 
 ## Estructura
 
@@ -35,6 +36,7 @@ src/petct/                paquete Python
   preprocess.py           3 mm isotrópicos, ventana HU, tope SUV, recorte al cuerpo, parches
   classical.py            referencia clásica: umbral SUV + morfología + exclusión anatómica
   metrics.py              Dice, FPV, FNV (definiciones de autoPET), MTV, SUVmax
+  geometry.py             posiciones de corte, espaciado efectivo, aspecto (Lab 1 aplicado)
   device.py               cuda / mps / cpu
 scripts/                  pasos numerados, uno por etapa
 tests/                    pruebas con un fantoma DICOM sintético (sin datos reales)

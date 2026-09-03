@@ -204,3 +204,22 @@ La heurística ahora ayuda (Dice de 0,13 a 0,33, FPV de 823 a 217 mL), pero en
 PETCT_0117d7f11f la "vejiga" resultó ser una componente de 1,9 L que une hígado,
 riñones y vejiga con SUV ≥ 2,5 y se llevó una lesión hiliar (FNV 56 mL). Se mantiene
 la decisión: las máscaras de órganos definitivas saldrán del CT (TotalSegmentator).
+
+## 2026-09-04. Geometría DICOM documentada (posiciones de corte, espaciado, medidas)
+
+Se agregó `src/petct/geometry.py` (orden por `ImagePositionPatient` proyectado sobre la
+normal, espaciado efectivo, comparación con `SliceThickness`, ecuación índice → mm,
+error por relación de aspecto), `scripts/06_geometria_series.py` (tabla por serie en
+`results/geometria_series.csv`), cuatro pruebas (25 en total) y el documento
+`docs/GEOMETRIA_DICOM.md`, que es el desarrollo del punto del Laboratorio 1 sobre los
+datos reales, para PET y CT.
+
+Hallazgos sobre los tres estudios: PET 400 × 400 × 284, píxel 2,036 mm, cortes de 3 mm
+cada 3 mm (contiguos), archivos ordenados de pies a cabeza; CT 512 × 512, píxel 0,76 a
+0,87 mm, cortes de 3 mm cada 2,5 mm (o 2 mm cada 1 mm): reconstrucción con solape;
+archivos ordenados de cabeza a pies, al revés que el PET. `SpacingBetweenSlices` no
+viene en ninguna serie; el espaciado medido es uniforme en las seis. PET, CT y SEG
+comparten `FrameOfReferenceUID`. Campo de visión 815 mm (PET) frente a 388 a 447 mm
+(CT), por eso `CTres` rellena con −1024 fuera del CT. Relación de aspecto coronal 1,47
+(PET) y hasta 3,13 (CT); ignorarla acorta las medidas verticales hasta un 68 %. Figura:
+`docs/figuras/geometria_posiciones_y_aspecto.png`.

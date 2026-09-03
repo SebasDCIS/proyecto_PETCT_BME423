@@ -219,3 +219,39 @@ aprender esa regla en vez de codificarla a mano."
 **Máscaras heurísticas de órganos.** Reglas provisionales (posición relativa en el eje
 z, volumen, SUV máximo) para encéfalo y vejiga. Se reemplazan por segmentación del CT
 (TotalSegmentator) cuando haya estudios reales.
+
+---
+
+## Geometría DICOM (ver `docs/GEOMETRIA_DICOM.md` para el desarrollo completo)
+
+**Sistema LPS.** Los ejes del paciente en DICOM: x hacia la izquierda, y hacia atrás, z
+hacia la cabeza, en mm. NIfTI usa RAS (x derecha, y adelante): mismos vóxeles, signos de x
+e y invertidos. *Para la defensa:* "PET, CT y SEG comparten el sistema y el
+`FrameOfReferenceUID`; por eso se superponen por milímetros sin registrar".
+
+**`ImagePositionPatient`.** Coordenadas (x, y, z) en mm del centro del primer píxel de
+cada corte. Es el único criterio robusto para ordenar cortes. Analogía: la coordenada GPS
+de la esquina de cada foto.
+
+**`ImageOrientationPatient`.** Seis cosenos: hacia dónde avanzan las columnas y hacia dónde
+las filas. Su producto cruz es la normal al corte. En el SEG de autoPET las filas van al
+revés que en el PET.
+
+**`PixelSpacing`.** Tamaño del píxel en mm, en orden (fila, columna). El campo de visión es
+`Rows × PixelSpacing`: 815 mm en el PET, 388 a 447 mm en el CT.
+
+**Grosor de corte frente a espaciado.** `SliceThickness` es cuánto tejido promedia un corte;
+el espaciado es cada cuántos mm hay uno. En el CT de autoPET los cortes de 3 mm van cada
+2,5 mm (solape). Analogía: ancho de la brocha frente a desplazamiento entre pasadas.
+
+**Espaciado efectivo.** Diferencia entre posiciones consecutivas ya ordenadas. Se mide
+porque `SpacingBetweenSlices` no viene. Uniforme en las seis series revisadas.
+
+**Relación de aspecto.** Δz / Δplano: 1,47 en PET, hasta 3,13 en CT. Si se ignora, las
+medidas verticales en coronal o sagital se acortan hasta un 68 %. A 3 mm isotrópicos vale 1.
+
+**Solape de reconstrucción.** Cortes más gruesos que el espaciado; cada corte comparte
+tejido con el vecino. Es normal en CT helicoidal y no es un error de los datos.
+
+**Multiframe (SEG).** Un solo archivo con muchos frames, cada uno con su posición.
+Se convierte ubicando cada frame por sus esquinas físicas.
