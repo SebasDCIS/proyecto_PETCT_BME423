@@ -88,6 +88,74 @@ def select_subset(clinical: pd.DataFrame, n_positive: int = 200, n_negative: int
     return sub.sort_values(["split", "diagnosis", "patient_id"]).reset_index(drop=True)
 
 
+# ---------------------------------------------------------------- manifiestos .tcia
+# Un manifiesto .tcia es un archivo de texto: unas líneas de cabecera y luego un
+# SeriesInstanceUID por línea. Es lo que abre el NBIA Data Retriever. TCIA publica uno
+# con TODAS las series de la versión "defaced" (la de acceso abierto); de ahí sacamos
+# las series de nuestros 250 pacientes y escribimos un manifiesto reducido.
+_TCIA_HEADER = (
+    "downloadServerUrl=https://nbia.cancerimagingarchive.net/nbia-download/servlet/DownloadServlet\n"
+    "includeAnnotation=true\nnoOfrRetry=4\ndatabasketId={name}\nmanifestVersion=3.0\n"
+    "ListOfSeriesToDownload=\n"
+)
+
+
+def read_tcia_manifest(path: str | Path) -> List[str]:
+    """Devuelve la lista de SeriesInstanceUID de un manifiesto .tcia."""
+    uids: List[str] = []
+    started = False
+    for line in Path(path).read_text().splitlines():
+        line = line.strip()
+        if started and line:
+            uids.append(line)
+        elif line.startswith("ListOfSeriesToDownload"):
+            started = True
+    if not uids:
+        raise ValueError(f"No se encontraron UIDs en {path}")
+    return uids
+
+
+def write_tcia_manifest(uids: List[str], path: str | Path) -> Path:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(_TCIA_HEADER.format(name=path.name) + "\n".join(uids) + "\n")
+    return path
+
+
+def _normalize_series_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """La API devuelve nombres de columna distintos según el endpoint; los unificamos."""
+    out = pd.DataFrame()
+    out["PatientID"] = df[_find_col(df, "PatientID", "Subject ID", "patient_id")].astype(str)
+    out["StudyInstanceUID"] = df[_find_col(df, "StudyInstanceUID", "Study UID", "study_uid")].astype(str)
+    out["SeriesInstanceUID"] = df[_find_col(df, "SeriesInstanceUID", "Series UID", "Series ID", "series_uid")].astype(str)
+    out["Modality"] = df[_find_col(df, "Modality")].astype(str).str.upper()
+    for extra in ("SeriesDescription", "Series Description", "ImageCount", "Number of Images", "FileSize", "File Size"):
+        if extra in df.columns:
+            out[extra.replace(" ", "")] = df[extra]
+    return out
+
+
+def series_from_manifest(manifest_path: str | Path, patient_ids: List[str], chunk: int = 200) -> pd.DataFrame:
+    """Cruza el manifiesto oficial (todas las series abiertas) con nuestros pacientes.
+
+    Consulta a NBIA los metadatos de los UIDs del manifiesto por bloques y se queda
+    con las series CT, PT y SEG de los pacientes del subconjunto.
+    """
+    from tcia_utils import nbia  # requiere red
+
+    uids = read_tcia_manifest(manifest_path)
+    frames = []
+    for i in range(0, len(uids), chunk):
+        part = nbia.getSeriesList(uids[i:i + chunk])
+        if part is not None and len(part):
+            frames.append(part)
+    if not frames:
+        raise RuntimeError("NBIA no devolvió metadatos para los UIDs del manifiesto")
+    df = _normalize_series_columns(pd.concat(frames, ignore_index=True))
+    wanted = set(str(p) for p in patient_ids)
+    return df[df.PatientID.isin(wanted) & df.Modality.isin(["CT", "PT", "SEG"])].reset_index(drop=True)
+
+
 # ---------------------------------------------------------------- descarga TCIA
 def fetch_series_table(patient_ids: List[str]) -> pd.DataFrame:
     """Consulta a NBIA las series (CT, PT, SEG) de cada paciente del subconjunto."""
@@ -100,9 +168,8 @@ def fetch_series_table(patient_ids: List[str]) -> pd.DataFrame:
             frames.append(rows)
     if not frames:
         raise RuntimeError("NBIA no devolvió series; ¿hay red / el ID es correcto?")
-    df = pd.concat(frames, ignore_index=True)
-    keep = df[df["Modality"].isin(["CT", "PT", "SEG"])]
-    return keep
+    df = _normalize_series_columns(pd.concat(frames, ignore_index=True))
+    return df[df["Modality"].isin(["CT", "PT", "SEG"])].reset_index(drop=True)
 
 
 def download_series(series_df: pd.DataFrame, out_dir: str | Path, max_workers: int = 4):

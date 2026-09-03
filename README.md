@@ -74,10 +74,14 @@ https://www.cancerimagingarchive.net/collection/fdg-pet-ct-lesions/
 
 Los datos no se suben al repositorio. Para reproducir:
 
-1. Descargar el CSV clínico desde la página de TCIA y guardarlo como `data/manifests/clinical_tcia.csv`.
+1. Desde la página de la colección, descargar dos archivos y dejarlos en `data/manifests/`:
+   el CSV clínico (`Clinical-Metadata-FDG-PET_CT-Lesions.csv` → `clinical_tcia.csv`) y el
+   manifiesto de la versión *defaced* (`FDG-PET-CT-Lesions_v02_*.tcia` → `FDG-PET-CT-Lesions_defaced.tcia`).
 2. `python scripts/01_seleccionar_subconjunto.py data/manifests/clinical_tcia.csv`
    → `data/manifests/subconjunto.csv` (250 estudios, semilla 423, partición por paciente).
-3. `python scripts/02_descargar_tcia.py --limit 3` para probar, luego sin `--limit` (≈ 100 GB en DICOM).
+3. `python scripts/02_descargar_tcia.py --tcia-manifest data/manifests/FDG-PET-CT-Lesions_defaced.tcia --limit 3 --descargar`
+   para probar; luego sin `--limit` (≈ 100 GB en DICOM). Alternativa: abrir
+   `data/manifests/subconjunto.tcia` con el NBIA Data Retriever.
 4. `python scripts/03_convertir_a_nifti.py` → `data/interim/nifti/<paciente>/<estudio>/{CT,PET,SUV,CTres,SEG}.nii.gz`.
 5. `python scripts/04_preprocesar.py` → `data/processed/*.npz` (3 mm, recortado, escalado).
 6. `python scripts/05_referencia_clasica.py` → `results/referencia_clasica.csv`.

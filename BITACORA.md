@@ -93,17 +93,14 @@ En el paciente sintético, el umbral solo da Dice 0,03 y FPV 983 mL (marca encé
 - Paso 1 con datos reales (sigue pendiente de la descarga).
 - Cuando haya `.npz` reales: correr `scripts/05` y registrar aquí la tabla de la referencia clásica. Ese es el primer número del informe.
 
-## 2026-09-03 (noche). Entorno del Mac, según `00_entorno.ipynb`
+## 2026-09-04. Cómo se bajan los datos, con precisión
 
-Python 3.12.13 (venv dentro del proyecto), macOS 26.6.2, arm64. numpy 2.5.2, scipy 1.18.1,
-pandas 3.0.5, pydicom 3.0.2, SimpleITK 2.5.6, nibabel 5.4.2, scikit-image 0.26.0,
-matplotlib 3.11.1, pytest 9.1.1, tcia_utils instalado, torch 2.14.0, monai 1.6.0.
-PyTorch ve `mps` (GPU de Apple, memoria unificada). RAM: 24 GB. Disco libre: 596 GB de
-926 GB. Las 17 pruebas pasan en el Mac.
-
-Decisión con estos números: el disco alcanza de sobra para los 250 estudios en DICOM
-(~100 GB) y sus derivados. Con 24 GB de memoria unificada, el Mac sirve para desarrollar
-y para entrenamientos cortos con parches de 96³ y lote 2; si el modelo completo cabe
-en el tiempo de una noche se decide con una medición de velocidad (iteraciones por
-segundo en `mps` contra la T4 de Colab), que se agrega como parte del Paso 3. Mientras
-no exista esa medición, el plan sigue siendo Colab para los entrenamientos completos.
+La página de TCIA ofrece dos versiones de las imágenes: la original (acceso controlado,
+no sirve) y la *defaced* (rostro anonimizado, CC BY 4.0). El manifiesto oficial de la
+versión abierta (`FDG-PET-CT-Lesions_v02_20260817.tcia`, actualizado el 17-08-2026)
+lista todas sus series. `scripts/02` ahora cruza ese manifiesto con nuestros 250
+pacientes, escribe `series_tcia.csv` y un manifiesto reducido `subconjunto.tcia`, y
+descarga solo si se pide `--descargar`. Así hay dos caminos para bajar: `tcia_utils`
+desde el script, o el NBIA Data Retriever abriendo el manifiesto reducido. Los archivos
+de entrada se dejan en `data/manifests/`; los DICOM van a `data/raw/`. Prueba nueva:
+lectura y escritura de manifiestos `.tcia` (18 pruebas en total).
