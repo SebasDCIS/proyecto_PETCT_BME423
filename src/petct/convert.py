@@ -71,12 +71,27 @@ def resample_to_reference(img: sitk.Image, ref: sitk.Image, interpolator=sitk.si
 
 
 # ---------------------------------------------------------------- DICOM SEG → máscara
+def _frame_geometry(ds, fg):
+    """Orientación (cosenos de columna y fila) y espaciado de un frame del SEG.
+    Pueden venir por frame o compartidos por todos los frames."""
+    shared = ds.SharedFunctionalGroupsSequence[0] if "SharedFunctionalGroupsSequence" in ds else None
+    src = fg if "PlaneOrientationSequence" in fg else shared
+    iop = [float(v) for v in src.PlaneOrientationSequence[0].ImageOrientationPatient]
+    src = fg if "PixelMeasuresSequence" in fg else shared
+    pm = src.PixelMeasuresSequence[0]
+    row_sp, col_sp = (float(v) for v in pm.PixelSpacing)  # (entre filas, entre columnas)
+    return np.array(iop[0:3]), np.array(iop[3:6]), row_sp, col_sp
+
+
 def seg_to_mask(seg_file: str | Path, ref: sitk.Image) -> sitk.Image:
     """Convierte un objeto DICOM SEG (multiframe) en una máscara binaria sobre `ref`.
 
-    Cada frame del SEG lleva su ImagePositionPatient; ubicamos el corte de `ref`
-    al que corresponde y depositamos ahí el frame. Los frames vienen empaquetados
-    a 1 bit; pydicom los desempaqueta a (n_frames, rows, cols).
+    Cada frame trae su posición (ImagePositionPatient, la esquina del primer píxel) y su
+    orientación (ImageOrientationPatient). En autoPET los frames vienen con las filas
+    recorridas en sentido contrario al PET (orientación 1,0,0,0,-1,0 frente a 1,0,0,0,1,0),
+    así que no basta con apilarlos: hay que ubicar físicamente las dos esquinas de cada
+    frame en la grilla de referencia y voltear filas o columnas cuando corresponda. Si se
+    ignora, la máscara queda reflejada y cae fuera de las lesiones.
     """
     import pydicom
 
@@ -86,20 +101,37 @@ def seg_to_mask(seg_file: str | Path, ref: sitk.Image) -> sitk.Image:
         frames = frames[None]
     rows, cols = int(ds.Rows), int(ds.Columns)
     size = ref.GetSize()  # (x, y, z)
-    if (cols, rows) != (size[0], size[1]):
-        raise ValueError(f"SEG {cols}x{rows} no coincide con la grilla de referencia {size[:2]}")
-
     mask = np.zeros((size[2], size[1], size[0]), dtype=np.uint8)
-    pffg = ds.PerFrameFunctionalGroupsSequence
     n_out = 0
-    for k, fg in enumerate(pffg):
-        ipp = [float(v) for v in fg.PlanePositionSequence[0].ImagePositionPatient]
-        idx = ref.TransformPhysicalPointToIndex(ipp)
-        z = int(idx[2])
-        if 0 <= z < size[2]:
-            mask[z] |= frames[k].astype(np.uint8)
-        else:
+    for k, fg in enumerate(ds.PerFrameFunctionalGroupsSequence):
+        ipp = np.array([float(v) for v in fg.PlanePositionSequence[0].ImagePositionPatient])
+        col_dir, row_dir, row_sp, col_sp = _frame_geometry(ds, fg)
+        # esquinas físicas: primer píxel y último píxel del frame
+        p_first = ipp
+        p_last = ipp + row_dir * row_sp * (rows - 1) + col_dir * col_sp * (cols - 1)
+        i_first = np.array(ref.TransformPhysicalPointToContinuousIndex([float(v) for v in p_first]))
+        i_last = np.array(ref.TransformPhysicalPointToContinuousIndex([float(v) for v in p_last]))
+        z = int(round(i_first[2]))
+        if not (0 <= z < size[2]):
             n_out += 1
+            continue
+        frame = frames[k].astype(np.uint8)
+        # si el último píxel queda "antes" que el primero en un eje, el frame va reflejado
+        if i_last[1] < i_first[1]:
+            frame = frame[::-1, :]
+        if i_last[0] < i_first[0]:
+            frame = frame[:, ::-1]
+        y0 = int(round(min(i_first[1], i_last[1])))
+        x0 = int(round(min(i_first[0], i_last[0])))
+        if (y0, x0) != (0, 0) or (rows, cols) != (size[1], size[0]):
+            # frame desplazado o de otro tamaño: se pega donde corresponde, recortando bordes
+            ys = slice(max(y0, 0), min(y0 + rows, size[1]))
+            xs = slice(max(x0, 0), min(x0 + cols, size[0]))
+            fy = slice(ys.start - y0, ys.stop - y0)
+            fx = slice(xs.start - x0, xs.stop - x0)
+            mask[z, ys, xs] |= frame[fy, fx]
+        else:
+            mask[z] |= frame
     if n_out:
         print(f"[seg_to_mask] aviso: {n_out} frames fuera de la grilla de referencia")
     out = sitk.GetImageFromArray(mask)

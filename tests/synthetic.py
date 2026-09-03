@@ -97,8 +97,13 @@ def _pet_tags(ds):
     ds.RadiopharmaceuticalInformationSequence = Sequence([rps])
 
 
-def write_seg(out: Path, mask: np.ndarray, sp, study_uid, series_uid):
-    """Escribe un DICOM SEG binario mínimo (un frame por corte con lesión)."""
+def write_seg(out: Path, mask: np.ndarray, sp, study_uid, series_uid, flip_rows: bool = True):
+    """Escribe un DICOM SEG binario mínimo (un frame por corte con lesión).
+
+    Con `flip_rows=True` imita a autoPET: las filas del frame se recorren en sentido
+    contrario al PET (ImageOrientationPatient 1,0,0,0,-1,0) y la posición del frame es
+    la de la última fila del PET. Un conversor que ignore la orientación pega la máscara
+    reflejada."""
     out.mkdir(parents=True, exist_ok=True)
     ds = _base_ds(out / "SEG.dcm", "SEG", "1.2.840.10008.5.1.4.1.1.66.4")
     ds.StudyInstanceUID, ds.SeriesInstanceUID = study_uid, series_uid
@@ -110,20 +115,27 @@ def write_seg(out: Path, mask: np.ndarray, sp, study_uid, series_uid):
     # deliberadamente en orden inverso, para probar que se usa la posición y no el índice
     frames = [k for k in range(mask.shape[0]) if mask[k].any()][::-1]
     ds.NumberOfFrames = len(frames)
+    shared = Dataset()
+    po = Dataset(); po.ImageOrientationPatient = [1, 0, 0, 0, -1, 0] if flip_rows else [1, 0, 0, 0, 1, 0]
+    pm = Dataset(); pm.PixelSpacing = [sp[1], sp[2]]; pm.SliceThickness = sp[0]
+    shared.PlaneOrientationSequence = Sequence([po]); shared.PixelMeasuresSequence = Sequence([pm])
+    ds.SharedFunctionalGroupsSequence = Sequence([shared])
+    y_first = ORIGIN[1] + (mask.shape[1] - 1) * sp[1] if flip_rows else ORIGIN[1]
     pffg = []
     for k in frames:
         fg = Dataset()
         pp = Dataset()
-        pp.ImagePositionPatient = [ORIGIN[0], ORIGIN[1], ORIGIN[2] + k * sp[0]]
+        pp.ImagePositionPatient = [ORIGIN[0], y_first, ORIGIN[2] + k * sp[0]]
         fg.PlanePositionSequence = Sequence([pp])
         pffg.append(fg)
     ds.PerFrameFunctionalGroupsSequence = Sequence(pffg)
-    bits = np.stack([mask[k] for k in frames]).astype(np.uint8)
+    planos = [mask[k][::-1, :] if flip_rows else mask[k] for k in frames]
+    bits = np.stack(planos).astype(np.uint8)
     ds.PixelData = np.packbits(bits.reshape(-1), bitorder="little").tobytes()
     ds.save_as(str(ds.filename), enforce_file_format=True)
 
 
-def make_phantom(root: Path) -> dict:
+def make_phantom(root: Path, seg_flip_rows: bool = True) -> dict:
     """Crea root/CT, root/PT, root/SEG. Devuelve las verdades para los tests."""
     study_uid = generate_uid()
     body_ct = _body_mask(CT_SHAPE, CT_SP)
@@ -139,5 +151,5 @@ def make_phantom(root: Path) -> dict:
     pet[les_pet] = 8.0 / f           # SUV 8 en la lesión
     write_series(root / "PT", "PT", pet, PET_SP, study_uid, generate_uid(),
                  slope=max(pet.max() / 30000.0, 1e-9), intercept=0.0, extra=_pet_tags)
-    write_seg(root / "SEG", les_pet, PET_SP, study_uid, generate_uid())
+    write_seg(root / "SEG", les_pet, PET_SP, study_uid, generate_uid(), flip_rows=seg_flip_rows)
     return {"lesion_pet": les_pet, "body_pet": body_pet, "suv_factor": f}

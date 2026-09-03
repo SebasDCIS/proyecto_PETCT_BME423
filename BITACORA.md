@@ -121,3 +121,49 @@ nuevas, anonimizadas), así que el cruce con nuestros pacientes se hace por API 
 `scripts/02 --tcia-manifest`.
 
 Pendiente: `scripts/02 --limit 3 --descargar` en el Mac y revisar los tres estudios.
+
+## 2026-09-04. Primeros tres pacientes reales: un error encontrado y el primer número del informe
+
+**Descarga.** `scripts/02 --tcia-manifest --limit 3 --descargar` funcionó a la primera:
+el cruce con el manifiesto defaced devolvió 9 series (3 CT, 3 PT, 3 SEG) y `tcia_utils`
+bajó 1,1 GB en unos tres minutos. Los StudyInstanceUID de la versión defaced son los
+mismos del CSV clínico; solo cambian los SeriesInstanceUID. Los tres PET son Siemens,
+`Units = BQML`, `DecayCorrection = START`, con peso registrado (61 a 84 kg): el cálculo
+de SUV se aplica sin excepciones. Tamaños: PET 400 × 400 × 284 a 2,04 × 2,04 × 3 mm; CT
+512 × 512 × 340 a 852 cortes de 0,76 a 0,87 mm.
+
+**Error encontrado y corregido.** La primera conversión dejó las máscaras SEG en el
+lugar equivocado: el SUV medio dentro de la "lesión" era 0,9, es decir, fondo. La causa:
+autoPET guarda los frames del DICOM SEG con las filas recorridas al revés que el PET
+(`ImageOrientationPatient` 1,0,0,0,−1,0 contra 1,0,0,0,1,0), y el conversor apilaba
+los frames sin mirar la orientación. `seg_to_mask` ahora ubica físicamente las dos
+esquinas de cada frame en la grilla del PET y voltea filas o columnas cuando hace
+falta. El fantoma sintético imita ese caso desde ahora y una prueba nueva exige que la
+máscara salga igual con las dos orientaciones (19 pruebas). Tras la corrección, el SUV
+medio en las lesiones es 3,3 a 4,3 y el 62 a 68 % de sus vóxeles supera 2,5, con
+SUVmax de 11 a 20 (distinto del máximo global de cada estudio, que es la vejiga).
+Lección para la defensa: un Dice de 1,0 en el fantoma no protege de un supuesto
+equivocado sobre los datos reales; la validación con datos reales fue la que lo
+descubrió.
+
+**Preprocesamiento.** A 3 mm y recortado al cuerpo, cada paciente queda en
+284 × 120 × 135 vóxeles aproximadamente y 10 MB en disco; los tres tardaron 6 s.
+Lesiones anotadas: 184, 118 y 36 mL.
+
+**Referencia clásica, primera tabla (3 pacientes, todos cáncer de pulmón):**
+
+| variante | Dice | FPV (mL) | FNV (mL) |
+|---|---|---|---|
+| umbral 2,5 + apertura + tamaño mínimo | 0,126 | 823 | 0,8 |
+| + exclusión heurística de órganos | 0,025 | 644 | 47,9 |
+
+La exclusión heurística baja los falsos positivos pero borra lesiones reales: en
+PETCT_04606080a0 una lesión pélvica de 106 mL con SUVmax 20 fue tomada por "vejiga"
+(la regla usa posición baja + SUV ≥ 10). Decisión: la heurística no va en la
+referencia clásica del informe; `scripts/05` reporta las dos variantes mientras tanto, y
+la exclusión anatómica se hará con máscaras del CT (TotalSegmentator) cuando estén los
+250 estudios. Figura: `docs/figuras/paso2_referencia_clasica_3_pacientes.png` (MIP
+coronal con lesiones anotadas, umbral, órganos heurísticos y resultado).
+
+**Pendiente.** Descarga completa (248 estudios más, ~110 GB); `scripts/03`, `04`, `05`
+sobre todos; TotalSegmentator sobre el CT a 3 mm (medir tiempo por estudio en el Mac).

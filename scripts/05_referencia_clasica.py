@@ -34,16 +34,21 @@ def main():
         vol = load_study(f)
         ml = float(np.prod(vol["spacing"]) / 1000.0)
         suv = vol["suv"] * vol["suv_top"]
-        pred = classical_segmentation(suv, vol["body"], ml, cfg["umbral_suv"],
-                                      cfg["apertura_radio_vox"], cfg["volumen_min_ml"])
-        m = evaluate_study(pred, vol["seg"], suv, ml)
-        m["estudio"] = f.stem
-        rows.append(m)
-        print(f"{f.stem[:30]:30s} dice={m['dice']:.3f} FPV={m['fpv_ml']:.1f} FNV={m['fnv_ml']:.1f}")
+        # dos variantes: solo umbral + morfología, y con la exclusión heurística de órganos.
+        # Se reportan las dos porque la heurística puede borrar lesiones reales (ver bitácora).
+        for variante, heur in (("umbral+morfologia", False), ("con_exclusion_heuristica", True)):
+            pred = classical_segmentation(suv, vol["body"], ml, cfg["umbral_suv"],
+                                          cfg["apertura_radio_vox"], cfg["volumen_min_ml"],
+                                          use_heuristics=heur)
+            m = evaluate_study(pred, vol["seg"], suv, ml)
+            m["estudio"], m["variante"] = f.stem[:16], variante
+            rows.append(m)
+            print(f"{f.stem[:16]} {variante:26s} dice={m['dice']:.3f} FPV={m['fpv_ml']:7.1f} FNV={m['fnv_ml']:6.1f}")
     df = pd.DataFrame(rows)
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(a.out, index=False)
-    print("\nPromedios:", df[["dice", "fpv_ml", "fnv_ml"]].mean(numeric_only=True).round(3).to_dict())
+    print("\nPromedios por variante:")
+    print(df.groupby("variante")[["dice", "fpv_ml", "fnv_ml"]].mean().round(3).to_string())
 
 
 if __name__ == "__main__":

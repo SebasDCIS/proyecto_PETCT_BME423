@@ -85,3 +85,16 @@ def test_seg_coincide_con_lesion(phantom):
     inter = (seg & truth["lesion_pet"]).sum()
     dice = 2 * inter / (seg.sum() + truth["lesion_pet"].sum())
     assert dice > 0.999, f"Dice SEG vs verdad = {dice:.4f}"
+
+
+def test_seg_orientacion_normal_e_invertida(tmp_path):
+    """La máscara debe ser la misma con filas normales y con filas invertidas (autoPET)."""
+    res = {}
+    for flip in (False, True):
+        root = tmp_path / f"flip_{flip}"
+        truth = synthetic.make_phantom(root, seg_flip_rows=flip)
+        out = convert_study(root, root / "nifti")
+        seg = sitk.GetArrayFromImage(sitk.ReadImage(str(out["SEG"]))).astype(bool)
+        inter = (seg & truth["lesion_pet"]).sum()
+        res[flip] = 2 * inter / (seg.sum() + truth["lesion_pet"].sum())
+    assert res[False] > 0.999 and res[True] > 0.999, res
