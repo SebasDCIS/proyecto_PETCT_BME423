@@ -104,3 +104,20 @@ descarga solo si se pide `--descargar`. Así hay dos caminos para bajar: `tcia_u
 desde el script, o el NBIA Data Retriever abriendo el manifiesto reducido. Los archivos
 de entrada se dejan en `data/manifests/`; los DICOM van a `data/raw/`. Prueba nueva:
 lectura y escritura de manifiestos `.tcia` (18 pruebas en total).
+
+## 2026-09-04. Datos verificados y subconjunto elegido
+
+Los dos archivos de TCIA quedaron en `data/manifests/` (`clinical_tcia.csv`,
+`FDG-PET-CT-Lesions_defaced.tcia`). El CSV clínico trae una fila por serie (3 042 filas:
+1 014 CT, 1 014 PT, 1 014 SEG) de 900 pacientes; hay pacientes con hasta 5 estudios.
+Diagnósticos por estudio: 513 negativos, 188 melanoma, 168 pulmón, 145 linfoma, igual
+que el artículo del dataset. La colección completa pesa 409 GB según el propio CSV.
+
+`scripts/01` con semilla 423 eligió 251 estudios de 251 pacientes distintos (67 por
+diagnóstico positivo + 50 negativos; un estudio por paciente): 176 train, 26 val, 49
+test. Esos 251 estudios suman 110 GB en DICOM (CT 81 GB, PT 27 GB, SEG 1,7 GB). El
+manifiesto de la versión defaced tiene 3 042 UIDs, distintos de los del CSV (son series
+nuevas, anonimizadas), así que el cruce con nuestros pacientes se hace por API con
+`scripts/02 --tcia-manifest`.
+
+Pendiente: `scripts/02 --limit 3 --descargar` en el Mac y revisar los tres estudios.
