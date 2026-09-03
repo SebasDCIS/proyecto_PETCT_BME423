@@ -1,0 +1,27 @@
+# Datos: nunca al repositorio (la rúbrica lo prohíbe y pesan cientos de GB)
+data/raw/*
+data/interim/*
+data/processed/*
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+tciaDownload/
+*.nii
+*.nii.gz
+*.dcm
+
+# Modelos y corridas
+runs/
+checkpoints/
+*.pt
+*.pth
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+
+# Sistema
+.DS_Store

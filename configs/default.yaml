@@ -1,0 +1,38 @@
+# Configuración central del proyecto. Todo script lee de aquí para que
+# "cambiar un número" ocurra en un solo lugar y quede en el historial de git.
+
+proyecto: "Segmentación de lesiones FDG-PET/CT — fusión temprana vs intermedia con atención cruzada"
+semilla: 423
+
+datos:
+  coleccion_tcia: "FDG-PET-CT-Lesions"
+  n_positivos: 200
+  n_negativos: 50
+  particion: [0.7, 0.1, 0.2]     # train / val / test, por paciente
+  raw: "data/raw"
+  nifti: "data/interim/nifti"
+  procesado: "data/processed"
+
+preprocesamiento:
+  espaciado_mm: [3.0, 3.0, 3.0]  # isotrópico; la propuesta declara 3 mm por cómputo
+  ventana_hu: [-200, 300]        # tejido blando → [0, 1]
+  suv_clip: [0, 30]              # SUV → [0, 1] con tope 30 (evita que la vejiga domine)
+  parche: [96, 96, 96]
+  prob_parche_con_lesion: 0.7    # muestreo sesgado a lesiones
+
+referencia_clasica:
+  umbral_suv: 2.5
+  apertura_radio_vox: 1
+  volumen_min_ml: 0.5
+
+entrenamiento:
+  iteraciones: 25000
+  lote: 2
+  lr: 3.0e-4
+  precision_mixta: true
+  checkpoint_cada: 500          # iteraciones; imprescindible en Colab
+
+evaluacion:
+  metricas: [dice, hd95, fpv_ml, fnv_ml, mtv_error_ml, suvmax_error]
+  organos_fisiologicos: [encefalo, miocardio, rinones_vejiga, higado, grasa_parda]
+  bootstrap: 1000

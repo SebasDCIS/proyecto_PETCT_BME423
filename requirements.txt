@@ -1,0 +1,17 @@
+# Entorno base (CPU). Python 3.10–3.12.
+numpy>=1.26
+scipy>=1.11
+pandas>=2.0
+pyyaml>=6.0
+pydicom>=2.4
+SimpleITK>=2.3
+nibabel>=5.0
+scikit-image>=0.22
+matplotlib>=3.8
+tqdm>=4.66
+pytest>=8.0
+# Descarga desde TCIA (solo en el computador con red):
+tcia_utils>=2.0
+# Aprendizaje profundo (Paso 3 en adelante; en Colab ya vienen torch y CUDA):
+# torch>=2.2
+# monai>=1.3
