@@ -233,3 +233,9 @@ por `tcia_utils` trae un archivo `LICENSE` junto a los DICOM, así que todo lect
 carpetas ahora salta lo que no sea DICOM; y la posición de los frames del SEG confirma
 la orientación invertida: su y es 237,2 mm, exactamente el origen del PET (−575,3) más
 399 filas por 2,036 mm, es decir, la última fila del PET.
+
+## 2026-09-04. Los cuadernos ahora los narro yo
+
+Reescribí las celdas de texto de los cuatro cuadernos en primera persona: explico qué
+hago y por qué, como lo contaría en la defensa, en vez de instrucciones dirigidas a mí.
+Los tres cuadernos con datos quedaron ejecutados con los tres pacientes reales.
