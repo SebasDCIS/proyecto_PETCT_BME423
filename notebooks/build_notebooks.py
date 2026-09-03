@@ -321,7 +321,9 @@ apertura morfológica, tamaño mínimo y exclusión anatómica. Los tres primero
 un físico médico habría hecho hace veinte años. El cuarto es el que decide el resultado y
 depende de tener máscaras de órganos; mientras no las tengamos, dos reglas provisionales
 buscan el encéfalo (la componente caliente grande más alta) y la vejiga (la componente
-muy intensa más baja)."""),
+muy intensa más baja). Un detalle que importa: en este fantoma la cabeza está en el
+índice 0 del arreglo; en los NIfTI de autoPET está al final, porque en DICOM la
+coordenada z crece hacia la cabeza. Por eso las funciones reciben `head_at_end`."""),
 ("code", """def paciente_sintetico():
     Z, Y, X = 200, 100, 100                     # 60 x 30 x 30 cm a 3 mm
     zz, yy, xx = np.mgrid[:Z, :Y, :X]
@@ -342,7 +344,7 @@ print(f"lesiones anotadas: {seg_p.sum()*ML:.1f} mL")
 etapas = {}
 etapas["1 umbral 2,5"] = threshold_suv(suv_p) & body_p
 etapas["2+3 apertura y tamaño"] = clean_mask(etapas["1 umbral 2,5"], 1, 0.5, ML)
-etapas["4 exclusión anatómica"] = classical_segmentation(suv_p, body_p, ML)
+etapas["4 exclusión anatómica"] = classical_segmentation(suv_p, body_p, ML, head_at_end=False)
 for nombre, m in etapas.items():
     r = evaluate_study(m, seg_p, suv_p, ML)
     print(f"{nombre:26s} Dice={r['dice']:.3f}  FPV={r['fpv_ml']:7.1f} mL  FNV={r['fnv_ml']:.1f} mL  MTV pred={r['mtv_pred_ml']:.1f} mL")"""),
@@ -352,7 +354,7 @@ porque esos órganos son grandes y compactos. Solo la exclusión anatómica baja
 cero. Esa es la hipótesis del proyecto entero, dicha con reglas fijas: la anatomía es lo
 que separa captación fisiológica de patológica. Los modelos B y C intentan que la red
 aprenda esa regla sola a partir del CT."""),
-("code", """organos = heuristic_organ_masks(suv_p, body_p, ML)
+("code", """organos = heuristic_organ_masks(suv_p, body_p, ML, head_at_end=False)
 mip = suv_p.max(axis=1)
 fig, ax = plt.subplots(1, 3, figsize=(10, 6))
 ax[0].imshow(mip, cmap="gray_r", vmin=0, vmax=8, aspect="auto"); ax[0].set_title("MIP SUV")
@@ -377,7 +379,7 @@ if proc:
     filas = []
     for f in proc:
         v = load_study(f); suv_r = v["suv"] * v["suv_top"]
-        pred = classical_segmentation(suv_r, v["body"], ML)
+        pred = classical_segmentation(suv_r, v["body"], ML, head_at_end=v["head_at_end"])
         r = evaluate_study(pred, v["seg"], suv_r, ML); r["estudio"] = f.stem[:20]; filas.append(r)
     df = pd.DataFrame(filas).set_index("estudio")
     display(df.round(2))

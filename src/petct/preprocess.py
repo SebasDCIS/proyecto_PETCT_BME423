@@ -115,6 +115,9 @@ def preprocess_study(nifti_dir: str | Path, out_file: str | Path, spacing=(3.0, 
         origin=np.array(suv_img.GetOrigin(), dtype=np.float64),
         bbox=np.array([[s.start, s.stop] for s in box], dtype=np.int32),
         shape_resampled=np.array(suv_img.GetSize()[::-1], dtype=np.int32),
+        # En DICOM (sistema LPS) z crece hacia la cabeza. Si la dirección z es +1, el
+        # índice 0 del arreglo es el corte más inferior y la cabeza queda al FINAL.
+        head_at_end=np.bool_(suv_img.GetDirection()[8] > 0),
     )
     return {"shape": suv.shape, "lesion_voxels": int(seg.sum()),
             "ml_per_voxel": float(np.prod(spacing) / 1000.0)}
@@ -125,7 +128,8 @@ def load_study(npz_file: str | Path) -> Dict[str, np.ndarray]:
     d = np.load(npz_file)
     return {"suv": d["suv"].astype(np.float32), "ct": d["ct"].astype(np.float32),
             "seg": d["seg"].astype(np.uint8), "body": d["body"].astype(bool),
-            "suv_top": float(d["suv_top"]), "spacing": d["spacing"].astype(float)}
+            "suv_top": float(d["suv_top"]), "spacing": d["spacing"].astype(float),
+            "head_at_end": bool(d["head_at_end"]) if "head_at_end" in d else True}
 
 
 # ---------------------------------------------------------------- parches

@@ -167,3 +167,40 @@ coronal con lesiones anotadas, umbral, órganos heurísticos y resultado).
 
 **Pendiente.** Descarga completa (248 estudios más, ~110 GB); `scripts/03`, `04`, `05`
 sobre todos; TotalSegmentator sobre el CT a 3 mm (medir tiempo por estudio en el Mac).
+
+## 2026-09-04. Corrección: la cabeza está al final del arreglo
+
+Sebastián notó que en la figura de los tres pacientes la vejiga aparecía arriba y la
+cabeza "cortada" abajo. Tenía razón en lo primero: la figura estaba al revés. En los
+NIfTI convertidos, el índice 0 del eje z es el corte más inferior (en DICOM la
+coordenada z crece hacia la cabeza y la dirección del volumen es +1), así que la cabeza
+queda al FINAL del arreglo. Las reglas heurísticas suponían lo contrario y por eso
+la vejiga había sido etiquetada como "encéfalo" y una lesión mediastínica como
+"vejiga". Lo que ayer se describió como "lesión pélvica de 106 mL" es una lesión
+torácica, coherente con el diagnóstico de cáncer de pulmón de los tres pacientes.
+
+Cambios: `preprocess_study` guarda `head_at_end` en el `.npz`; `heuristic_organ_masks`
+y `classical_segmentation` reciben esa orientación; las figuras se dibujan con la
+cabeza arriba; dos pruebas nuevas verifican las heurísticas con la cabeza al principio
+y al final (21 pruebas). Regla para el resto del proyecto: nunca suponer orientación,
+leerla de la geometría.
+
+Sobre la "cabeza cortada": no es un error nuestro. La versión *defaced* de autoPET
+borra un bloque rectangular que cubre toda la cabeza (PET y CT en cero), no solo el
+rostro. Consecuencias: (1) no existe captación cerebral en estos datos, así que el
+encéfalo sale de la lista de órganos fisiológicos del análisis de falsos positivos;
+(2) las lesiones de cabeza y cuello altas, si las había, no están; (3) el recorte al
+cuerpo y la máscara corporal funcionan igual porque el bloque queda en aire. Queda
+declarado como limitación del dataset en el informe.
+
+Tabla corregida de la referencia clásica (3 pacientes):
+
+| variante | Dice | FPV (mL) | FNV (mL) |
+|---|---|---|---|
+| umbral 2,5 + apertura + tamaño mínimo | 0,126 | 823 | 0,8 |
+| + exclusión heurística (orientación corregida) | 0,326 | 217 | 18,6 |
+
+La heurística ahora ayuda (Dice de 0,13 a 0,33, FPV de 823 a 217 mL), pero en
+PETCT_0117d7f11f la "vejiga" resultó ser una componente de 1,9 L que une hígado,
+riñones y vejiga con SUV ≥ 2,5 y se llevó una lesión hiliar (FNV 56 mL). Se mantiene
+la decisión: las máscaras de órganos definitivas saldrán del CT (TotalSegmentator).

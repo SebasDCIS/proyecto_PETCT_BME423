@@ -39,7 +39,7 @@ def main():
         for variante, heur in (("umbral+morfologia", False), ("con_exclusion_heuristica", True)):
             pred = classical_segmentation(suv, vol["body"], ml, cfg["umbral_suv"],
                                           cfg["apertura_radio_vox"], cfg["volumen_min_ml"],
-                                          use_heuristics=heur)
+                                          use_heuristics=heur, head_at_end=vol["head_at_end"])
             m = evaluate_study(pred, vol["seg"], suv, ml)
             m["estudio"], m["variante"] = f.stem[:16], variante
             rows.append(m)

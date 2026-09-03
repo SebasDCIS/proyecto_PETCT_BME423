@@ -13,7 +13,7 @@ from petct.convert import convert_study  # noqa: E402
 from petct.preprocess import (load_study, preprocess_study, sample_patch,  # noqa: E402
                               scale_suv, window_ct)
 from petct.metrics import dice, evaluate_study, false_negative_volume, false_positive_volume  # noqa: E402
-from petct.classical import classical_segmentation, clean_mask  # noqa: E402
+from petct.classical import classical_segmentation, clean_mask, heuristic_organ_masks  # noqa: E402
 import synthetic  # noqa: E402
 
 
@@ -101,3 +101,27 @@ def test_limpieza_elimina_puntos():
     mask[15, 15, 15] = True           # punto suelto
     out = clean_mask(mask, open_radius=1, min_ml=0.5, ml_per_voxel=0.027)
     assert out[8, 8, 8] and not out[15, 15, 15]
+
+
+def _paciente(head_at_end):
+    """Cilindro con 'encéfalo' grande y 'vejiga' intensa; la cabeza al principio o al final."""
+    Z, Y, X = 200, 60, 60
+    zz, yy, xx = np.mgrid[:Z, :Y, :X]
+    body = ((yy - 30) / 27) ** 2 + ((xx - 30) / 27) ** 2 <= 1
+    suv = np.where(body, 1.0, 0.0)
+    z_head, z_bladder = (185, 30) if head_at_end else (15, 170)
+    brain = (zz - z_head) ** 2 + (yy - 30) ** 2 + (xx - 30) ** 2 <= 14 ** 2
+    bladder = (zz - z_bladder) ** 2 + (yy - 30) ** 2 + (xx - 30) ** 2 <= 8 ** 2
+    suv[brain] = 7.0
+    suv[bladder] = 25.0
+    return suv, body, brain, bladder
+
+
+@pytest.mark.parametrize("head_at_end", [True, False])
+def test_heuristicas_respetan_orientacion(head_at_end):
+    suv, body, brain, bladder = _paciente(head_at_end)
+    org = heuristic_organ_masks(suv, body, 0.027, head_at_end=head_at_end)
+    assert "encefalo" in org and "vejiga" in org, org.keys()
+    assert (org["encefalo"] & brain).sum() / brain.sum() > 0.95
+    assert (org["vejiga"] & bladder).sum() / bladder.sum() > 0.95
+    assert not (org["encefalo"] & bladder).any()
