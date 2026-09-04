@@ -55,12 +55,31 @@ def main():
         for fut in as_completed([ex.submit(_uno, t) for t in tareas]):
             r = fut.result(); rows.append(r)
             print(("[error] " if r["error"] else "[ok] ") + r["patient_id"] + (f" {r['shape']} lesión {r['lesion_ml']:.1f} mL" if not r["error"] else " " + r["error"]), flush=True)
-    if rows:
-        tabla = Path("data/manifests/procesados.csv")
-        prev = pd.read_csv(tabla) if tabla.exists() else pd.DataFrame()
-        df = pd.concat([prev, pd.DataFrame(rows)], ignore_index=True).drop_duplicates(["patient_id", "study_uid"], keep="last")
-        df.to_csv(tabla, index=False)
-        print(f"{len(rows)} estudios procesados ahora; tabla en {tabla} ({len(df)} filas)")
+    # La tabla resumen se reconstruye siempre desde los .npz que existen, así refleja la
+    # colección completa aunque el preprocesamiento se haya hecho en varias corridas (o
+    # en dos máquinas, como pasó con los 19 estudios grandes).
+    tabla = Path("data/manifests/procesados.csv")
+    df = tabla_desde_npz(Path(a.out))
+    df.to_csv(tabla, index=False)
+    print(f"{len(rows)} estudios procesados ahora; tabla en {tabla} ({len(df)} filas)")
+
+
+def tabla_desde_npz(out_dir: Path) -> pd.DataFrame:
+    """Una fila por .npz: paciente, estudio, forma, vóxeles y mL de lesión."""
+    import numpy as np
+    filas = []
+    for f in sorted(out_dir.glob("*.npz")):
+        if f.name.endswith(".tmp.npz"):
+            continue
+        pid, study = f.stem.split("__", 1)
+        d = np.load(f)                       # carga perezosa: solo se leen seg y spacing
+        seg = d["seg"]
+        ml_vox = float(np.prod(d["spacing"])) / 1000.0
+        filas.append({"patient_id": pid, "study_uid": study, "archivo": f.name,
+                      "shape": str(tuple(int(s) for s in seg.shape)),
+                      "lesion_voxels": int(seg.sum()), "lesion_ml": float(seg.sum()) * ml_vox,
+                      "head_at_end": bool(d["head_at_end"]) if "head_at_end" in d else True})
+    return pd.DataFrame(filas)
 
 
 if __name__ == "__main__":

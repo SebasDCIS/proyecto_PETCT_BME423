@@ -287,3 +287,44 @@ problema de la captación fisiológica, dicho en mililitros. La heurística baja
 
 **Pendiente.** Convertir los 19 estudios grandes en el Mac y rehacer 04 y 05 para
 incluirlos (los scripts saltan lo ya hecho). Re-ejecutar los cuadernos con los 251.
+
+## 2026-09-05. Colección completa: 251 estudios convertidos, preprocesados y medidos
+
+Los 19 estudios grandes (CT de 1 208 a 2 471 cortes) se convirtieron en el Mac sin
+errores en una sola corrida de `03 → 04 → 05 → 06` (los scripts saltaron lo ya hecho).
+Totales: 251 NIfTI (69 GB), 251 `.npz` (3,0 GB; forma mediana 316 × 126 × 147, mínima
+200 × 83 × 123, máxima 659 × 156 × 171), 502 series medidas. En los 251 `head_at_end`
+es verdadero (índice 0 = corte inferior). `scripts/04` ahora reconstruye
+`procesados.csv` desde los `.npz` existentes en cada corrida, porque la tabla anterior
+solo guardaba lo procesado en la última máquina.
+
+**Referencia clásica, 251 estudios (201 positivos, 50 negativos).** Dice promediado solo
+sobre positivos. Los números cambian poco respecto de los 232: la colección completa
+confirma lo que decía la parcial.
+
+| variante | Dice (positivos) media / mediana | FPV media (mL) | FNV media (mL) | FPV en negativos (mL) |
+|---|---|---|---|---|
+| umbral 2,5 + apertura + tamaño mínimo | 0,179 / 0,100 | 952 | 7,6 | 1 009 |
+| + exclusión heurística | 0,205 / 0,119 | 726 | 24,6 | 738 |
+
+Por diagnóstico (umbral + morfología, 67 estudios cada uno): linfoma Dice 0,25 (MTV
+medio 315 mL), pulmón 0,18 (225 mL), melanoma 0,11 (123 mL, lesiones chicas y
+dispersas; FPV más alto, 1 104 mL, porque muchos son de cuerpo entero). Por partición:
+entrenamiento 0,18 (141 positivos), validación 0,17 (21), prueba 0,18 (39): las tres
+particiones se parecen, que es lo que se quiere de un sorteo estratificado. MTV anotado
+medio 221 mL, mediana 94. La heurística se descarta (baja el FPV un 24 % pero triplica
+el FNV); las máscaras de órganos vendrán del CT.
+
+**Los 19 estudios largos y la comparación.** Pregunta que salió hoy: si algunos estudios
+son de cuerpo entero hasta los pies y el resto de ojos a muslos, ¿no contamina eso la
+comparación? No: los tres modelos verán exactamente los mismos estudios, con la misma
+partición y el mismo preprocesamiento, así que la heterogeneidad les afecta por igual y
+no sesga la diferencia entre ellos, que es lo que se mide. La red entrena con parches de
+96³, no con el volumen completo, y en inferencia la ventana deslizante recorre lo que
+haya. Lo que sí cambia es el nivel absoluto: un cuerpo de 2 m tiene más tejido donde
+inventar falsos positivos, por eso las métricas se reportarán también por diagnóstico y,
+si hace falta, por protocolo. Sacarlos sería peor: son en buena parte melanomas, y
+meterían un sesgo de selección.
+
+**Pendiente.** Re-ejecutar los cuadernos 01b y 02 con los 251 (`jupyter nbconvert
+--execute --inplace`). Paso 3 empieza ahora: modelo A.
