@@ -31,7 +31,9 @@ def main():
         series = series[series.StudyInstanceUID.astype(str).isin(elegidos)]
     out = Path(a.out); out.parent.mkdir(parents=True, exist_ok=True)
     prev = pd.read_csv(out) if out.exists() else pd.DataFrame(columns=["series_uid"])
-    hechas = set(prev["series_uid"]) if len(prev) else set()
+    if "series_uid" not in prev.columns:      # tabla de una versión anterior: se rehace
+        prev = pd.DataFrame(columns=["series_uid"])
+    hechas = set(prev["series_uid"].astype(str)) if len(prev) else set()
     rows = []
     pend = series[series.Modality.isin(["CT", "PT"]) & ~series.SeriesInstanceUID.astype(str).isin(hechas)]
     print(f"ya medidas: {len(hechas)} | pendientes: {len(pend)}", flush=True)

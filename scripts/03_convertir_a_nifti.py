@@ -44,7 +44,9 @@ def main():
     ap.add_argument("--out", default="data/interim/nifti")
     ap.add_argument("--manifest", default="data/manifests/subconjunto.csv",
                     help="solo convierte los estudios elegidos (uno por paciente); '' para convertir todo")
-    ap.add_argument("--workers", type=int, default=3, help="procesos en paralelo")
+    ap.add_argument("--workers", type=int, default=1, help="procesos en paralelo (1 si la RAM es escasa)")
+    ap.add_argument("--max-ct-slices", type=int, default=0,
+                    help="posponer estudios cuyo CT tiene más cortes que este valor (0 = sin límite)")
     a = ap.parse_args()
 
     series = pd.read_csv(a.series_csv)
@@ -55,16 +57,23 @@ def main():
         series = series[series.StudyInstanceUID.astype(str).isin(elegidos)]
         print(f"{series.StudyInstanceUID.nunique()} estudios del subconjunto")
     raw = Path(a.raw)
-    pendientes = []
+    pendientes, pospuestos = [], []
     ya = 0
     for (pid, study_uid), grp in series.groupby(["PatientID", "StudyInstanceUID"]):
         out_dir = Path(a.out) / str(pid) / str(study_uid)
         if (out_dir / "SUV.nii.gz").exists() and (out_dir / "SEG.nii.gz").exists():
             ya += 1
             continue
+        if a.max_ct_slices and "ImageCount" in grp:
+            n_ct = grp.loc[grp.Modality == "CT", "ImageCount"].max()
+            if n_ct > a.max_ct_slices:      # estudios enormes: se convierten en una máquina con más RAM
+                pospuestos.append((pid, int(n_ct)))
+                continue
         filas = [(r["Modality"], r["SeriesInstanceUID"]) for _, r in grp.iterrows()]
         pendientes.append((pid, study_uid, filas, str(raw), a.out))
-    print(f"ya convertidos: {ya} | pendientes: {len(pendientes)} | workers: {a.workers}", flush=True)
+    print(f"ya convertidos: {ya} | pendientes: {len(pendientes)} | pospuestos: {len(pospuestos)} | workers: {a.workers}", flush=True)
+    if pospuestos:
+        print("pospuestos (CT con más cortes que el límite):", pospuestos, flush=True)
 
     ok, bad = 0, []
     with ProcessPoolExecutor(max_workers=a.workers) as ex:

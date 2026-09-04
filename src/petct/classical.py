@@ -56,13 +56,13 @@ def exclude_organs(mask: np.ndarray, organ_masks: Dict[str, np.ndarray],
     organs = np.zeros_like(mask, dtype=bool)
     for m in organ_masks.values():
         organs |= m.astype(bool)
+    # fracción de cada componente que cae dentro de órganos, calculada de una vez para
+    # todas las componentes (recorrerlas una a una con labels == k es cien veces más lento)
+    idx = np.arange(1, n + 1)
+    frac = np.asarray(ndimage.mean(organs.astype(np.float32), labels, idx))
     keep = np.ones(n + 1, dtype=bool)
     keep[0] = False
-    for k in range(1, n + 1):
-        comp = labels == k
-        frac = organs[comp].mean()
-        if frac > overlap_frac:
-            keep[k] = False
+    keep[1:] = frac <= overlap_frac
     return keep[labels]
 
 
@@ -90,19 +90,19 @@ def heuristic_organ_masks(suv: np.ndarray, body: np.ndarray, ml_per_voxel: float
     zs = np.where(body.any(axis=(1, 2)))[0]
     z_top, z_bot = (zs.min(), zs.max()) if zs.size else (0, nz - 1)
     height = max(z_bot - z_top, 1)
-    best_brain = (0, None)
-    for k in range(1, n + 1):
-        comp = labels == k
-        vol_ml = comp.sum() * ml_per_voxel
-        cz = ndimage.center_of_mass(comp)[0]
-        head_idx = z_bot if head_at_end else z_top
-        rel = abs(cz - head_idx) / height  # 0 = cabeza, 1 = pies
-        if rel < 0.2 and vol_ml >= brain_min_ml and vol_ml > best_brain[0]:
-            best_brain = (vol_ml, comp)
-        if rel > 0.6 and vol_ml >= bladder_min_ml and suv[comp].max() >= bladder_suv:
-            out["vejiga"] = out.get("vejiga", np.zeros_like(comp)) | comp
-    if best_brain[1] is not None:
-        out["encefalo"] = best_brain[1]
+    idx = np.arange(1, n + 1)
+    vols_ml = np.asarray(ndimage.sum(hot, labels, idx)) * ml_per_voxel
+    cz = np.array([c[0] for c in ndimage.center_of_mass(hot, labels, idx)])
+    smax = np.asarray(ndimage.maximum(suv, labels, idx))
+    head_idx = z_bot if head_at_end else z_top
+    rel = np.abs(cz - head_idx) / height  # 0 = cabeza, 1 = pies
+    brain_cand = np.where((rel < 0.2) & (vols_ml >= brain_min_ml))[0]
+    if brain_cand.size:
+        k = brain_cand[np.argmax(vols_ml[brain_cand])]
+        out["encefalo"] = labels == (k + 1)
+    bladder_cand = np.where((rel > 0.6) & (vols_ml >= bladder_min_ml) & (smax >= bladder_suv))[0]
+    if bladder_cand.size:
+        out["vejiga"] = np.isin(labels, bladder_cand + 1)
     return out
 
 

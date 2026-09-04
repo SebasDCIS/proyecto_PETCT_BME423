@@ -37,24 +37,24 @@ def false_positive_volume(pred: np.ndarray, gt: np.ndarray, ml_per_voxel: float)
     """mL de componentes predichas sin ningún vóxel de verdad debajo."""
     pred, gt = pred.astype(bool), gt.astype(bool)
     labels, n = ndimage.label(pred, structure=_CONN26)
-    fp_vox = 0
-    for k in range(1, n + 1):
-        comp = labels == k
-        if not np.any(gt[comp]):
-            fp_vox += int(comp.sum())
-    return fp_vox * ml_per_voxel
+    if n == 0:
+        return 0.0
+    idx = np.arange(1, n + 1)
+    overlap = np.asarray(ndimage.sum(gt, labels, idx))       # vóxeles de verdad bajo cada isla
+    sizes = np.asarray(ndimage.sum(pred, labels, idx))
+    return float(sizes[overlap == 0].sum() * ml_per_voxel)
 
 
 def false_negative_volume(pred: np.ndarray, gt: np.ndarray, ml_per_voxel: float) -> float:
     """mL de lesiones anotadas que la predicción no tocó."""
     pred, gt = pred.astype(bool), gt.astype(bool)
     labels, n = ndimage.label(gt, structure=_CONN26)
-    fn_vox = 0
-    for k in range(1, n + 1):
-        comp = labels == k
-        if not np.any(pred[comp]):
-            fn_vox += int(comp.sum())
-    return fn_vox * ml_per_voxel
+    if n == 0:
+        return 0.0
+    idx = np.arange(1, n + 1)
+    overlap = np.asarray(ndimage.sum(pred, labels, idx))
+    sizes = np.asarray(ndimage.sum(gt, labels, idx))
+    return float(sizes[overlap == 0].sum() * ml_per_voxel)
 
 
 def mtv(mask: np.ndarray, ml_per_voxel: float) -> float:

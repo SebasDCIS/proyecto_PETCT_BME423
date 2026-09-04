@@ -239,3 +239,51 @@ la orientación invertida: su y es 237,2 mm, exactamente el origen del PET (−5
 Reescribí las celdas de texto de los cuatro cuadernos en primera persona: explico qué
 hago y por qué, como lo contaría en la defensa, en vez de instrucciones dirigidas a mí.
 Los tres cuadernos con datos quedaron ejecutados con los tres pacientes reales.
+
+## 2026-09-04 (noche). Colección completa descargada; 232 estudios convertidos y medidos
+
+**Descarga.** 831 series completas (verificadas archivo por archivo contra `ImageCount`),
+115 GB. Son más de 753 porque el cruce con el manifiesto trajo todos los estudios de cada
+paciente (26 pacientes tienen más de uno); el proyecto usa solo el estudio del sorteo y
+`scripts/03` filtra por `subconjunto.csv`.
+
+**Conversión.** 232 de 251 estudios convertidos sin errores. Los 19 restantes tienen CT
+de 1 208 a 2 471 cortes (cuerpo completo hasta los pies) y no caben en la memoria del
+entorno remoto; se convierten en el Mac con `python scripts/03_convertir_a_nifti.py`.
+Cambios para que esto fuera posible: escritura atómica (carpeta `.tmp` renombrada al
+final, así una corrida cortada no deja estudios a medias), compresión rápida (nivel 1:
+20 s por estudio en vez de 45, archivos algo más grandes: 60 GB en NIfTI), scripts
+04 a 06 reanudables, y las funciones por componente conexa (métricas y heurísticas)
+vectorizadas con `ndimage` (la referencia clásica pasó de 10 s a 1,3 s por estudio con
+el mismo resultado; las 25 pruebas siguen pasando).
+
+**Geometría de la colección (251 PET + 251 CT).** Todo axial puro, muestreo uniforme
+en las 502 series. PET: 400 × 400, píxel 2,036 mm siempre; 248 con cortes de 3 mm cada
+3 mm y 3 con cortes de 5 mm cada 3 mm (solape); 200 a 661 cortes; extensión 600 a
+1 983 mm (hay estudios de cuerpo entero hasta los pies). CT: 512 × 512, píxel 0,69 a
+0,98 mm; tres protocolos: 3 mm cada 2,5 mm (175), 2 mm cada 1 mm (53) y 1 mm cada
+0,7 mm (23); 240 a 2 471 cortes; relación de aspecto coronal 0,72 a 3,62. En los 251 el
+CT viene ordenado de cabeza a pies y el PET de pies a cabeza. 216 pacientes entraron de
+cabeza (HFS) y 35 de pies (FFS); no cambia nada porque las posiciones están en el sistema
+del paciente y `head_at_end` se lee de la geometría, pero hay que saber decirlo.
+
+**Preprocesamiento.** 232 `.npz`, 2,8 GB en total; forma mediana (z, y, x) 313 × 126 ×
+146 a 3 mm, máxima 659 × 156 × 171.
+
+**Referencia clásica, 232 estudios (182 positivos, 50 negativos).** Dice se promedia
+solo sobre positivos (en un negativo cualquier predicción da Dice 0 por definición, como
+en el reto).
+
+| variante | Dice (positivos) media / mediana | FPV media / mediana (mL) | FNV media (mL) |
+|---|---|---|---|
+| umbral 2,5 + apertura + tamaño mínimo | 0,178 / 0,096 | 959 / 771 | 5,7 |
+| + exclusión heurística | 0,207 / 0,113 | 731 / 518 | 15,1 |
+
+Por diagnóstico (umbral + morfología): linfoma Dice 0,28 (lesiones grandes, MTV medio
+333 mL), pulmón 0,18 (225 mL), melanoma 0,10 (107 mL, lesiones chicas y dispersas). En
+los 50 negativos el umbral marca en promedio 1 009 mL de "tumor": ese es el tamaño del
+problema de la captación fisiológica, dicho en mililitros. La heurística baja el FPV un
+24 % pero triplica el FNV: se descarta del informe final, como estaba decidido.
+
+**Pendiente.** Convertir los 19 estudios grandes en el Mac y rehacer 04 y 05 para
+incluirlos (los scripts saltan lo ya hecho). Re-ejecutar los cuadernos con los 251.
