@@ -25,9 +25,17 @@ def main():
     ap.add_argument("--raw", default="data/raw")
     ap.add_argument("--series-csv", default="data/manifests/series_tcia.csv")
     ap.add_argument("--out", default="data/interim/nifti")
+    ap.add_argument("--manifest", default="data/manifests/subconjunto.csv",
+                    help="solo convierte los estudios elegidos (uno por paciente); '' para convertir todo")
     a = ap.parse_args()
 
     series = pd.read_csv(a.series_csv)
+    if a.manifest:
+        # el cruce con el manifiesto trae TODOS los estudios de cada paciente (hay
+        # pacientes con hasta 5); el proyecto usa uno por paciente, el del sorteo
+        elegidos = set(pd.read_csv(a.manifest).study_uid.astype(str))
+        series = series[series.StudyInstanceUID.astype(str).isin(elegidos)]
+        print(f"{series.StudyInstanceUID.nunique()} estudios del subconjunto")
     raw = Path(a.raw)
     ok, bad = 0, []
     for (pid, study_uid), grp in series.groupby(["PatientID", "StudyInstanceUID"]):

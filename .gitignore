@@ -31,3 +31,7 @@ __pycache__/
 # Archivos temporales de sincronización
 _sync.zip
 _tmp/
+logs/
+
+# Apuntes personales (no se comparten)
+notas_personales/
