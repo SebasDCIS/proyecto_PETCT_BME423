@@ -54,7 +54,7 @@ def medir(dev_name: str, parche: int, lote: int, iteraciones: int, small: bool, 
             scaler.scale(loss).backward(); scaler.step(opt); scaler.update()
         else:
             loss.backward(); opt.step()
-        return float(loss)
+        return float(loss.detach())
 
     def sync():
         if device.type == "cuda":

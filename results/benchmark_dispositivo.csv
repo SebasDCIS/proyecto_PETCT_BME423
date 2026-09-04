@@ -1,0 +1,3 @@
+dispositivo,parche,lote,red,amp,parametros_M,seg_por_iter,horas_25000_it,memoria_pico
+mps,96,2,completa,False,12.9,0.587,4.1,1.1 GB
+cpu,96,2,completa,False,12.9,0.629,4.4,

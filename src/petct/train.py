@@ -64,7 +64,7 @@ class TrainConfig:
     parche: Sequence[int] = (96, 96, 96)
     prob_parche_con_lesion: float = 0.7
     semilla: int = 423
-    workers: int = 2
+    workers: int = 0                    # procesos de carga; con la caché en RAM basta 0 (cada worker tendría su propia caché)
     cache_estudios: int = 256
     small: bool = False                 # red chica para pruebas y humo
     max_minutos: Optional[float] = None  # parar con gracia (sesiones de Colab)

@@ -360,3 +360,11 @@ sin volteo cabeza-pies; caché de estudios configurable (todo en el Mac, 40–50
 el YAML gana `validar_cada` y `max_estudios_val`. Pendiente inmediato: benchmark en el
 Mac (`mps`) para decidir dónde corre el presupuesto completo, y la corrida de humo con
 datos reales.
+
+**Benchmark en el Mac (M5, 24 GB), red completa, lote 2, parches 96³, sin AMP:**
+`mps` 0,587 s/iteración → 4,1 h para 25 000 iteraciones, 1,1 GB de memoria pico;
+`cpu` 0,629 s/iteración → 4,4 h. Decisión: los tres entrenamientos completos corren en
+el Mac (una noche por modelo); Colab queda como plan B. Que la CPU quede casi igual que
+MPS no es un error de medición: las convoluciones 3D en MPS no están tan optimizadas
+como en CUDA y el procesador del M5 es rápido. El tiempo real por iteración se registra
+en `runs/<modelo>/log_entrenamiento.csv`. Las 32 pruebas pasan en el Mac (12 s).
