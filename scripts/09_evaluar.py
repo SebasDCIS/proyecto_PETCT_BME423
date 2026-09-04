@@ -34,6 +34,7 @@ def main():
     ap.add_argument("--dispositivo", default=None)
     ap.add_argument("--limite", type=int, default=0, help="solo los primeros N estudios (pruebas)")
     ap.add_argument("--guardar-mascaras", action="store_true")
+    ap.add_argument("--etiqueta", default=None, help="nombre de la corrida en la tabla (por defecto modelo_<M>; para semillas: modelo_A_s2)")
     ap.add_argument("--salida", default=None)
     a = ap.parse_args()
 
@@ -52,10 +53,11 @@ def main():
     files = split_files(a.manifest, a.procesado, a.particion)
     if a.limite:
         files = files[: a.limite]
-    out = Path(a.salida) if a.salida else Path("results") / f"modelo_{a.modelo}_{a.particion}.csv"
-    masks = Path("runs") / a.modelo / f"mascaras_{a.particion}" if a.guardar_mascaras else None
+    etiqueta = a.etiqueta or f"modelo_{a.modelo}"
+    out = Path(a.salida) if a.salida else Path("results") / f"{etiqueta}_{a.particion}.csv"
+    masks = ck_path.parent / f"mascaras_{a.particion}" if a.guardar_mascaras else None
     df = evaluate_files(model, files, device, roi=roi, amp=(device.type == "cuda"),
-                        variante=f"modelo_{a.modelo}", save_masks_dir=masks, verbose=True)
+                        variante=etiqueta, save_masks_dir=masks, verbose=True)
     out.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(out, index=False)
     print("\nresumen:", {k: (round(v, 3) if isinstance(v, float) else v) for k, v in summarize(df).items()})

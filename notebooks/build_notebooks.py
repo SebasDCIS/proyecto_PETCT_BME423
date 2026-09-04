@@ -652,13 +652,16 @@ arriba) y quiero que la red pueda usarla.
 Los estudios se guardan en RAM a medida que se usan (hasta `cache_size`), porque abrir un
 `.npz` comprimido cuesta unas décimas de segundo y en 25 000 iteraciones eso se nota.
 Con 24 GB caben los 176 de entrenamiento (unos 35 MB cada uno); en Colab habría que bajar
-la caché a 40 o 50."""),
+la caché a 40 o 50. La fracción de parches con lesión no llega a 0,7: el 20 % de los estudios
+de entrenamiento son negativos y en ellos el parche se centra en el cuerpo; lo esperable es
+0,7 por la fracción de positivos, unos 0,56."""),
 ("code", """ds = PatchDataset(splits["train"], patch_size=(96, 96, 96), p_lesion=0.7, cache_size=8, seed=423)
 x, y = ds[0]
 print("entrada:", tuple(x.shape), x.dtype, " etiqueta:", tuple(y.shape), y.dtype)
 print(f"rango SUV escalado {x[0].min():.2f}–{x[0].max():.2f}, CT {x[1].min():.2f}–{x[1].max():.2f}, vóxeles de lesión en el parche: {int(y.sum())}")
 t = time.time(); frac = patch_positive_fraction(ds, 30); dt = (time.time() - t) / 30
-print(f"de 30 parches, {frac:.0%} contienen lesión (esperado ≳ 0,7); {dt*1000:.0f} ms por parche")"""),
+n_pos = sum(pd.read_csv(RAIZ / "data/manifests/subconjunto.csv").query("split == 'train'").diagnosis != "NEGATIVE")
+print(f"de 30 parches, {frac:.0%} contienen lesión; esperado ≈ 0,7 × {n_pos}/{len(splits['train'])} positivos = {0.7*n_pos/len(splits['train']):.2f} (los negativos no tienen lesión que centrar); {dt*1000:.0f} ms por parche")"""),
 ("code", """# un parche real, en el corte axial con más lesión
 for _ in range(20):
     x, y = ds[0]

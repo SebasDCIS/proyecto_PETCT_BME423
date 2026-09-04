@@ -5,8 +5,11 @@ Uso típico:
     # prueba de humo en el Mac (red chica, parches de 64, 200 iteraciones)
     python scripts/07_entrenar.py --modelo A --small --parche 64 --iteraciones 200 --validar-cada 100 --salida runs/humo_A
 
-    # entrenamiento completo (Colab con GPU, o el Mac si el benchmark lo justifica)
+    # entrenamiento completo (en el Mac: 0,65 s/it en mps, unas 5 h; Colab es el plan B)
     python scripts/07_entrenar.py --modelo A --salida runs/A
+
+    # repeticiones con otra semilla (misma partición, distinta inicialización y orden de parches)
+    python scripts/07_entrenar.py --modelo A --semilla 2 --salida runs/A_s2
 
 Si en `--salida` ya existe `ultimo.pt`, continúa desde ahí (pensado para Colab, cuya
 sesión se corta). `--max-minutos` detiene con gracia y guarda el checkpoint.
@@ -41,6 +44,7 @@ def main():
     ap.add_argument("--workers", type=int, default=None)
     ap.add_argument("--cache-estudios", type=int, default=None, help="estudios en RAM (bajar en Colab)")
     ap.add_argument("--max-minutos", type=float, default=None)
+    ap.add_argument("--semilla", type=int, default=None, help="semilla (por defecto la del YAML, 423); para repeticiones usar 1, 2, 3...")
     ap.add_argument("--small", action="store_true", help="red chica (solo pruebas)")
     ap.add_argument("--sin-reanudar", action="store_true")
     a = ap.parse_args()
@@ -50,7 +54,8 @@ def main():
         cfg_yaml, modelo=a.modelo, iteraciones=a.iteraciones, lote=a.lote, lr=a.lr,
         parche=(a.parche,) * 3 if a.parche else None, validar_cada=a.validar_cada,
         checkpoint_cada=a.checkpoint_cada, max_estudios_val=a.max_estudios_val, workers=a.workers,
-        cache_estudios=a.cache_estudios, max_minutos=a.max_minutos, small=a.small or None)
+        cache_estudios=a.cache_estudios, max_minutos=a.max_minutos, small=a.small or None,
+        semilla=a.semilla)
     device = pick_device(a.dispositivo)
     print("dispositivo:", describe_device() if a.dispositivo is None else device, flush=True)
 
