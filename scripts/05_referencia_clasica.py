@@ -29,8 +29,13 @@ def main():
     a = ap.parse_args()
     cfg = yaml.safe_load(open(a.config))["referencia_clasica"]
 
+    out = Path(a.out); out.parent.mkdir(parents=True, exist_ok=True)
+    prev = pd.read_csv(out) if out.exists() else pd.DataFrame(columns=["estudio"])
+    hechos = set(prev["estudio"]) if len(prev) else set()
     rows = []
-    for f in sorted(Path(a.processed).glob("*.npz")):
+    archivos = [f for f in sorted(Path(a.processed).glob("*.npz")) if f.stem[:16] not in hechos]
+    print(f"ya medidos: {len(hechos)} | pendientes: {len(archivos)}", flush=True)
+    for f in archivos:
         vol = load_study(f)
         ml = float(np.prod(vol["spacing"]) / 1000.0)
         suv = vol["suv"] * vol["suv_top"]
@@ -43,12 +48,14 @@ def main():
             m = evaluate_study(pred, vol["seg"], suv, ml)
             m["estudio"], m["variante"] = f.stem[:16], variante
             rows.append(m)
-            print(f"{f.stem[:16]} {variante:26s} dice={m['dice']:.3f} FPV={m['fpv_ml']:7.1f} FNV={m['fnv_ml']:6.1f}")
-    df = pd.DataFrame(rows)
-    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(a.out, index=False)
-    print("\nPromedios por variante:")
-    print(df.groupby("variante")[["dice", "fpv_ml", "fnv_ml"]].mean().round(3).to_string())
+        print(f"[ok] {f.stem[:16]}", flush=True)
+        # guardar tras cada estudio para poder reanudar
+        pd.concat([prev, pd.DataFrame(rows)], ignore_index=True).to_csv(out, index=False)
+    df = pd.read_csv(out) if out.exists() else pd.DataFrame(rows)
+    print(f"\nEstudios medidos: {df.estudio.nunique() if len(df) else 0}")
+    if len(df):
+        print("Promedios por variante:")
+        print(df.groupby("variante")[["dice", "fpv_ml", "fnv_ml"]].mean().round(3).to_string())
 
 
 if __name__ == "__main__":

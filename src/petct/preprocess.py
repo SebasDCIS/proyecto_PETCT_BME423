@@ -105,8 +105,9 @@ def preprocess_study(nifti_dir: str | Path, out_file: str | Path, spacing=(3.0, 
     suv, hu, seg, body = suv[box], hu[box], seg[box], body[box]
 
     out_file.parent.mkdir(parents=True, exist_ok=True)
+    tmp_file = out_file.with_suffix(".tmp.npz")   # escritura atómica: se renombra al final
     np.savez_compressed(
-        out_file,
+        tmp_file,
         suv=scale_suv(suv, suv_top).astype(np.float16),
         ct=window_ct(hu, *window).astype(np.float16),
         seg=seg, body=body.astype(np.uint8),
@@ -119,6 +120,7 @@ def preprocess_study(nifti_dir: str | Path, out_file: str | Path, spacing=(3.0, 
         # índice 0 del arreglo es el corte más inferior y la cabeza queda al FINAL.
         head_at_end=np.bool_(suv_img.GetDirection()[8] > 0),
     )
+    tmp_file.replace(out_file)
     return {"shape": suv.shape, "lesion_voxels": int(seg.sum()),
             "ml_per_voxel": float(np.prod(spacing) / 1000.0)}
 

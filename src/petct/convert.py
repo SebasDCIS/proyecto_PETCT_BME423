@@ -166,8 +166,16 @@ def find_series_folders(study_dir: str | Path) -> Dict[str, Path]:
 
 
 def convert_study(study_dir: str | Path, out_dir: str | Path, with_seg: bool = True) -> Dict[str, Path]:
-    """Convierte un estudio completo y escribe los cinco NIfTI en `out_dir`."""
-    study_dir, out_dir = Path(study_dir), Path(out_dir)
+    """Convierte un estudio completo y escribe los cinco NIfTI en `out_dir`.
+
+    Escribe primero en una carpeta temporal y la renombra al final: si el proceso se
+    corta a medias no queda un estudio "a medio convertir" que después parezca listo.
+    """
+    study_dir, final_dir = Path(study_dir), Path(out_dir)
+    out_dir = final_dir.with_name(final_dir.name + ".tmp")
+    if out_dir.exists():
+        import shutil
+        shutil.rmtree(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     series = find_series_folders(study_dir)
     if "CT" not in series or "PT" not in series:
@@ -181,7 +189,7 @@ def convert_study(study_dir: str | Path, out_dir: str | Path, with_seg: bool = T
     written: Dict[str, Path] = {}
     for name, img in (("CT", ct), ("PET", pet), ("SUV", suv), ("CTres", ctres)):
         p = out_dir / f"{name}.nii.gz"
-        sitk.WriteImage(img, str(p), useCompression=True)
+        sitk.WriteImage(img, str(p), useCompression=True, compressionLevel=1)
         written[name] = p
 
     if with_seg:
@@ -194,4 +202,8 @@ def convert_study(study_dir: str | Path, out_dir: str | Path, with_seg: bool = T
         p = out_dir / "SEG.nii.gz"
         sitk.WriteImage(mask, str(p), useCompression=True)
         written["SEG"] = p
-    return written
+    if final_dir.exists():
+        import shutil
+        shutil.rmtree(final_dir)
+    out_dir.rename(final_dir)
+    return {k: final_dir / v.name for k, v in written.items()}

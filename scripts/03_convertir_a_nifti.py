@@ -12,12 +12,29 @@ import argparse
 import os
 import sys
 import tempfile
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from petct.convert import convert_study  # noqa: E402
+
+
+def _convertir_uno(args):
+    """Convierte un estudio; corre en un proceso hijo."""
+    pid, study_uid, filas, raw, out = args
+    out_dir = Path(out) / str(pid) / str(study_uid)
+    with tempfile.TemporaryDirectory() as tmp:
+        for mod, uid in filas:
+            src = Path(raw) / str(uid)
+            if src.exists():
+                os.symlink(src.resolve(), Path(tmp) / f"{mod}_{uid}")
+        try:
+            convert_study(tmp, out_dir)
+            return pid, study_uid, ""
+        except Exception as e:  # se informa y se sigue con el resto
+            return pid, study_uid, str(e)
 
 
 def main():
@@ -27,6 +44,7 @@ def main():
     ap.add_argument("--out", default="data/interim/nifti")
     ap.add_argument("--manifest", default="data/manifests/subconjunto.csv",
                     help="solo convierte los estudios elegidos (uno por paciente); '' para convertir todo")
+    ap.add_argument("--workers", type=int, default=3, help="procesos en paralelo")
     a = ap.parse_args()
 
     series = pd.read_csv(a.series_csv)
@@ -37,25 +55,28 @@ def main():
         series = series[series.StudyInstanceUID.astype(str).isin(elegidos)]
         print(f"{series.StudyInstanceUID.nunique()} estudios del subconjunto")
     raw = Path(a.raw)
-    ok, bad = 0, []
+    pendientes = []
+    ya = 0
     for (pid, study_uid), grp in series.groupby(["PatientID", "StudyInstanceUID"]):
         out_dir = Path(a.out) / str(pid) / str(study_uid)
         if (out_dir / "SUV.nii.gz").exists() and (out_dir / "SEG.nii.gz").exists():
-            ok += 1
+            ya += 1
             continue
-        with tempfile.TemporaryDirectory() as tmp:
-            for _, row in grp.iterrows():
-                src = raw / str(row["SeriesInstanceUID"])
-                if src.exists():
-                    os.symlink(src.resolve(), Path(tmp) / f"{row['Modality']}_{row['SeriesInstanceUID']}")
-            try:
-                convert_study(tmp, out_dir)
+        filas = [(r["Modality"], r["SeriesInstanceUID"]) for _, r in grp.iterrows()]
+        pendientes.append((pid, study_uid, filas, str(raw), a.out))
+    print(f"ya convertidos: {ya} | pendientes: {len(pendientes)} | workers: {a.workers}", flush=True)
+
+    ok, bad = 0, []
+    with ProcessPoolExecutor(max_workers=a.workers) as ex:
+        for fut in as_completed([ex.submit(_convertir_uno, t) for t in pendientes]):
+            pid, study_uid, err = fut.result()
+            if err:
+                bad.append((pid, study_uid, err))
+                print(f"[error] {pid}: {err}", flush=True)
+            else:
                 ok += 1
-                print(f"[ok] {pid} / {study_uid[-8:]}")
-            except Exception as e:  # seguir con el resto y reportar al final
-                bad.append((pid, study_uid, str(e)))
-                print(f"[error] {pid}: {e}")
-    print(f"\nConvertidos: {ok}   con error: {len(bad)}")
+                print(f"[ok] {pid} ({ya + ok}/{ya + len(pendientes)})", flush=True)
+    print(f"\nConvertidos ahora: {ok}   con error: {len(bad)}   total listos: {ya + ok}")
     if bad:
         pd.DataFrame(bad, columns=["patient_id", "study_uid", "error"]).to_csv(
             Path(a.out) / "errores_conversion.csv", index=False)
