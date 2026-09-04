@@ -31,6 +31,8 @@ entrenamiento:
   lr: 3.0e-4
   precision_mixta: true
   checkpoint_cada: 500          # iteraciones; imprescindible en Colab
+  validar_cada: 1000            # validación rápida (ventana deslizante sobre pocos estudios)
+  max_estudios_val: 12          # cuántos estudios de validación usa la validación rápida
 
 evaluacion:
   metricas: [dice, hd95, fpv_ml, fnv_ml, mtv_error_ml, suvmax_error]

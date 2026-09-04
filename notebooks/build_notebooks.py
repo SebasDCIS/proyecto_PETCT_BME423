@@ -588,5 +588,206 @@ descripción geométrica de los datos para el informe."""),
 
 nb(nb01b, HERE / "01b_geometria_dicom.ipynb")
 
+# ============================================================ 03 · modelo A
+nb03 = [
+("md", """# 03 · Modelo A: U-Net 3D de fusión temprana
+
+Hasta aquí no había entrenado nada. Tenía la cadena de datos completa (251 estudios a 3 mm,
+con SUV, CT ventaneado y la máscara del experto en la misma grilla) y el piso medido con
+la receta clásica: Dice 0,18 en positivos y casi un litro de falsos positivos por
+paciente. En este cuaderno construyo el primero de los tres modelos y dejo listo el bucle
+de entrenamiento que van a compartir los tres.
+
+El modelo A es la solución estándar: PET y CT entran a la red como dos canales de la
+misma imagen, igual que el rojo y el verde de una foto, y desde la primera convolución la
+red los mezcla. Se llama fusión temprana. Es el punto de comparación: los modelos B y C
+del Paso 4 cambian solo la forma de juntar las dos modalidades; todo lo demás (datos,
+partición, parches, pérdida, optimizador, presupuesto) queda idéntico, y ese "todo lo
+demás" es lo que armo aquí.
+
+Aquí no entreno el modelo de verdad (eso son 25 000 iteraciones y va en la máquina que
+decida el benchmark). Lo que hago es demostrar cada pieza sobre datos reales: el
+dataset de parches, la red, la pérdida, la velocidad de este computador y una corrida
+corta de humo que prueba que la pérdida baja y que el checkpoint se guarda y se reanuda."""),
+("code", """import sys, time, json
+from pathlib import Path
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import torch
+
+RAIZ = Path.cwd().resolve().parent if Path.cwd().name == "notebooks" else Path.cwd()
+sys.path.insert(0, str(RAIZ / "src"))
+from petct.data import split_files, PatchDataset, VolumeDataset, patch_positive_fraction
+from petct.models import build_model, count_parameters, describe_models
+from petct.train import TrainConfig, train, poly_lr
+from petct.infer import predict_volume, evaluate_files, summarize
+from petct.device import pick_device, describe_device
+from monai.losses import DiceCELoss
+
+device = pick_device()
+print("raíz:", RAIZ)
+print("dispositivo:", describe_device())"""),
+("md", """## 1. Las particiones, leídas del sorteo
+
+No decido nada aquí: `subconjunto.csv` ya dice qué paciente va a entrenamiento,
+validación o prueba (semilla 423, estratificado por diagnóstico, un estudio por
+paciente). `split_files` solo cruza esa tabla con los `.npz` que existen. Si faltara
+alguno lo avisaría, porque una partición incompleta cambia los resultados sin que se note."""),
+("code", """splits = split_files(RAIZ / "data/manifests/subconjunto.csv", RAIZ / "data/processed")
+for k, v in splits.items():
+    print(f"{k:6s} {len(v):4d} estudios")
+sub = pd.read_csv(RAIZ / "data/manifests/subconjunto.csv")
+print(pd.crosstab(sub.split, sub.diagnosis))"""),
+("md", """## 2. El dataset de parches
+
+La red no ve pacientes, ve cubos de 96³ vóxeles (29 cm de lado). `PatchDataset` elige un
+estudio al azar, recorta un cubo centrado en un vóxel de lesión con probabilidad 0,7 (o en
+un vóxel cualquiera del cuerpo si no), y lo entrega como dos tensores: la entrada con dos
+canales (SUV escalado, CT ventaneado) y la etiqueta con un canal (0 fondo, 1 lesión).
+Como aumento de datos solo volteo al azar los ejes laterales; no volteo el eje
+cabeza-pies porque esa anatomía sí es informativa (la vejiga está abajo, el corazón
+arriba) y quiero que la red pueda usarla.
+
+Los estudios se guardan en RAM a medida que se usan (hasta `cache_size`), porque abrir un
+`.npz` comprimido cuesta unas décimas de segundo y en 25 000 iteraciones eso se nota.
+Con 24 GB caben los 176 de entrenamiento (unos 35 MB cada uno); en Colab habría que bajar
+la caché a 40 o 50."""),
+("code", """ds = PatchDataset(splits["train"], patch_size=(96, 96, 96), p_lesion=0.7, cache_size=8, seed=423)
+x, y = ds[0]
+print("entrada:", tuple(x.shape), x.dtype, " etiqueta:", tuple(y.shape), y.dtype)
+print(f"rango SUV escalado {x[0].min():.2f}–{x[0].max():.2f}, CT {x[1].min():.2f}–{x[1].max():.2f}, vóxeles de lesión en el parche: {int(y.sum())}")
+t = time.time(); frac = patch_positive_fraction(ds, 30); dt = (time.time() - t) / 30
+print(f"de 30 parches, {frac:.0%} contienen lesión (esperado ≳ 0,7); {dt*1000:.0f} ms por parche")"""),
+("code", """# un parche real, en el corte axial con más lesión
+for _ in range(20):
+    x, y = ds[0]
+    if y.sum() > 50: break
+z = int(y[0].sum(axis=(1, 2)).argmax())
+fig, ax = plt.subplots(1, 3, figsize=(10, 3.4))
+ax[0].imshow(x[1, z], cmap="gray", vmin=0, vmax=1); ax[0].set_title("canal CT (ventana tejido blando)")
+ax[1].imshow(x[0, z], cmap="inferno", vmin=0, vmax=0.4); ax[1].set_title("canal SUV (/30)")
+ax[2].imshow(x[0, z], cmap="gray", vmin=0, vmax=0.4); ax[2].contour(y[0, z], levels=[0.5], colors="lime"); ax[2].set_title("máscara del experto")
+for a in ax: a.axis("off")
+plt.suptitle(f"parche de 96³ del entrenamiento, corte axial {z}"); plt.tight_layout(); plt.show()"""),
+("md", """## 3. La red
+
+Uso la U-Net 3D de MONAI: cinco niveles de resolución (32, 64, 128, 256 y 320 filtros),
+cada uno a la mitad del anterior, con dos bloques residuales por nivel y normalización por
+instancia. Un parche de 96³ llega al fondo como 6³ con 320 canales: ahí cada "vóxel"
+resume un cubo de 10 cm de lado, que es la escala a la que se distingue "esto es el
+hígado" de "esto es un nódulo". El decodificador vuelve a subir la resolución y las
+conexiones de salto le devuelven los bordes finos. La salida tiene dos canales, fondo y
+lesión, y un softmax decide.
+
+Son 12,9 millones de parámetros. No es la red más grande que cabe; es la que cabe con
+lote 2 y parches de 96³ en 16 GB de GPU en precisión mixta, y la que voy a reutilizar como
+codificador en B y C para que los tres tengan capacidades comparables."""),
+("code", """for k, v in describe_models().items():
+    print(k, "→", v)
+model = build_model("A").to(device)
+print(f"parámetros: {count_parameters(model)/1e6:.1f} M")
+xb = torch.stack([ds[i][0] for i in range(2)]).to(device)
+with torch.no_grad():
+    out = model(xb)
+print("lote de entrada:", tuple(xb.shape), "→ salida (logits):", tuple(out.shape))
+print("la máscara predicha es el argmax de los dos canales:", tuple(out.argmax(1).shape))"""),
+("md", """## 4. La pérdida
+
+Dice + entropía cruzada. La parte Dice empuja directamente el solapamiento global, que
+es lo que se mide; la entropía cruzada da un gradiente por vóxel estable desde el
+principio, cuando la red no acierta nada y el Dice es casi cero en todas partes. Es la
+combinación estándar (nnU-Net la usa). El Dice lo calculo solo sobre el canal lesión:
+el fondo gana siempre y no aporta información.
+
+Una red sin entrenar da alrededor de 1,7: cerca de 1 por el Dice (solapamiento nulo) y
+unos 0,7 por la entropía cruzada de dos clases al azar (ln 2 ≈ 0,69). Ese es el punto
+de partida que la curva de entrenamiento tiene que bajar."""),
+("code", """loss_fn = DiceCELoss(softmax=True, to_onehot_y=True, include_background=False)
+yb = torch.stack([ds[i][1] for i in range(2)]).to(device)
+with torch.no_grad():
+    print(f"pérdida de la red sin entrenar: {float(loss_fn(model(xb), yb)):.3f}")
+its = np.arange(0, 25000, 250)
+plt.figure(figsize=(5, 2.6)); plt.plot(its, [poly_lr(3e-4, i, 25000) for i in its])
+plt.xlabel("iteración"); plt.ylabel("tasa de aprendizaje"); plt.title("lr · (1 − it/25000)^0.9"); plt.tight_layout(); plt.show()"""),
+("md", """## 5. ¿Cuánto tarda una iteración aquí?
+
+Es la medición que decide dónde corren las 25 000 iteraciones. Ida y vuelta completa
+(forward, backward, paso del optimizador) con la red completa, lote 2 y parches de 96³, en
+el dispositivo de esta máquina. El script `scripts/08_benchmark_dispositivo.py` hace lo
+mismo con más iteraciones y escribe `results/benchmark_dispositivo.csv`; aquí lo repito en
+chico para tener el número a la vista.
+
+La regla: horas = 25 000 × segundos por iteración / 3 600. Si sale bajo 10 horas, el
+Mac sirve para el presupuesto completo (por modelo); si sale mucho más, es Colab."""),
+("code", """opt = torch.optim.AdamW(model.parameters(), lr=3e-4)
+def paso():
+    opt.zero_grad(set_to_none=True)
+    loss = loss_fn(model(xb), yb); loss.backward(); opt.step()
+def sync():
+    if device.type == "cuda": torch.cuda.synchronize()
+    elif device.type == "mps": torch.mps.synchronize()
+for _ in range(2): paso()      # calentamiento
+sync(); t = time.time()
+N = 5
+for _ in range(N): paso()
+sync(); s_it = (time.time() - t) / N
+print(f"{device}: {s_it:.2f} s por iteración → 25 000 iteraciones ≈ {25000*s_it/3600:.1f} h por modelo")
+del opt, out"""),
+("md", """## 6. Corrida de humo: 150 iteraciones con la red chica
+
+No es un entrenamiento, es una prueba de que el bucle completo funciona con datos reales:
+la pérdida baja, la validación rápida corre la ventana deslizante sobre un estudio
+completo, `ultimo.pt` y `mejor.pt` se escriben, y el registro queda en CSV. Uso la red
+chica (1,2 M de parámetros) y parches de 64³ para que tarde pocos minutos. Si la carpeta
+ya tiene un `ultimo.pt`, el bucle continúa desde ahí, que es exactamente lo que necesito
+en Colab cuando la sesión se corta."""),
+("code", """cfg = TrainConfig(modelo="A", iteraciones=150, lote=2, lr=1e-3, checkpoint_cada=50, validar_cada=75,
+                  max_estudios_val=1, parche=(64, 64, 64), prob_parche_con_lesion=0.8, semilla=423,
+                  workers=0, cache_estudios=16, small=True, log_cada=10)
+salida = RAIZ / "runs" / "humo_A_cuaderno"
+res = train(cfg, splits["train"], splits["val"], salida, device, resume=True)
+print({k: v for k, v in res.items() if k in ("iteraciones_hechas", "mejor_dice_val", "loss_final", "minutos")})
+print("archivos:", sorted(p.name for p in salida.iterdir()))"""),
+("code", """log = pd.read_csv(salida / "log_entrenamiento.csv"); val = pd.read_csv(salida / "validacion.csv")
+fig, ax = plt.subplots(1, 2, figsize=(9, 3))
+ax[0].plot(log["iter"], log["loss"]); ax[0].set_xlabel("iteración"); ax[0].set_ylabel("pérdida Dice + CE"); ax[0].set_title("humo: la pérdida baja")
+ax[1].plot(val["iter"], val["dice_pos"], "o-"); ax[1].set_xlabel("iteración"); ax[1].set_ylabel("Dice (1 estudio de validación)"); ax[1].set_title("validación rápida")
+plt.tight_layout(); plt.show()
+print(val[["iter", "dice_pos", "fpv_ml", "fnv_ml_pos"]].round(3).to_string(index=False))"""),
+("md", """## 7. Ver lo que predice, aunque sea poco
+
+Con 150 iteraciones de una red chica no espero nada bueno; lo que quiero ver es que la
+inferencia por ventana deslizante produce una máscara del tamaño del estudio y que las
+métricas se calculan igual que para la referencia clásica. La figura es el MIP coronal
+del SUV con el contorno del experto y el de la red. Para el informe, esta misma figura se
+hace con el modelo entrenado de verdad."""),
+("code", """modelo_humo = build_model("A", small=True).to(device)
+ck = torch.load(salida / "mejor.pt", map_location=device, weights_only=False)
+modelo_humo.load_state_dict(ck["model"])
+vd = VolumeDataset(splits["val"][:1])
+x, y, meta = vd[0]
+t = time.time(); pred = predict_volume(modelo_humo, x, device, roi=(64, 64, 64)); dt = time.time() - t
+print(f"{meta['patient_id']}: máscara predicha {pred.shape} en {dt:.1f} s; vóxeles predichos {int(pred.sum())}, del experto {int(y.sum())}")
+suv = x[0].numpy(); seg = y[0].numpy()
+mip = suv.max(axis=1); origin = "lower" if meta["head_at_end"] else "upper"
+fig, ax = plt.subplots(1, 2, figsize=(7, 5))
+for a, m, titulo in ((ax[0], seg, "experto"), (ax[1], pred, "red (humo, 150 it)")):
+    a.imshow(mip, cmap="gray_r", vmin=0, vmax=0.3, origin=origin, aspect=1)
+    if m.any(): a.contour(m.max(axis=1), levels=[0.5], colors="red" if titulo != "experto" else "lime", linewidths=0.8, origin=origin)
+    a.set_title(titulo); a.axis("off")
+plt.tight_layout(); plt.show()"""),
+("md", """## 8. Qué sigue
+
+Con esto el Paso 3 tiene todas las piezas: `data.py` (parches), `models.py` (la red),
+`train.py` (el bucle), `infer.py` (ventana deslizante y métricas) y los scripts
+`07_entrenar.py`, `08_benchmark_dispositivo.py` y `09_evaluar.py`. Lo que falta es correr
+el presupuesto completo del modelo A en la máquina que el benchmark indique, elegir el
+checkpoint por validación y evaluarlo una sola vez en prueba. Después, en el Paso 4,
+agrego B y C sobre la misma interfaz `build_model` y el mismo bucle, que es la condición
+para que la comparación sea limpia."""),
+]
+nb(nb03, HERE / "03_modelo_a_fusion_temprana.ipynb")
+
 nb(nb00, HERE / "00_entorno.ipynb")
 nb(nb01, HERE / "01_datos_suv_conversion.ipynb")

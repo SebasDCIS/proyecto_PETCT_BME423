@@ -255,3 +255,93 @@ tejido con el vecino. Es normal en CT helicoidal y no es un error de los datos.
 
 **Multiframe (SEG).** Un solo archivo con muchos frames, cada uno con su posición.
 Se convierte ubicando cada frame por sus esquinas físicas.
+
+---
+
+## Paso 3 · Modelo A, entrenamiento e inferencia
+
+**Fusión temprana.** PET y CT entran a la red como dos canales de la misma imagen (como
+el rojo y el verde de una foto) y se mezclan desde la primera convolución. Es el modelo
+A y la solución estándar del reto. *Para la defensa:* "la red decide desde el primer
+filtro con las dos modalidades a la vez; no hay un momento en que mire el CT por
+separado".
+
+**Canal de entrada.** Cada uno de los volúmenes que entran apilados a la primera capa.
+Un tensor de entrada del proyecto tiene forma (lote, 2, 96, 96, 96): 2 canales, SUV y CT.
+
+**U-Net 3D.** Red en forma de U: un codificador que baja la resolución (y sube el número
+de filtros) hasta un cuello de botella, y un decodificador que la vuelve a subir. Las
+*conexiones de salto* copian los mapas del codificador al decodificador del mismo nivel,
+para que los bordes finos no se pierdan al bajar. Analogía: para describir un mapa
+primero se mira desde lejos (qué región es) y luego se dibuja el detalle con la lupa,
+pero sin olvidar lo que se vio desde lejos.
+
+**Cuello de botella.** El nivel más profundo de la U: para un parche de 96³, un cubo de
+6³ con 320 canales, donde cada posición resume 10 cm de tejido. Ahí es donde el modelo C
+va a hacer la atención cruzada.
+
+**Bloque residual.** Dos convoluciones con un "atajo" que suma la entrada a la salida.
+Facilita entrenar redes profundas porque cada bloque solo tiene que aprender la
+corrección respecto de la identidad.
+
+**Normalización por instancia.** Cada mapa de activación se lleva a media 0 y desviación 1
+por muestra, sin depender del lote. Con lotes de 2 la normalización por lote es
+inestable; por eso en imagen médica se usa la de instancia.
+
+**Softmax y logits.** La red saca dos números por vóxel (fondo, lesión), los *logits*; el
+softmax los convierte en probabilidades que suman 1 y el argmax elige. La máscara es
+"1 donde la probabilidad de lesión supera a la de fondo".
+
+**Pérdida Dice + entropía cruzada.** Lo que se minimiza. El término Dice mide
+directamente el solapamiento (lo que se evalúa); la entropía cruzada da gradiente por
+vóxel estable al inicio. Una red sin entrenar da ≈ 1,7 (1 del Dice + ln 2 de la CE).
+*Para la defensa:* "la misma pérdida, con los mismos pesos, para los tres modelos".
+
+**Optimizador (AdamW).** El algoritmo que actualiza los pesos con los gradientes. Adam
+adapta el tamaño del paso por parámetro; la W es la regularización por decaimiento de
+pesos separada. Tasa de aprendizaje 3·10⁻⁴ que decae de forma polinómica a cero
+(`lr · (1 − it/25000)^0,9`), como nnU-Net.
+
+**Iteración y época.** Iteración: un lote (2 parches) y un paso del optimizador. Época:
+una pasada por todo el conjunto. Como los parches se muestrean al azar, el proyecto
+cuenta iteraciones (25 000 por modelo), no épocas; es lo que hace comparables los
+presupuestos.
+
+**Presupuesto de entrenamiento.** El número fijo de iteraciones, lote y parche que
+recibe cada modelo. Igualarlo es lo que permite atribuir las diferencias a la
+arquitectura y no a que uno entrenó más.
+
+**Aumento de datos.** Transformaciones al azar de cada parche para que la red no memorice.
+Aquí solo volteos en los ejes laterales; no en cabeza-pies, porque esa anatomía es
+informativa. Poco a propósito: se compara arquitectura, no recetas de aumento.
+
+**Precisión mixta (AMP).** Calcular en float16 donde no importa la precisión y mantener
+los pesos en float32: mitad de memoria, casi el doble de velocidad en CUDA. Se activa
+solo en GPU NVIDIA; en MPS y CPU se calcula en float32.
+
+**Checkpoint.** Archivo con los pesos, el estado del optimizador y la iteración
+(`ultimo.pt`); `mejor.pt` guarda los pesos del mejor Dice de validación. Si la sesión se
+corta, el entrenamiento reanuda desde `ultimo.pt`. Escritura atómica, como en el
+preprocesamiento.
+
+**Ventana deslizante.** Para predecir un estudio entero con una red que vio cubos de
+96³: se recorre el volumen con cubos solapados al 50 %, se predice cada uno y se
+promedian las zonas de solape con peso gaussiano (más confianza al centro del cubo). Es
+la única forma de inferir un volumen que no cabe en memoria, y se usa igual en
+validación y en prueba.
+
+**Validación rápida.** Cada 1 000 iteraciones se predicen unos pocos estudios de
+validación completos y se mide Dice, FPV y FNV. Sirve para elegir el checkpoint y
+detectar sobreajuste, sin gastar el tiempo de evaluar los 26.
+
+**Corrida de humo.** Entrenamiento cortísimo (150 iteraciones, red chica) cuyo único
+propósito es verificar que todas las piezas encajan con datos reales antes de gastar
+horas de GPU.
+
+**Caché LRU.** Los estudios abiertos se guardan en RAM hasta un máximo; cuando entra uno
+nuevo sale el que lleva más tiempo sin usarse (*least recently used*). Evita reabrir el
+`.npz` en cada parche.
+
+**DataLoader y workers.** El objeto de PyTorch que arma lotes a partir del Dataset, con
+procesos en paralelo (`workers`) que preparan el siguiente lote mientras la GPU calcula.
+Cada proceso lleva su propia semilla, o sacarían los mismos parches.

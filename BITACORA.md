@@ -328,3 +328,35 @@ meterían un sesgo de selección.
 
 **Pendiente.** Re-ejecutar los cuadernos 01b y 02 con los 251 (`jupyter nbconvert
 --execute --inplace`). Paso 3 empieza ahora: modelo A.
+
+## 2026-09-05. Paso 3: dataset de parches, modelo A y bucle de entrenamiento
+
+Código nuevo, probado en CPU con el fantoma (32 pruebas en total, 7 nuevas):
+
+- `src/petct/data.py`: `split_files` (cruza el sorteo con los `.npz`), `PatchDataset`
+  (parches 96³ sesgados a lesiones, dos canales SUV/CT, volteos laterales, caché LRU de
+  estudios en RAM, semilla por proceso del DataLoader) y `VolumeDataset` (estudios
+  completos para validar).
+- `src/petct/models.py`: `build_model("A")` = U-Net 3D de MONAI, 5 niveles
+  (32-64-128-256-320), 2 bloques residuales por nivel, normalización por instancia,
+  12,9 M de parámetros; versión chica (1,2 M) para pruebas. B y C se registran en el
+  Paso 4 sobre la misma interfaz.
+- `src/petct/train.py`: bucle por iteraciones con pérdida Dice + CE (Dice solo sobre
+  lesión), AdamW con decaimiento polinómico, precisión mixta solo en CUDA, recorte de
+  gradiente, checkpoint atómico `ultimo.pt` cada 500 iteraciones, `mejor.pt` por Dice de
+  validación rápida (12 estudios, ventana deslizante) cada 1 000, reanudación
+  automática, parada por tiempo (`--max-minutos`) para Colab, registros en CSV.
+- `src/petct/infer.py`: ventana deslizante (solape 0,5, peso gaussiano) y evaluación con
+  las mismas columnas que `referencia_clasica.csv`.
+- `scripts/07_entrenar.py`, `08_benchmark_dispositivo.py` (segundos por iteración y
+  horas para 25 000 en cada dispositivo), `09_evaluar.py` (una partición completa con un
+  checkpoint; `test` se evalúa una sola vez al final).
+- `notebooks/03_modelo_a_fusion_temprana.ipynb`: particiones, un parche real, la red, la
+  pérdida, el benchmark de esta máquina, corrida de humo de 150 iteraciones y una
+  predicción sobre un estudio de validación.
+
+Decisiones: aumentos mínimos (solo volteos laterales) porque se comparan arquitecturas;
+sin volteo cabeza-pies; caché de estudios configurable (todo en el Mac, 40–50 en Colab);
+el YAML gana `validar_cada` y `max_estudios_val`. Pendiente inmediato: benchmark en el
+Mac (`mps`) para decidir dónde corre el presupuesto completo, y la corrida de humo con
+datos reales.

@@ -87,6 +87,10 @@ Los datos no se suben al repositorio. Para reproducir:
 4. `python scripts/03_convertir_a_nifti.py` → `data/interim/nifti/<paciente>/<estudio>/{CT,PET,SUV,CTres,SEG}.nii.gz`.
 5. `python scripts/04_preprocesar.py` → `data/processed/*.npz` (3 mm, recortado, escalado).
 6. `python scripts/05_referencia_clasica.py` → `results/referencia_clasica.csv`.
+7. `python scripts/06_geometria_series.py` → `results/geometria_series.csv` (geometría de cada serie DICOM).
+8. `python scripts/08_benchmark_dispositivo.py` → segundos por iteración en cada dispositivo (decide Mac o Colab).
+9. `python scripts/07_entrenar.py --modelo A --salida runs/A` → entrena (reanuda solo si hay `ultimo.pt`).
+10. `python scripts/09_evaluar.py --modelo A --checkpoint runs/A/mejor.pt --particion val` → `results/modelo_A_val.csv`.
 
 Cita del dataset: Gatidis S, et al. *A whole-body FDG-PET/CT Dataset with manually annotated Tumor
 Lesions.* Sci Data 2022;9:601. doi:10.1038/s41597-022-01718-3.
@@ -96,9 +100,9 @@ Lesions.* Sci Data 2022;9:601. doi:10.1038/s41597-022-01718-3.
 | Paso | Script / notebook | Estado |
 |---|---|---|
 | 0 | `notebooks/00_entorno.ipynb` revisión del entorno | listo |
-| 1 | `notebooks/01_datos_suv_conversion.ipynb` y `scripts/01…03` | listo y probado con fantoma sintético |
-| 2 | `notebooks/02_preprocesamiento_referencia_clasica.ipynb`, `scripts/04`, `scripts/05` | listo y probado con fantomas |
-| 3 | modelo A (fusión temprana), Colab | pendiente |
+| 1 | `notebooks/01_datos_suv_conversion.ipynb`, `notebooks/01b_geometria_dicom.ipynb` y `scripts/01…03`, `06` | listo; 251 estudios convertidos |
+| 2 | `notebooks/02_preprocesamiento_referencia_clasica.ipynb`, `scripts/04`, `scripts/05` | listo; referencia clásica sobre 251 |
+| 3 | `notebooks/03_modelo_a_fusion_temprana.ipynb`, `src/petct/{data,models,train,infer}.py`, `scripts/07…09` | código listo y probado; entrenamiento completo pendiente |
 | 4 | modelos B y C (fusión intermedia) | pendiente |
 | 5 | evaluación y análisis por órgano | pendiente |
 
