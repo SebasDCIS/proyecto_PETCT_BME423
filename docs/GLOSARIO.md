@@ -345,3 +345,7 @@ nuevo sale el que lleva más tiempo sin usarse (*least recently used*). Evita re
 **DataLoader y workers.** El objeto de PyTorch que arma lotes a partir del Dataset, con
 procesos en paralelo (`workers`) que preparan el siguiente lote mientras la GPU calcula.
 Cada proceso lleva su propia semilla, o sacarían los mismos parches.
+
+**Semilla de repetición.** Misma partición y mismos datos, distinta inicialización de
+pesos y distinto orden de parches. Tres semillas por modelo permiten reportar media y
+desviación y saber si una diferencia entre A, B y C es de la arquitectura o del azar.

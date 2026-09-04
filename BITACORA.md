@@ -368,3 +368,21 @@ el Mac (una noche por modelo); Colab queda como plan B. Que la CPU quede casi ig
 MPS no es un error de medición: las convoluciones 3D en MPS no están tan optimizadas
 como en CUDA y el procesador del M5 es rápido. El tiempo real por iteración se registra
 en `runs/<modelo>/log_entrenamiento.csv`. Las 32 pruebas pasan en el Mac (12 s).
+
+**Humo con datos reales (cuaderno 03):** pérdida 1,94 → 0,97 en 150 iteraciones de la
+red chica; validación con ventana deslizante sobre un estudio de 284 × 135 × 147 en
+1,8 s; checkpoints escritos y reanudados. La fracción de parches con lesión fue 53 %
+(esperado 0,7 × 141/176 positivos ≈ 0,56: los estudios negativos no tienen lesión que
+centrar).
+
+**Entrenamiento completo del modelo A lanzado** (`runs/A`, semilla 423, 0,65 s por
+iteración con datos reales). Iteración 1 000: Dice 0,12, FPV 579 mL, FNV 4,9 mL en los 12
+estudios de validación rápida (la referencia clásica: 0,18 / 952 / 7,6).
+
+**Protocolo acordado para lo que sigue.** No subir la resolución (2 mm = 3,4 veces más
+vóxeles, menos contexto por parche, 10 h por modelo, ganancia modesta) ni bajar más
+datos. Con 5 h por corrida, lo que mejora el proyecto es repetir: tres semillas por
+modelo (nueve corridas, ~36 h de Mac) para reportar media y desviación, decidido después
+de ver el nivel del modelo A. Agregados `--semilla` (07), `--etiqueta` (09) y
+`scripts/10_resumir_corridas.py` (tabla de corridas, comparación media ± sd por modelo
+junto a la referencia clásica, curvas de entrenamiento).
