@@ -4,6 +4,7 @@
 Uso:
     python scripts/08_benchmark_dispositivo.py                 # todos los dispositivos disponibles
     python scripts/08_benchmark_dispositivo.py --dispositivos mps cpu --parche 96 --lote 2 --iteraciones 10
+    python scripts/08_benchmark_dispositivo.py --modelos B C --dispositivos mps      # Paso 4
 
 Mide, con datos sintéticos (no hace falta tener los .npz), segundos por iteración de
 ida y vuelta (forward + backward + paso del optimizador) de la U-Net completa con el
@@ -35,10 +36,10 @@ def disponibles():
     return out
 
 
-def medir(dev_name: str, parche: int, lote: int, iteraciones: int, small: bool, amp: bool):
+def medir(dev_name: str, parche: int, lote: int, iteraciones: int, small: bool, amp: bool, modelo: str = "A"):
     device = pick_device(dev_name)
     torch.manual_seed(0)
-    model = build_model("A", small=small).to(device)
+    model = build_model(modelo, small=small).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=3e-4)
     loss_fn = DiceCELoss(softmax=True, to_onehot_y=True, include_background=False)
     use_amp = amp and device.type == "cuda"
@@ -75,7 +76,7 @@ def medir(dev_name: str, parche: int, lote: int, iteraciones: int, small: bool, 
         mem = f"{torch.cuda.max_memory_allocated() / 2**30:.1f} GB"
     elif device.type == "mps":
         mem = f"{torch.mps.driver_allocated_memory() / 2**30:.1f} GB"
-    return {"dispositivo": dev_name, "parche": parche, "lote": lote, "red": "chica" if small else "completa",
+    return {"modelo": modelo, "dispositivo": dev_name, "parche": parche, "lote": lote, "red": "chica" if small else "completa",
             "amp": use_amp, "parametros_M": round(count_parameters(model) / 1e6, 1),
             "seg_por_iter": round(s_it, 3), "horas_25000_it": round(25000 * s_it / 3600, 1), "memoria_pico": mem}
 
@@ -83,6 +84,7 @@ def medir(dev_name: str, parche: int, lote: int, iteraciones: int, small: bool, 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dispositivos", nargs="*", default=None)
+    ap.add_argument("--modelos", nargs="*", default=["A"], help="A, A+, B, C")
     ap.add_argument("--parche", type=int, default=96)
     ap.add_argument("--lote", type=int, default=2)
     ap.add_argument("--iteraciones", type=int, default=10)
@@ -91,14 +93,15 @@ def main():
     ap.add_argument("--salida", default="results/benchmark_dispositivo.csv")
     a = ap.parse_args()
     filas = []
-    for d in (a.dispositivos or disponibles()):
-        print(f"midiendo en {d}...", flush=True)
-        try:
-            r = medir(d, a.parche, a.lote, a.iteraciones, a.small, not a.sin_amp)
-        except Exception as e:  # p. ej. memoria insuficiente
-            r = {"dispositivo": d, "parche": a.parche, "lote": a.lote, "error": str(e)[:120]}
-        print("  ", r, flush=True)
-        filas.append(r)
+    for m in a.modelos:
+        for d in (a.dispositivos or disponibles()):
+            print(f"midiendo modelo {m} en {d}...", flush=True)
+            try:
+                r = medir(d, a.parche, a.lote, a.iteraciones, a.small, not a.sin_amp, modelo=m)
+            except Exception as e:  # p. ej. memoria insuficiente
+                r = {"modelo": m, "dispositivo": d, "parche": a.parche, "lote": a.lote, "error": str(e)[:120]}
+            print("  ", r, flush=True)
+            filas.append(r)
     df = pd.DataFrame(filas)
     out = Path(a.salida)
     out.parent.mkdir(parents=True, exist_ok=True)
