@@ -490,7 +490,43 @@ inválido: pesos de otra arquitectura).
 tres semillas: 0,549 / 0,578 / 0,574 → **A = 0,567 ± 0,016**, FPV 21 ± 3 mL, FNV 8,0 ± 0,4
 mL. Modelo A cerrado.
 
-**Benchmark definitivo de B y C en el Mac (`mps`, lote 2, parches 96³):** 0,710 y 0,709 s por
-iteración (A: 0,59), 2,2 GB de memoria pico (antes 11,6). Unas 5 h por corrida, igual que A.
-Cuaderno 04 ejecutado con la arquitectura definitiva (humo de C: 100 iteraciones de la red
-chica). Lanzada la primera corrida de B (`runs/B`, semilla 423).
+## 2026-09-05 (tarde). Hallazgo: lesiones anotadas dentro de la caja borrada por el defacing
+
+La figura de casos (`scripts/13_figuras_casos.py`, MIP coronal con experto y predicciones)
+mostró que en `PETCT_1a90052cb2` y `PETCT_e03b96666f` el contorno del experto cae dentro de
+la franja blanca superior: la caja que el defacing borró. La anotación se hizo sobre la
+imagen original y conserva lesiones donde ya no queda señal (SUV exactamente 0, CT aire).
+Ningún método puede segmentarlas y contaban como falsos negativos.
+
+**Cuantificación (251 estudios):** 69 tienen lesión anotada fuera de la máscara de cuerpo;
+2 064 mL en total (4,6 % de los 44 414 mL anotados), 1 651 mL con SUV = 0 (zona borrada); el
+resto son lesiones fuera del campo de visión del CT (brazos), donde sí hay PET. En validación,
+268 mL de 4 179; `PETCT_73fda3a382` tiene 207 de sus 269 mL en la zona borrada.
+
+**Regla de evaluación adoptada (`metrics.blank_region_mask`, `evaluate_study(exclude_blank=True)`):**
+se excluyen de la predicción y de la verdad los vóxeles con SUV = 0. Es objetiva, se aplica
+igual a los tres modelos y a la referencia clásica, y la columna `gt_excluido_ml` deja
+constancia. La métrica cruda del reto sigue disponible (`--incluir-zona-borrada`). El
+entrenamiento no cambia (A ya entrenó con esas anotaciones y B corre igual; el efecto es el
+mismo para los tres). La validación rápida durante el entrenamiento mantiene la regla cruda
+para que la elección del checkpoint sea idéntica en las nueve corridas. Consecuencia: un
+estudio de validación (`1a90052cb2`, melanoma) queda sin lesión evaluable y pasa a contar
+como negativo (20 positivos, 6 negativos).
+
+**Resultados recalculados desde las máscaras guardadas (`scripts/14`):**
+
+| | Dice (positivos) | FPV (mL) | FNV (mL) | FPV negativos (mL) |
+|---|---|---|---|---|
+| A, semilla 423 | 0,603 (med 0,653) | 18,0 | 6,5 | 28,7 |
+| A, semilla 2 | 0,632 (med 0,728) | 22,2 | 5,9 | 44,0 |
+| A, semilla 3 | 0,630 (med 0,715) | 22,5 | 5,6 | 36,3 |
+| **A, media ± sd** | **0,621 ± 0,016** | **20,9 ± 2,5** | **6,0 ± 0,4** | 36 |
+| referencia clásica, val | 0,180 | 1 192 | 5,6 | 1 224 |
+
+Los resultados sin la corrección quedan en `results/sin_exclusion/`. La referencia clásica
+se recalculó sobre los 251 con la misma regla (Dice 0,184 en positivos, FPV 952, FNV 2,6).
+
+**Para la defensa.** El defacing de la versión pública no solo elimina el encéfalo de los
+datos: deja anotaciones huérfanas que ningún modelo puede acertar. Hay que decirlo, medirlo
+(4,6 % del volumen anotado) y excluirlo de forma declarada; si no, se está midiendo el
+anonimizado y no el modelo. Lo detectó una figura, no una tabla: mirar los casos vale.

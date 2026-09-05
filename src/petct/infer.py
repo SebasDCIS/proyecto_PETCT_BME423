@@ -9,7 +9,9 @@ de MONAI; la misma función se usa para validar durante el entrenamiento y para 
 prueba final, así los números son comparables.
 
 `evaluate_files` devuelve una tabla con las mismas columnas que la referencia clásica
-(`results/referencia_clasica.csv`), para poder ponerlas lado a lado.
+(`results/referencia_clasica.csv`), para poder ponerlas lado a lado. Por defecto excluye de
+la evaluación la zona sin imagen (SUV = 0, la caja borrada por el defacing), donde hay
+lesiones anotadas que nadie puede segmentar; `exclude_blank=False` da la métrica cruda.
 """
 from __future__ import annotations
 
@@ -42,7 +44,7 @@ def predict_volume(model: torch.nn.Module, x: torch.Tensor, device: torch.device
 def evaluate_files(model: torch.nn.Module, files: Sequence[Path], device: torch.device,
                    roi=(96, 96, 96), overlap: float = 0.5, amp: bool = False,
                    variante: str = "modelo", save_masks_dir: Optional[Path] = None,
-                   verbose: bool = False) -> pd.DataFrame:
+                   verbose: bool = False, exclude_blank: bool = True) -> pd.DataFrame:
     """Predice y mide cada estudio; una fila por estudio, columnas como la referencia clásica."""
     rows: List[Dict] = []
     for i, f in enumerate(files):
@@ -52,7 +54,7 @@ def evaluate_files(model: torch.nn.Module, files: Sequence[Path], device: torch.
         pred = predict_volume(model, x, device, roi, overlap, amp=amp)
         suv_real = vol["suv"] * vol["suv_top"]
         ml = float(np.prod(vol["spacing"])) / 1000.0
-        m = evaluate_study(pred.astype(bool), vol["seg"].astype(bool), suv_real, ml)
+        m = evaluate_study(pred.astype(bool), vol["seg"].astype(bool), suv_real, ml, exclude_blank=exclude_blank)
         m["estudio"] = f.stem.split("__")[0]
         m["variante"] = variante
         rows.append(m)
@@ -63,16 +65,5 @@ def evaluate_files(model: torch.nn.Module, files: Sequence[Path], device: torch.
             print(f"[{i + 1}/{len(files)}] {m['estudio']} dice={m['dice']:.3f} fpv={m['fpv_ml']:.0f} fnv={m['fnv_ml']:.1f}", flush=True)
     return pd.DataFrame(rows)
 
-
-def summarize(df: pd.DataFrame) -> Dict[str, float]:
-    """Resumen como en el reto: Dice solo en positivos; FPV en todos; FNV en positivos."""
-    pos = df[df.mtv_gt_ml > 0]
-    neg = df[df.mtv_gt_ml == 0]
-    return {
-        "n": int(len(df)), "n_pos": int(len(pos)),
-        "dice_pos": float(pos.dice.mean()) if len(pos) else float("nan"),
-        "dice_pos_mediana": float(pos.dice.median()) if len(pos) else float("nan"),
-        "fpv_ml": float(df.fpv_ml.mean()),
-        "fnv_ml_pos": float(pos.fnv_ml.mean()) if len(pos) else float("nan"),
-        "fpv_ml_neg": float(neg.fpv_ml.mean()) if len(neg) else float("nan"),
-    }
+# `summarize` vive en metrics (no necesita torch) y se reexporta aquí por compatibilidad
+from .metrics import summarize  # noqa: E402,F401

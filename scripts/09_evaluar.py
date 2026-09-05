@@ -36,6 +36,7 @@ def main():
     ap.add_argument("--guardar-mascaras", action="store_true")
     ap.add_argument("--etiqueta", default=None, help="nombre de la corrida en la tabla (por defecto modelo_<M>; para semillas: modelo_A_s2)")
     ap.add_argument("--salida", default=None)
+    ap.add_argument("--incluir-zona-borrada", action="store_true", help="no excluir la caja del defacing (métrica cruda del reto)")
     a = ap.parse_args()
 
     cfg = yaml.safe_load(open(a.config))
@@ -57,7 +58,8 @@ def main():
     out = Path(a.salida) if a.salida else Path("results") / f"{etiqueta}_{a.particion}.csv"
     masks = ck_path.parent / f"mascaras_{a.particion}" if a.guardar_mascaras else None
     df = evaluate_files(model, files, device, roi=roi, amp=(device.type == "cuda"),
-                        variante=etiqueta, save_masks_dir=masks, verbose=True)
+                        variante=etiqueta, save_masks_dir=masks, verbose=True,
+                        exclude_blank=not a.incluir_zona_borrada)
     out.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(out, index=False)
     print("\nresumen:", {k: (round(v, 3) if isinstance(v, float) else v) for k, v in summarize(df).items()})

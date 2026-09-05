@@ -208,7 +208,11 @@ def train(cfg: TrainConfig, train_files: Sequence[Path], val_files: Sequence[Pat
                 print(f"it {it:6d}  loss {row['loss']:.4f}  lr {lr:.2e}  {dt:.2f} s/it", flush=True)
 
         if val_subset and (it % cfg.validar_cada == 0 or it == cfg.iteraciones):
-            df = evaluate_files(model, val_subset, device, roi=cfg.parche, amp=use_amp, variante=cfg.modelo)
+            # la validación rápida usa la métrica cruda (sin excluir la zona borrada) para que la
+            # elección del checkpoint sea la misma regla en las nueve corridas (A se entrenó así);
+            # la evaluación final (scripts/09) sí excluye la zona sin imagen
+            df = evaluate_files(model, val_subset, device, roi=cfg.parche, amp=use_amp, variante=cfg.modelo,
+                                exclude_blank=False)
             s = summarize(df)
             improved = not math.isnan(s["dice_pos"]) and s["dice_pos"] > best
             if improved:

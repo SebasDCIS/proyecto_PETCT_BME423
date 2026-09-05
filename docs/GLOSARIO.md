@@ -396,3 +396,10 @@ C 24,4 M (59 GFLOP). La diferencia B–C (0,4 M) es solo la atención.
 **GFLOP.** Miles de millones de operaciones de coma flotante. Contarlos antes de entrenar
 dice cuánto va a tardar cada iteración; una red con el doble de parámetros puede costar
 16 veces más si opera ancho a resolución completa, como pasó con la primera versión de B.
+
+**Zona borrada (defacing) y regla de exclusión.** La caja que la anonimización borró de la
+imagen (toda la cabeza): PET exactamente 0 y CT aire. El experto anotó sobre la imagen
+original, así que ahí quedan lesiones anotadas sin señal debajo (4,6 % del volumen anotado
+de la colección). Se excluyen de la evaluación, en predicción y verdad, con la misma regla
+para todos los métodos; `gt_excluido_ml` registra cuánto. *Para la defensa:* "evaluar ahí es
+medir el anonimizado, no el modelo".

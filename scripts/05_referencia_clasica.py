@@ -26,11 +26,13 @@ def main():
     ap.add_argument("--processed", default="data/processed")
     ap.add_argument("--out", default="results/referencia_clasica.csv")
     ap.add_argument("--config", default="configs/default.yaml")
+    ap.add_argument("--rehacer", action="store_true", help="volver a medir todo (p. ej. tras cambiar la regla de evaluación)")
+    ap.add_argument("--incluir-zona-borrada", action="store_true", help="no excluir la caja del defacing")
     a = ap.parse_args()
     cfg = yaml.safe_load(open(a.config))["referencia_clasica"]
 
     out = Path(a.out); out.parent.mkdir(parents=True, exist_ok=True)
-    prev = pd.read_csv(out) if out.exists() else pd.DataFrame(columns=["estudio"])
+    prev = pd.read_csv(out) if out.exists() and not a.rehacer else pd.DataFrame(columns=["estudio"])
     hechos = set(prev["estudio"]) if len(prev) else set()
     rows = []
     archivos = [f for f in sorted(Path(a.processed).glob("*.npz")) if f.stem[:16] not in hechos]
@@ -45,7 +47,7 @@ def main():
             pred = classical_segmentation(suv, vol["body"], ml, cfg["umbral_suv"],
                                           cfg["apertura_radio_vox"], cfg["volumen_min_ml"],
                                           use_heuristics=heur, head_at_end=vol["head_at_end"])
-            m = evaluate_study(pred, vol["seg"], suv, ml)
+            m = evaluate_study(pred, vol["seg"], suv, ml, exclude_blank=not a.incluir_zona_borrada)
             m["estudio"], m["variante"] = f.stem[:16], variante
             rows.append(m)
         print(f"[ok] {f.stem[:16]}", flush=True)
