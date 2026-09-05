@@ -390,5 +390,9 @@ atención le sirve. Estabiliza el arranque y hace honesta la comparación.
 los parámetros de B. Separa dos explicaciones posibles de un resultado: "gana porque
 fusiona distinto" y "gana porque es más grande".
 
-**Parámetros declarados.** A 12,9 M; A+ 28,9 M; B 34,6 M; C 35,0 M. La diferencia B–C
-(0,4 M) es solo la atención.
+**Parámetros declarados.** A 12,9 M (37 GFLOP por parche); A+ 24,3 M; B 24,0 M (59 GFLOP);
+C 24,4 M (59 GFLOP). La diferencia B–C (0,4 M) es solo la atención.
+
+**GFLOP.** Miles de millones de operaciones de coma flotante. Contarlos antes de entrenar
+dice cuánto va a tardar cada iteración; una red con el doble de parámetros puede costar
+16 veces más si opera ancho a resolución completa, como pasó con la primera versión de B.

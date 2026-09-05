@@ -837,12 +837,18 @@ print("parche:", tuple(xb.shape), "vóxeles de lesión:", int(y.sum()))"""),
 ("md", """## 1. Los tres modelos, lado a lado
 
 `describe_models` dice qué es cada uno; el conteo de parámetros dice cuánto pesa. B y C
-tienen 2,7 veces los parámetros de A porque llevan dos codificadores completos (11,9 M cada
-uno); preferí mantener el codificador idéntico al de A, la misma "lupa" por modalidad,
-antes que igualar parámetros angostando los canales. La diferencia entre B y C son 0,4 M:
-el bloque de atención. Y agrego un control, A+, que es A con canales más anchos hasta
-llegar a los parámetros de B: si algún día B gana a A, A+ dice si fue por la fusión o por
-el tamaño."""),
+tienen casi el doble de parámetros que A (24 M contra 13 M) porque llevan dos
+codificadores, cada uno con el mismo plan de reducción que A (la primera convolución ya
+baja a 48³; eso es lo que los hace baratos: 59 gigaflops por parche contra 37 de A).
+Preferí mantener ese codificador idéntico al de A, la misma "lupa" por modalidad, antes que
+igualar parámetros angostando los canales. La diferencia entre B y C son 0,4 M: el bloque
+de atención. Y agrego un control, A+, que es A con canales más anchos hasta llegar a los
+parámetros de B: si algún día B gana a A, A+ dice si fue por la fusión o por el tamaño.
+
+Una lección de ingeniería que quedó en la bitácora: mi primera versión de B procesaba la
+primera capa a resolución completa y tardaba 4 s por iteración (28 h por corrida, 16 veces
+las operaciones de A). Contar gigaflops antes de lanzar 25 000 iteraciones ahorró una
+semana."""),
 ("code", """filas = []
 for nombre, desc in describe_models().items():
     m = build_model(nombre)
@@ -878,9 +884,8 @@ plt.tight_layout(); plt.show()"""),
 ("md", """## 3. Cuánto tarda cada uno aquí
 
 La misma medición del cuaderno 03, ahora para los cuatro modelos: segundos por iteración
-de ida y vuelta con lote 2 y parches de 96³. Espero que B y C tarden alrededor de 1,5
-veces lo que A, porque bajan dos veces. Con eso sé cuántas horas son las 25 000
-iteraciones de cada uno."""),
+de ida y vuelta con lote 2 y parches de 96³. Por operaciones, B y C deberían tardar entre
+1,5 y 2 veces lo que A. Con eso sé cuántas horas son las 25 000 iteraciones de cada uno."""),
 ("code", """loss_fn = DiceCELoss(softmax=True, to_onehot_y=True, include_background=False)
 xb2 = torch.stack([ds[i][0] for i in range(2)]).to(device); yb2 = torch.stack([ds[i][1] for i in range(2)]).to(device)
 def sync():

@@ -34,13 +34,14 @@ posición, no a la de 3 mm; los bordes finos los aporta el decodificador con los
 Como la atención no sabe dónde está cada posición, se suma a las consultas y a las
 etiquetas una codificación de posición sinusoidal 3D (fija, sin parámetros).
 
-Parámetros (versión completa): A 12,9 M; B 34,6 M; C 35,0 M. B y C tienen más porque
-llevan dos codificadores completos (11,9 M cada uno); el decodificador es liviano a
-propósito (un subbloque por nivel). La diferencia B–C es solo el bloque de atención
-(0,4 M): esa es la comparación limpia. Para separar "más red" de "otra fusión" existe
-además `A+`: la misma fusión temprana con canales ×1,5 (28,9 M, del orden de B); si
-sobra tiempo de cómputo, es el control que responde si B gana por la fusión o por el
-tamaño.
+Parámetros y costo (versión completa, un parche de 96³): A 12,9 M y 37 GFLOP; B 24,0 M y
+59 GFLOP; C 24,4 M y 59 GFLOP. B y C tienen más porque llevan dos codificadores (cada uno
+con el mismo plan de reducción que A: la primera convolución ya baja a 48³, así nunca se
+hace una convolución ancha a resolución completa). La diferencia B–C es solo el bloque de
+atención (0,4 M): esa es la comparación limpia. Para separar "más red" de "otra fusión"
+existe además `A+`: la misma fusión temprana con canales ×1,375 (24,3 M, los parámetros
+de B); si sobra tiempo de cómputo, es el control que responde si B gana por la fusión o
+por el tamaño.
 
 `build_model(nombre, small=True)` da versiones chicas (16, 32, 64, 128) para pruebas y
 humo; los números del informe salen siempre de las versiones completas.
@@ -57,7 +58,7 @@ from monai.networks.nets import UNet
 
 CHANNELS_FULL = (32, 64, 128, 256, 320)
 CHANNELS_SMALL = (16, 32, 64, 128)
-CHANNELS_WIDE = (48, 96, 192, 384, 480)     # A ancha: ~2,2× parámetros, para separar capacidad de fusión
+CHANNELS_WIDE = (44, 88, 176, 352, 440)     # A ancha: 24,3 M, los parámetros de B, para separar capacidad de fusión
 
 
 # ---------------------------------------------------------------- modelo A (MONAI)
@@ -77,16 +78,21 @@ def early_fusion_unet(in_channels: int = 2, out_channels: int = 2, small: bool =
 
 # ---------------------------------------------------------------- piezas de B y C
 class Encoder(nn.Module):
-    """Camino de bajada: un bloque residual por nivel; el primero sin reducir, los demás
-    reducen ×2. Devuelve los mapas de todos los niveles (para los saltos) y el del fondo."""
+    """Camino de bajada, con exactamente el mismo plan que la U-Net de MONAI del modelo A:
+    cada nivel es un bloque residual (dos subbloques) y los cuatro primeros reducen ×2,
+    empezando desde la primera convolución (96³ → 48³ → 24³ → 12³ → 6³); el quinto (el
+    cuello de botella, 320 canales) no reduce. Que la primera capa ya reduzca es lo que hace
+    barata a la red: nunca se hace una convolución 3×3×3 ancha a resolución completa.
+    Devuelve los mapas de todos los niveles (los cuatro primeros son los saltos)."""
 
     def __init__(self, in_channels: int, channels: Sequence[int]):
         super().__init__()
         stages = []
         prev = in_channels
+        n = len(channels)
         for i, ch in enumerate(channels):
-            stages.append(ResidualUnit(3, prev, ch, strides=1 if i == 0 else 2, kernel_size=3,
-                                       subunits=2, norm="instance"))
+            stride = 2 if i < n - 1 else 1
+            stages.append(ResidualUnit(3, prev, ch, strides=stride, kernel_size=3, subunits=2, norm="instance"))
             prev = ch
         self.stages = nn.ModuleList(stages)
 
@@ -95,33 +101,37 @@ class Encoder(nn.Module):
         for st in self.stages:
             x = st(x)
             feats.append(x)
-        return feats            # feats[-1] es el cuello de botella
+        return feats            # feats[-1] es el cuello de botella (misma resolución que feats[-2])
 
 
 class Decoder(nn.Module):
-    """Camino de subida. En cada nivel: subir ×2 (convolución transpuesta), concatenar con
-    los saltos de ambos codificadores y refinar con un bloque residual."""
+    """Camino de subida, como en la U-Net de MONAI: en cada nivel se concatena lo que viene
+    de abajo con los saltos (de ambos codificadores), una convolución transpuesta sube ×2 y
+    un bloque residual de un subbloque refina. El último nivel produce directamente los dos
+    canales de salida a 96³."""
 
     def __init__(self, channels: Sequence[int], skip_mult: int = 2, out_channels: int = 2):
         super().__init__()
         ups, blocks = [], []
-        for i in range(len(channels) - 1, 0, -1):
-            ups.append(Convolution(3, channels[i], channels[i - 1], strides=2, kernel_size=3,
-                                   norm="instance", is_transposed=True))
-            # un solo subbloque en la subida (como la U-Net de MONAI): el decodificador es
-            # liviano a propósito; la capacidad está en los codificadores
-            blocks.append(ResidualUnit(3, channels[i - 1] * (1 + skip_mult), channels[i - 1], strides=1,
-                                       kernel_size=3, subunits=1, norm="instance"))
+        n = len(channels)
+        in_ch = channels[-1]
+        for i in range(n - 2, -1, -1):                       # niveles de salto: n-2 ... 0
+            is_top = i == 0
+            out_ch = out_channels if is_top else channels[i - 1] if i - 1 >= 0 else channels[0]
+            ups.append(Convolution(3, in_ch + skip_mult * channels[i], out_ch, strides=2, kernel_size=3,
+                                   norm="instance", is_transposed=True, conv_only=is_top))
+            blocks.append(None if is_top else ResidualUnit(3, out_ch, out_ch, strides=1, kernel_size=3,
+                                                              subunits=1, norm="instance"))
+            in_ch = out_ch
         self.ups = nn.ModuleList(ups)
-        self.blocks = nn.ModuleList(blocks)
-        self.head = nn.Conv3d(channels[0], out_channels, kernel_size=1)
+        self.blocks = nn.ModuleList([b if b is not None else nn.Identity() for b in blocks])
 
     def forward(self, bottom: torch.Tensor, skips: Sequence[torch.Tensor]) -> torch.Tensor:
         x = bottom
         for up, blk, skip in zip(self.ups, self.blocks, reversed(skips)):
-            x = up(x)
-            x = blk(torch.cat([x, skip], dim=1))
-        return self.head(x)
+            x = up(torch.cat([x, skip], dim=1))
+            x = blk(x)
+        return x
 
 
 def sincos_pos_3d(shape: Sequence[int], dim: int, device, dtype) -> torch.Tensor:
@@ -228,7 +238,7 @@ def early_fusion_wide(small: bool = False) -> nn.Module:
 
 _REGISTRY = {
     "A": ("fusión temprana: U-Net 3D con PET y CT como dos canales de entrada", early_fusion_unet),
-    "A+": ("control de capacidad: A con canales ×1,5 (≈ los parámetros de B); separa el efecto de tener más red del de fusionar distinto", early_fusion_wide),
+    "A+": ("control de capacidad: A con canales ×1,375 (24,3 M, los parámetros de B); separa el efecto de tener más red del de fusionar distinto", early_fusion_wide),
     "B": ("fusión intermedia: dos codificadores (PET, CT) concatenados en el cuello de botella y en los saltos", dual_concat),
     "C": ("fusión intermedia: dos codificadores con atención cruzada PET→CT en el cuello de botella (B + atención)", dual_cross_attention),
 }

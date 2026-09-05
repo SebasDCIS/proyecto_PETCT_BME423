@@ -470,3 +470,22 @@ semillas, A queda en Dice 0,56 ± 0,02, FPV 20 ± 3 mL, FNV 8,2 ± 0,4 mL
 (`results/comparacion_modelos.csv`). La desviación entre semillas en validación completa
 (0,02) es menor que en la validación rápida (0,07), como corresponde a 26 estudios frente a
 12: es el umbral por debajo del cual una diferencia entre modelos no dice nada.
+
+**Corrección de B y C antes de lanzarlos (misma tarde).** El benchmark en el Mac dio 4,03 s
+por iteración para B y C (28 h por corrida, 11,6 GB de memoria) contra 0,59 de A. Contando
+operaciones: A 37 GFLOP por parche, B 586. La causa no eran los dos codificadores sino que
+mi `Encoder` procesaba el primer nivel a resolución completa (96³, 32 canales, dos
+subbloques) y el decodificador terminaba con una convolución de 96 canales también a 96³;
+la U-Net de MONAI de A reduce ×2 desde la primera convolución y nunca opera ancho a
+resolución completa. Rehice `Encoder` y `Decoder` con exactamente el plan de MONAI
+(96³ → 48³ → 24³ → 12³ → 6³; cuello de botella a 6³; subida con concatenación de saltos +
+convolución transpuesta + un subbloque residual; último nivel produce la salida). Ahora:
+B 24,0 M y 59 GFLOP; C 24,4 M y 59 GFLOP (1,6× A). A+ pasa a canales ×1,375 (24,3 M, los
+parámetros de B). Las 37 pruebas pasan. Lección: contar operaciones (`torch.utils.flop_counter`)
+antes de lanzar 25 000 iteraciones; el benchmark de 10 iteraciones evitó perder una semana.
+Hay que repetir el benchmark y re-ejecutar el cuaderno 04 (el humo anterior de C queda
+inválido: pesos de otra arquitectura).
+
+**Semilla 3 de A en validación:** Dice 0,574 (mediana 0,688), FPV 24 mL, FNV 7,6 mL. Las
+tres semillas: 0,549 / 0,578 / 0,574 → **A = 0,567 ± 0,016**, FPV 21 ± 3 mL, FNV 8,0 ± 0,4
+mL. Modelo A cerrado.
