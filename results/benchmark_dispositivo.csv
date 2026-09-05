@@ -3,3 +3,5 @@ mps,96,2,completa,False,12.9,0.587,4.1,1.1 GB,
 cpu,96,2,completa,False,12.9,0.629,4.4,,
 mps,96,2,completa,False,34.6,4.033,28.0,11.6 GB,B
 mps,96,2,completa,False,35.0,4.038,28.0,11.6 GB,C
+mps,96,2,completa,False,24.0,0.71,4.9,2.2 GB,B
+mps,96,2,completa,False,24.4,0.709,4.9,2.2 GB,C

@@ -489,3 +489,8 @@ inválido: pesos de otra arquitectura).
 **Semilla 3 de A en validación:** Dice 0,574 (mediana 0,688), FPV 24 mL, FNV 7,6 mL. Las
 tres semillas: 0,549 / 0,578 / 0,574 → **A = 0,567 ± 0,016**, FPV 21 ± 3 mL, FNV 8,0 ± 0,4
 mL. Modelo A cerrado.
+
+**Benchmark definitivo de B y C en el Mac (`mps`, lote 2, parches 96³):** 0,710 y 0,709 s por
+iteración (A: 0,59), 2,2 GB de memoria pico (antes 11,6). Unas 5 h por corrida, igual que A.
+Cuaderno 04 ejecutado con la arquitectura definitiva (humo de C: 100 iteraciones de la red
+chica). Lanzada la primera corrida de B (`runs/B`, semilla 423).
