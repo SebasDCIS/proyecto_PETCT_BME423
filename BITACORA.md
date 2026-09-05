@@ -463,3 +463,10 @@ atención suma 1 por consulta y con `gamma = 0` deja el mapa PET intacto, la cod
 de posición distingue posiciones, y 12 iteraciones de entrenamiento de B y C bajan la
 pérdida sobre el fantoma. `scripts/08` acepta `--modelos B C` para medir su velocidad en
 `mps` antes de lanzarlos (se espera ~1,5× el tiempo de A por los dos codificadores).
+
+**Semilla 2 de A en los 26 de validación:** Dice 0,578 (mediana 0,665), FPV 22 mL, FNV
+7,9 mL, FPV en negativos 36 mL; pulmón 0,72, linfoma 0,64, melanoma 0,37. Con dos
+semillas, A queda en Dice 0,56 ± 0,02, FPV 20 ± 3 mL, FNV 8,2 ± 0,4 mL
+(`results/comparacion_modelos.csv`). La desviación entre semillas en validación completa
+(0,02) es menor que en la validación rápida (0,07), como corresponde a 26 estudios frente a
+12: es el umbral por debajo del cual una diferencia entre modelos no dice nada.
