@@ -530,3 +530,11 @@ se recalculó sobre los 251 con la misma regla (Dice 0,184 en positivos, FPV 952
 datos: deja anotaciones huérfanas que ningún modelo puede acertar. Hay que decirlo, medirlo
 (4,6 % del volumen anotado) y excluirlo de forma declarada; si no, se está midiendo el
 anonimizado y no el modelo. Lo detectó una figura, no una tabla: mirar los casos vale.
+
+## 2026-09-05 (noche). Primera corrida de B
+
+`runs/B`, semilla 423, 5 h 56 min (0,85 s/it real), mejor checkpoint en la iteración 13 000
+(Dice de validación rápida 0,513). En los 26 de validación, con la regla de exclusión:
+Dice 0,603 (mediana 0,655), FPV 20,3 mL, FNV 5,8 mL, FPV en negativos 36 mL. Es
+prácticamente idéntico a la semilla 423 de A (0,603 / 18,0 / 6,5). Una sola semilla no
+permite concluir; B_s2 lanzada.
