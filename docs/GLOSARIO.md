@@ -349,3 +349,46 @@ Cada proceso lleva su propia semilla, o sacarían los mismos parches.
 **Semilla de repetición.** Misma partición y mismos datos, distinta inicialización de
 pesos y distinto orden de parches. Tres semillas por modelo permiten reportar media y
 desviación y saber si una diferencia entre A, B y C es de la arquitectura o del azar.
+
+---
+
+## Paso 4 · Modelos B y C
+
+**Codificador dual (dual encoder).** Dos caminos de bajada independientes, uno por
+modalidad, con la misma forma pero pesos propios. Cada uno aprende a resumir su imagen en
+su propio lenguaje (metabolismo / anatomía). Analogía: dos peritos que estudian el caso por
+separado.
+
+**Concatenación.** Apilar dos pilas de mapas en una más gruesa (320 + 320 = 640) y dejar
+que la capa siguiente los mezcle. No calcula nada por sí misma. Analogía: dos informes en
+la misma carpeta. Es la fusión del modelo B.
+
+**Atención (query, key, value).** Cada posición fabrica una consulta (query); cada
+posición ofrece una etiqueta (key) y un contenido (value). Se compara la consulta con
+todas las etiquetas, los parecidos pasan por softmax (pesos que suman 1) y la respuesta es
+la suma de los contenidos ponderada por esos pesos. Analogía: llegar a una biblioteca con
+una pregunta y llevarse sobre todo los libros cuyo lomo coincide.
+
+**Autoatención frente a atención cruzada.** Autoatención: consulta, etiquetas y contenidos
+salen del mismo mapa (transformers, LLM). Atención cruzada: la consulta sale de un mapa (el
+PET) y las etiquetas y contenidos de otro (el CT). Es la fusión del modelo C: "el PET
+pregunta al CT". *Para la defensa:* "cada foco del PET decide, caso por caso, de qué
+regiones del CT tomar información; en la concatenación la mezcla es fija".
+
+**Cabezas de atención.** Varias atenciones en paralelo (8 en C), cada una con sus propias
+consultas y etiquetas: ocho preguntas distintas a la vez, cuyas respuestas se juntan.
+
+**Codificación de posición.** La atención no sabe dónde está cada posición (trata el mapa
+como una bolsa de puntos). Se le suma a cada posición un código fijo de senos y cosenos que
+depende de sus coordenadas (z, y, x), para que "arriba" y "abajo" existan. Sin parámetros.
+
+**Ganancia aprendible (gamma).** Un número que multiplica la salida de la atención y parte
+en 0: al inicio C es idéntico a B, y durante el entrenamiento la red sube gamma solo si la
+atención le sirve. Estabiliza el arranque y hace honesta la comparación.
+
+**Control de capacidad (A+).** La misma arquitectura de A con canales ×1,5 para igualar
+los parámetros de B. Separa dos explicaciones posibles de un resultado: "gana porque
+fusiona distinto" y "gana porque es más grande".
+
+**Parámetros declarados.** A 12,9 M; A+ 28,9 M; B 34,6 M; C 35,0 M. La diferencia B–C
+(0,4 M) es solo la atención.

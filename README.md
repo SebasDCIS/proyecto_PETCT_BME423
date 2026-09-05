@@ -102,8 +102,8 @@ Lesions.* Sci Data 2022;9:601. doi:10.1038/s41597-022-01718-3.
 | 0 | `notebooks/00_entorno.ipynb` revisión del entorno | listo |
 | 1 | `notebooks/01_datos_suv_conversion.ipynb`, `notebooks/01b_geometria_dicom.ipynb` y `scripts/01…03`, `06` | listo; 251 estudios convertidos |
 | 2 | `notebooks/02_preprocesamiento_referencia_clasica.ipynb`, `scripts/04`, `scripts/05` | listo; referencia clásica sobre 251 |
-| 3 | `notebooks/03_modelo_a_fusion_temprana.ipynb`, `src/petct/{data,models,train,infer}.py`, `scripts/07…09` | código listo y probado; entrenamiento completo pendiente |
-| 4 | modelos B y C (fusión intermedia) | pendiente |
+| 3 | `notebooks/03_modelo_a_fusion_temprana.ipynb`, `src/petct/{data,models,train,infer}.py`, `scripts/07…10` | modelo A entrenado (Dice 0,55 en validación; FPV 1 192 → 18 mL) |
+| 4 | `notebooks/04_modelos_b_c_fusion_intermedia.ipynb`, `src/petct/models.py` (B, C, A+) | código listo y probado; 9 corridas (3 modelos × 3 semillas) en curso |
 | 5 | evaluación y análisis por órgano | pendiente |
 
 ## Licencia

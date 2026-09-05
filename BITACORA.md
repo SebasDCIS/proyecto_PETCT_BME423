@@ -424,3 +424,42 @@ partición de prueba (49) no se toca hasta tener los nueve checkpoints. Resultad
 `results/modelo_A_val.csv`, `results/corridas.csv`, `results/comparacion_modelos.csv`,
 `docs/figuras/curvas_entrenamiento.png`. Máscaras predichas en `runs/A/mascaras_val/`
 (fuera de git) para el análisis por órgano.
+
+## 2026-09-05. Semilla 2 del modelo A; Paso 4: modelos B y C construidos
+
+**Semilla 2 de A** (`runs/A_s2`, 4 h 48 min): mejor Dice de validación rápida 0,586, contra
+0,512 de la semilla 423. Siete centésimas de diferencia con la misma arquitectura, los
+mismos datos y el mismo presupuesto: es la variabilidad que hay que conocer antes de
+comparar arquitecturas, y la razón de las tres semillas. Evaluación en los 26 de
+validación pendiente (`scripts/09 ... --etiqueta modelo_A_s2`). Semilla 3 en cola.
+
+**Modelos B y C** (`src/petct/models.py`), sobre la misma interfaz `build_model`:
+
+- Codificador propio (`Encoder`): un bloque residual de MONAI por nivel, mismo plan de
+  canales que A (32-64-128-256-320), dos subbloques, normalización por instancia;
+  reducción ×2 desde el segundo nivel. 11,9 M de parámetros por codificador.
+- B: dos codificadores (PET, CT). En el cuello de botella se concatenan (640 canales) y
+  una convolución 1×1×1 los mezcla en 320; los saltos llevan al decodificador los mapas
+  de ambos lados concatenados. Decodificador liviano (un subbloque por nivel, como en la
+  U-Net de MONAI). Total 34,6 M.
+- C: B más un bloque de atención cruzada en el cuello de botella antes de concatenar:
+  consultas desde el mapa PET, etiquetas y contenidos desde el mapa CT, 8 cabezas,
+  pre-normalización, codificación de posición sinusoidal 3D fija, y una ganancia
+  aprendible `gamma` que parte en 0 (al inicio C se comporta exactamente como B y la red
+  decide cuánto usar la atención). Total 35,0 M; la diferencia con B son 0,4 M.
+  `attention_maps()` devuelve los pesos promediados por cabeza para el análisis.
+- A+: control de capacidad. La misma fusión temprana de A con canales ×1,5
+  (48-96-192-384-480), 28,9 M. Si sobra cómputo, responde si B gana por fusionar distinto
+  o por ser más grande. Opcional; no forma parte de las nueve corridas.
+
+Decisión de diseño declarada: B y C tienen 2,7 veces los parámetros de A porque llevan dos
+codificadores completos; se prefirió mantener el codificador idéntico al de A (misma
+"lupa" por modalidad) antes que igualar parámetros angostando los canales. La comparación
+limpia de la atención es B contra C; la de fusión temprana contra intermedia es A contra
+B, con A+ como control si se corre.
+
+Pruebas nuevas (37 en total): forma y gradiente de B y C, C−B < 10 % de parámetros, la
+atención suma 1 por consulta y con `gamma = 0` deja el mapa PET intacto, la codificación
+de posición distingue posiciones, y 12 iteraciones de entrenamiento de B y C bajan la
+pérdida sobre el fantoma. `scripts/08` acepta `--modelos B C` para medir su velocidad en
+`mps` antes de lanzarlos (se espera ~1,5× el tiempo de A por los dos codificadores).

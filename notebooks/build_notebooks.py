@@ -792,5 +792,137 @@ para que la comparación sea limpia."""),
 ]
 nb(nb03, HERE / "03_modelo_a_fusion_temprana.ipynb")
 
+# ============================================================ 04 · modelos B y C
+nb04 = [
+("md", """# 04 · Modelos B y C: dos codificadores, concatenación y atención cruzada
+
+El modelo A ya está entrenado y me dio el punto de comparación: Dice 0,55 en validación y
+los falsos positivos de un litro a 18 mL. Ahora construyo los otros dos, que son la
+pregunta del proyecto. Los tres comparten todo (datos, partición, parches, pérdida,
+optimizador, presupuesto); lo único que cambia es cómo se juntan el PET y el CT dentro de
+la red.
+
+En A, PET y CT entran como dos canales de una misma imagen y se mezclan desde la primera
+convolución. En B, cada modalidad baja por su propio codificador y los dos resúmenes se
+apilan en el cuello de botella (concatenación) antes de subir por un decodificador común. C
+es exactamente B más un bloque de atención cruzada en ese mismo cuello de botella: cada
+posición del mapa PET "pregunta" al mapa CT qué hay ahí y suma la respuesta a su propio
+mapa antes de apilar. Por eso B contra C aísla el efecto de la atención.
+
+En este cuaderno muestro las tres arquitecturas sobre un parche real, cuento sus
+parámetros, verifico que la atención hace lo que dice hacer, mido cuánto tarda cada una en
+esta máquina y corro un humo corto de C."""),
+("code", """import sys, time
+from pathlib import Path
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import torch
+
+RAIZ = Path.cwd().resolve().parent if Path.cwd().name == "notebooks" else Path.cwd()
+sys.path.insert(0, str(RAIZ / "src"))
+from petct.data import split_files, PatchDataset
+from petct.models import build_model, count_parameters, describe_models, CrossAttentionFusion, sincos_pos_3d
+from petct.train import TrainConfig, train
+from petct.device import pick_device, describe_device
+from monai.losses import DiceCELoss
+
+device = pick_device()
+print("dispositivo:", describe_device())
+splits = split_files(RAIZ / "data/manifests/subconjunto.csv", RAIZ / "data/processed")
+ds = PatchDataset(splits["train"], patch_size=(96, 96, 96), p_lesion=1.0, cache_size=4, seed=7)
+x, y = ds[0]
+xb, yb = x[None].to(device), y[None].to(device)
+print("parche:", tuple(xb.shape), "vóxeles de lesión:", int(y.sum()))"""),
+("md", """## 1. Los tres modelos, lado a lado
+
+`describe_models` dice qué es cada uno; el conteo de parámetros dice cuánto pesa. B y C
+tienen 2,7 veces los parámetros de A porque llevan dos codificadores completos (11,9 M cada
+uno); preferí mantener el codificador idéntico al de A, la misma "lupa" por modalidad,
+antes que igualar parámetros angostando los canales. La diferencia entre B y C son 0,4 M:
+el bloque de atención. Y agrego un control, A+, que es A con canales más anchos hasta
+llegar a los parámetros de B: si algún día B gana a A, A+ dice si fue por la fusión o por
+el tamaño."""),
+("code", """filas = []
+for nombre, desc in describe_models().items():
+    m = build_model(nombre)
+    with torch.no_grad():
+        out = m.to(device)(xb)
+    filas.append({"modelo": nombre, "parámetros (M)": round(count_parameters(m) / 1e6, 1),
+                  "salida": str(tuple(out.shape)), "qué es": desc})
+    del m
+tabla = pd.DataFrame(filas)
+print(tabla[["modelo", "parámetros (M)", "salida"]].to_string(index=False))
+for _, r in tabla.iterrows(): print(f"\\n{r['modelo']}: {r['qué es']}")"""),
+("md", """## 2. Qué hace la atención cruzada, en chico
+
+Para verlo sin ruido uso el bloque de atención solo, con mapas pequeños. Tres cosas que
+tienen que cumplirse. Primero, para cada posición del PET los pesos sobre las posiciones
+del CT suman 1: son una distribución de "a quién le pregunto". Segundo, al inicio la
+ganancia `gamma` vale 0, así que la salida es idéntica al mapa PET: C arranca siendo B, y
+solo durante el entrenamiento la red decide cuánto usar la atención. Tercero, la
+codificación de posición da a cada posición un código distinto; sin ella la atención no
+sabría que una región está arriba y otra abajo."""),
+("code", """torch.manual_seed(0)
+blk = CrossAttentionFusion(64, heads=4)
+pet = torch.randn(1, 64, 3, 4, 5); ct = torch.randn(1, 64, 3, 4, 5)
+fused = blk(pet, ct)
+w = blk.attention_maps(pet, ct)
+print("pesos de atención:", tuple(w.shape), "(consultas del PET × posiciones del CT); suma por consulta:", float(w.sum(-1).mean()))
+print("gamma inicial:", float(blk.gamma), "→ ¿salida idéntica al PET?", bool(torch.allclose(fused, pet)))
+pe = sincos_pos_3d((3, 4, 5), 64, "cpu", torch.float32)
+fig, ax = plt.subplots(1, 2, figsize=(9, 3.2))
+ax[0].imshow(pe.numpy().T, aspect="auto", cmap="RdBu"); ax[0].set_xlabel("posición (60 = 3·4·5)"); ax[0].set_ylabel("dimensión"); ax[0].set_title("codificación de posición 3D")
+ax[1].imshow(w[0].numpy(), cmap="viridis"); ax[1].set_xlabel("posición del CT"); ax[1].set_ylabel("consulta del PET"); ax[1].set_title("pesos de atención (sin entrenar)")
+plt.tight_layout(); plt.show()"""),
+("md", """## 3. Cuánto tarda cada uno aquí
+
+La misma medición del cuaderno 03, ahora para los cuatro modelos: segundos por iteración
+de ida y vuelta con lote 2 y parches de 96³. Espero que B y C tarden alrededor de 1,5
+veces lo que A, porque bajan dos veces. Con eso sé cuántas horas son las 25 000
+iteraciones de cada uno."""),
+("code", """loss_fn = DiceCELoss(softmax=True, to_onehot_y=True, include_background=False)
+xb2 = torch.stack([ds[i][0] for i in range(2)]).to(device); yb2 = torch.stack([ds[i][1] for i in range(2)]).to(device)
+def sync():
+    if device.type == "cuda": torch.cuda.synchronize()
+    elif device.type == "mps": torch.mps.synchronize()
+res = []
+for nombre in ("A", "A+", "B", "C"):
+    m = build_model(nombre).to(device); opt = torch.optim.AdamW(m.parameters(), lr=3e-4)
+    def paso():
+        opt.zero_grad(set_to_none=True); loss = loss_fn(m(xb2), yb2); loss.backward(); opt.step()
+    for _ in range(2): paso()
+    sync(); t = time.time()
+    for _ in range(4): paso()
+    sync(); s_it = (time.time() - t) / 4
+    res.append({"modelo": nombre, "s/it": round(s_it, 2), "horas 25 000 it": round(25000 * s_it / 3600, 1)})
+    del m, opt
+print(pd.DataFrame(res).to_string(index=False))"""),
+("md", """## 4. Humo de C con datos reales
+
+Como con A: 100 iteraciones de la red chica con parches de 64³, solo para comprobar que el
+bucle completo funciona con dos codificadores y atención, que la pérdida baja y que el
+checkpoint se guarda. No es un resultado."""),
+("code", """cfg = TrainConfig(modelo="C", iteraciones=100, lote=2, lr=1e-3, checkpoint_cada=50, validar_cada=100,
+                  max_estudios_val=1, parche=(64, 64, 64), prob_parche_con_lesion=0.8, semilla=423,
+                  workers=0, cache_estudios=16, small=True, log_cada=10)
+salida = RAIZ / "runs" / "humo_C_cuaderno"
+res = train(cfg, splits["train"], splits["val"], salida, device, resume=True)
+print({k: v for k, v in res.items() if k in ("modelo", "parametros", "iteraciones_hechas", "loss_final", "minutos")})
+log = pd.read_csv(salida / "log_entrenamiento.csv")
+ck = torch.load(salida / "ultimo.pt", map_location="cpu", weights_only=False)
+print("gamma tras el humo:", float(ck["model"]["cross.gamma"]), "(partió en 0; si se mueve, la red está usando la atención)")
+plt.figure(figsize=(5, 2.6)); plt.plot(log["iter"], log["loss"]); plt.xlabel("iteración"); plt.ylabel("pérdida"); plt.title("humo C (red chica)"); plt.tight_layout(); plt.show()"""),
+("md", """## 5. Qué sigue
+
+Las nueve corridas: A, B y C con semillas 423, 2 y 3, con `scripts/07_entrenar.py --modelo
+B --semilla 2 --salida runs/B_s2` y equivalentes. Cada una se evalúa en validación con
+`scripts/09` y `scripts/10` arma la tabla con media y desviación por modelo. La prueba se
+abre una sola vez al final. Después, con las máscaras guardadas y las máscaras de órganos
+del CT, el análisis por órgano del Paso 5, que es donde la pregunta del proyecto se
+responde de verdad: no solo cuánto se equivoca cada fusión, sino dónde."""),
+]
+nb(nb04, HERE / "04_modelos_b_c_fusion_intermedia.ipynb")
+
 nb(nb00, HERE / "00_entorno.ipynb")
 nb(nb01, HERE / "01_datos_suv_conversion.ipynb")
