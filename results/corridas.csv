@@ -1,0 +1,2 @@
+corrida,modelo,semilla,small,iteraciones,mejor_dice_val_rapida,iter_mejor,loss_final,seg_por_iter,minutos,dispositivo
+A,A,423,False,25000,0.5115940456968506,23000,0.4568934328854084,0.6466875016689301,288.0335862835248,mps

@@ -386,3 +386,41 @@ modelo (nueve corridas, ~36 h de Mac) para reportar media y desviación, decidid
 de ver el nivel del modelo A. Agregados `--semilla` (07), `--etiqueta` (09) y
 `scripts/10_resumir_corridas.py` (tabla de corridas, comparación media ± sd por modelo
 junto a la referencia clásica, curvas de entrenamiento).
+
+## 2026-09-05. Modelo A entrenado: Dice 0,55 en validación, falsos positivos de 1 192 a 18 mL
+
+**Corrida.** `runs/A`, semilla 423, 25 000 iteraciones, lote 2, parches 96³, `mps`,
+0,647 s/iteración, 4 h 48 min. Pérdida de 1,73 (iteración 20) a 0,49 (promedio de las
+últimas 5 000); seguía bajando despacio, sin señal de sobreajuste. Validación rápida
+(12 estudios) cada 1 000 iteraciones: el FPV cae primero (579 mL en la 1 000, 134 en la
+6 000), el Dice sube después (0,40 en la 7 000, 0,51 en la 13 000) y desde ahí oscila entre
+0,42 y 0,51 por el tamaño de la muestra. Mejor checkpoint: iteración 23 000 (Dice 0,512,
+FPV 10 mL, FNV 3,9 mL).
+
+**Validación completa (26 estudios, 21 positivos), `scripts/09`, checkpoint 23 000:**
+
+| | Dice (positivos) media / mediana | FPV media (mL) | FNV media (mL) | FPV en negativos (mL) | MTV predicho / anotado (mL) |
+|---|---|---|---|---|---|
+| referencia clásica (mismos 26) | 0,170 / — | 1 192 | 7,6 | 852 | 1 545 / 199 |
+| modelo A | 0,549 / 0,566 | 18 | 8,4 | 26 | 157 / 199 |
+
+Por diagnóstico: pulmón Dice 0,70 (7), linfoma 0,66 (7), melanoma 0,28 (7). El melanoma
+de validación tiene lesiones diminutas (MTV anotado medio 6,8 mL; predicho 24,5): con
+lesiones de pocos vóxeles el Dice castiga cualquier borde de más, y ahí 3 mm isotrópicos
+pesan. Un solo positivo con Dice 0 (`PETCT_1a90052cb2`: lesión de 9,5 mL no detectada,
+43 mL inventados); el mayor FNV es `PETCT_e03b96666f` (93,6 mL no tocados, Dice 0,68 igual).
+Los cinco negativos suman 129 mL de falsos positivos (el peor, 104 mL en `PETCT_f6295a93a6`).
+
+**Lectura.** El modelo A está en el nivel esperado para 176 pacientes y 5 h de cómputo
+(los ganadores de autoPET: 0,6–0,7 con semanas de GPU). Lo que aprendió entre la
+iteración 1 000 y la 13 000 fue sobre todo a descartar captación fisiológica: es el CT
+trabajando en fusión temprana. El MTV predicho queda un 20 % por debajo del anotado
+(bordes conservadores), contra 8 veces por encima en la clásica.
+
+**Protocolo congelado para las nueve corridas.** Se mantiene todo tal como corrió A:
+lote 2, parches 96³, 25 000 iteraciones, lr 3·10⁻⁴, sin AMP en `mps`, volteos laterales.
+Cambiar algo ahora obligaría a repetir A. Semillas: 423 (hecha), 2 y 3 por modelo. La
+partición de prueba (49) no se toca hasta tener los nueve checkpoints. Resultados:
+`results/modelo_A_val.csv`, `results/corridas.csv`, `results/comparacion_modelos.csv`,
+`docs/figuras/curvas_entrenamiento.png`. Máscaras predichas en `runs/A/mascaras_val/`
+(fuera de git) para el análisis por órgano.
