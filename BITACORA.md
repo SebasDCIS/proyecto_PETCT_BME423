@@ -543,3 +543,39 @@ permite concluir; B_s2 lanzada.
 (mediana 0,711), FPV 26,2 mL, FNV 5,8 mL, FPV en negativos 44 mL. Con dos semillas,
 B = 0,605 ± 0,002 de Dice y 23 ± 4 mL de FPV, contra A = 0,621 ± 0,016 y 21 ± 3. Diferencia
 dentro del ruido. B_s3 lanzada.
+
+## 2026-09-06. Auditoría del protocolo y de fugas, con B_s3 corriendo
+
+Antes de lanzar C quise comprobar que las nueve corridas comparten exactamente los mismos datos
+y la misma configuración, y que no hay fuga entre particiones. Lo revisé contra los archivos
+reales (manifiesto, `resumen.json` de cada corrida, código), no de memoria; el detalle queda en
+`docs/PROTOCOLO_CONGELADO.md`.
+
+**Datos.** 251 estudios = 251 pacientes = 251 `study_uid`; ningún paciente en dos particiones;
+estratificado por diagnóstico (train 47/47/47/35, val 7/7/7/5, test 13/13/13/10); el manifiesto
+no cambió desde el commit `28a5ddf` (md5 `03d1d5c6…`). Lesión anotada por estudio: 173 / 161 /
+200 mL (train / val / test), parecidos.
+
+**Configuración.** Los `resumen.json` de A, A_s2, A_s3, B y B_s2 coinciden campo a campo
+(25 000 it, lote 2, parche 96³, 70 % lesión, lr 3e-4, wd 1e-5, validación cada 1 000 sobre 12,
+caché 256, red completa); solo cambian `modelo` y `semilla`. B_s3 va con la misma línea. AMP
+está en `true` pero solo actúa en CUDA: todo se entrena en fp32 en mps, igual para todos.
+
+**Fugas.** Entrenamiento solo ve train (`splits["train"]` → `PatchDataset`); val solo entra a
+la validación rápida sin gradiente; test no se ha cargado nunca (no hay `*_test.csv` ni
+`mascaras_test`). Normalizaciones constantes (sin estadísticas globales), aumento solo en
+train, umbral clásico fijado por diseño, mapas de órganos solo en evaluación, regla de
+exclusión solo en evaluación. Veredicto: sin fugas; test sigue cerrado.
+
+**Dos cosas que descubrí y dejo declaradas.** (1) `split_files` ordena alfabéticamente, así que
+los 12 de validación rápida no son los 12 primeros del manifiesto sino 3 pulmón, 3 linfoma,
+4 melanoma y 2 negativos, siempre los mismos; incluyen a `1a90052cb2` (lesión solo en la zona
+borrada, Dice cruda 0 fija), lo que explica que la validación rápida dé 0,50–0,59 y los 26 con
+exclusión 0,60–0,63. Es un criterio ruidoso pero idéntico en las nueve corridas; no lo cambio
+para no romper la comparabilidad. (2) Los 12 están dentro de los 26 que reporto en val, así
+que val es levemente optimista; la cifra limpia será la de test. Mejores checkpoints: A 23 000,
+A_s2 24 000, A_s3 22 000, B 13 000, B_s2 19 000 (B llega antes a su mejor punto).
+
+Limpieza menor: la sección `evaluacion` del YAML decía `hd95` y una lista de órganos vieja;
+ahora refleja lo que realmente se calcula. No afecta a B_s3 (leyó el YAML al arrancar y solo
+usa `entrenamiento`/`preprocesamiento`).

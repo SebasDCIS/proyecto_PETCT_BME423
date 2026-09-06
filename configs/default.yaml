@@ -29,12 +29,15 @@ entrenamiento:
   iteraciones: 25000
   lote: 2
   lr: 3.0e-4
-  precision_mixta: true
+  weight_decay: 1.0e-5          # (informativo: TrainConfig lo fija; AdamW)
+  precision_mixta: true         # solo actúa en CUDA; en mps/cpu se entrena en fp32
   checkpoint_cada: 500          # iteraciones; imprescindible en Colab
   validar_cada: 1000            # validación rápida (ventana deslizante sobre pocos estudios)
   max_estudios_val: 12          # cuántos estudios de validación usa la validación rápida
 
 evaluacion:
-  metricas: [dice, hd95, fpv_ml, fnv_ml, mtv_error_ml, suvmax_error]
-  organos_fisiologicos: [encefalo, miocardio, rinones_vejiga, higado, grasa_parda]
+  # métricas del reto autoPET (Dice solo en positivos; FPV/FNV por componentes 26-conexas)
+  metricas: [dice, fpv_ml, fnv_ml, mtv_pred_ml, mtv_gt_ml, suvmax_pred, suvmax_gt]
+  excluir_zona_borrada: true    # vóxeles con SUV = 0 (caja del defacing) fuera de pred y gt
+  grupos_de_organos: "src/petct/organs.py::GROUPS"   # TotalSegmentator agrupado (Paso 5)
   bootstrap: 1000
