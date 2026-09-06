@@ -538,3 +538,8 @@ anonimizado y no el modelo. Lo detectó una figura, no una tabla: mirar los caso
 Dice 0,603 (mediana 0,655), FPV 20,3 mL, FNV 5,8 mL, FPV en negativos 36 mL. Es
 prácticamente idéntico a la semilla 423 de A (0,603 / 18,0 / 6,5). Una sola semilla no
 permite concluir; B_s2 lanzada.
+
+**B, semilla 2** (`runs/B_s2`, 6 h 32 min, mejor checkpoint 19 000): validación Dice 0,606
+(mediana 0,711), FPV 26,2 mL, FNV 5,8 mL, FPV en negativos 44 mL. Con dos semillas,
+B = 0,605 ± 0,002 de Dice y 23 ± 4 mL de FPV, contra A = 0,621 ± 0,016 y 21 ± 3. Diferencia
+dentro del ruido. B_s3 lanzada.
