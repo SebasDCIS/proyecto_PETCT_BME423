@@ -37,6 +37,8 @@ def main():
     ap.add_argument("--etiqueta", default=None, help="nombre de la corrida en la tabla (por defecto modelo_<M>; para semillas: modelo_A_s2)")
     ap.add_argument("--salida", default=None)
     ap.add_argument("--incluir-zona-borrada", action="store_true", help="no excluir la caja del defacing (métrica cruda del reto)")
+    ap.add_argument("--sin-atencion", action="store_true",
+                    help="ablación para C: pone gamma = 0 al evaluar, es decir, apaga la atención cruzada y deja el resto de la red intacta")
     a = ap.parse_args()
 
     cfg = yaml.safe_load(open(a.config))
@@ -48,6 +50,17 @@ def main():
     roi = tuple(ck.get("config", {}).get("parche", cfg["preprocesamiento"]["parche"]))
     model = build_model(a.modelo, small=small).to(device)
     load_weights(model, ck_path, device)
+    gammas = {n: float(p) for n, p in model.named_parameters() if n.endswith("gamma")}
+    if gammas:
+        print(f"gamma aprendido: {gammas}", flush=True)
+    if a.sin_atencion:
+        if not gammas:
+            sys.exit("--sin-atencion solo tiene sentido con un modelo que tenga atención cruzada (C)")
+        with torch.no_grad():
+            for n, p in model.named_parameters():
+                if n.endswith("gamma"):
+                    p.zero_()
+        print("[ablación] atención cruzada apagada (gamma = 0); el resto de los pesos es el mismo", flush=True)
     print(f"checkpoint de la iteración {ck.get('iter')} (Dice val {ck.get('best_dice', float('nan')):.3f}); "
           f"red {'chica' if small else 'completa'}; parche {roi}; dispositivo {device}", flush=True)
 
