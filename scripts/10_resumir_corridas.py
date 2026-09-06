@@ -30,7 +30,7 @@ def resumen_corridas(runs: Path) -> pd.DataFrame:
     filas = []
     for d in sorted(runs.glob("*/")):
         rj = d / "resumen.json"
-        if not rj.exists() or d.name.startswith("humo"):
+        if not rj.exists() or (d.name.startswith("humo") or "piloto" in d.name):
             continue
         r = json.load(open(rj))
         cfg = r.get("config", {})
@@ -83,7 +83,7 @@ def resumen_evaluaciones(results: Path) -> pd.DataFrame:
 
 
 def figura_curvas(runs: Path, out: Path):
-    dirs = [d for d in sorted(runs.glob("*/")) if (d / "log_entrenamiento.csv").exists() and not d.name.startswith("humo")]
+    dirs = [d for d in sorted(runs.glob("*/")) if (d / "log_entrenamiento.csv").exists() and not (d.name.startswith("humo") or "piloto" in d.name)]
     if not dirs:
         return
     fig, ax = plt.subplots(1, 2, figsize=(11, 3.8))

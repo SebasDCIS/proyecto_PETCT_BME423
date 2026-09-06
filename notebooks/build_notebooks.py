@@ -865,7 +865,7 @@ for _, r in tabla.iterrows(): print(f"\\n{r['modelo']}: {r['qué es']}")"""),
 Para verlo sin ruido uso el bloque de atención solo, con mapas pequeños. Tres cosas que
 tienen que cumplirse. Primero, para cada posición del PET los pesos sobre las posiciones
 del CT suman 1: son una distribución de "a quién le pregunto". Segundo, al inicio la
-ganancia `gamma` vale 0, así que la salida es idéntica al mapa PET: C arranca siendo B, y
+ganancia `gamma` partía en 0 en la primera versión (la salida era idéntica al mapa PET: C arrancaba siendo B); desde el 2026-09-07 parte en 1, porque con 0 la rama quedó inerte (ver bitácora), y
 solo durante el entrenamiento la red decide cuánto usar la atención. Tercero, la
 codificación de posición da a cada posición un código distinto; sin ella la atención no
 sabría que una región está arriba y otra abajo."""),
@@ -875,7 +875,7 @@ pet = torch.randn(1, 64, 3, 4, 5); ct = torch.randn(1, 64, 3, 4, 5)
 fused = blk(pet, ct)
 w = blk.attention_maps(pet, ct)
 print("pesos de atención:", tuple(w.shape), "(consultas del PET × posiciones del CT); suma por consulta:", float(w.sum(-1).mean()))
-print("gamma inicial:", float(blk.gamma), "→ ¿salida idéntica al PET?", bool(torch.allclose(fused, pet)))
+print("gamma inicial:", float(blk.gamma), "→ ¿salida idéntica al PET?", bool(torch.allclose(fused, pet)), "(con gamma_init=0 sería True)")
 pe = sincos_pos_3d((3, 4, 5), 64, "cpu", torch.float32)
 fig, ax = plt.subplots(1, 2, figsize=(9, 3.2))
 ax[0].imshow(pe.numpy().T, aspect="auto", cmap="RdBu"); ax[0].set_xlabel("posición (60 = 3·4·5)"); ax[0].set_ylabel("dimensión"); ax[0].set_title("codificación de posición 3D")
@@ -916,7 +916,7 @@ res = train(cfg, splits["train"], splits["val"], salida, device, resume=True)
 print({k: v for k, v in res.items() if k in ("modelo", "parametros", "iteraciones_hechas", "loss_final", "minutos")})
 log = pd.read_csv(salida / "log_entrenamiento.csv")
 ck = torch.load(salida / "ultimo.pt", map_location="cpu", weights_only=False)
-print("gamma tras el humo:", float(ck["model"]["cross.gamma"]), "(partió en 0; si se mueve, la red está usando la atención)")
+print("gamma tras el humo:", float(ck["model"]["cross.gamma"]), "(parte en 1; la ablación de scripts/09 --sin-atencion dice si la atención importa)")
 plt.figure(figsize=(5, 2.6)); plt.plot(log["iter"], log["loss"]); plt.xlabel("iteración"); plt.ylabel("pérdida"); plt.title("humo C (red chica)"); plt.tight_layout(); plt.show()"""),
 ("md", """## 5. Qué sigue
 

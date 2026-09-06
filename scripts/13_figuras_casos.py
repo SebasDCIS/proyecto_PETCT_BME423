@@ -49,7 +49,7 @@ def main():
         estudios = a.estudios or []
     if not estudios:
         sys.exit("indica --estudios o --peores N")
-    corridas = a.corridas or sorted(d.name for d in Path("runs").glob("*/") if (d / f"mascaras_{a.particion}").exists() and not d.name.startswith("humo"))
+    corridas = a.corridas or sorted(d.name for d in Path("runs").glob("*/") if (d / f"mascaras_{a.particion}").exists() and not (d.name.startswith("humo") or "piloto" in d.name))
     print("estudios:", estudios, "| corridas:", corridas)
 
     fig, axes = plt.subplots(len(estudios), 1 + len(corridas), figsize=(3.2 * (1 + len(corridas)), 4.6 * len(estudios)), squeeze=False)

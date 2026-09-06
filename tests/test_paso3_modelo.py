@@ -113,7 +113,9 @@ def test_atencion_cruzada_pesos_suman_uno():
     pet, ct = torch.randn(1, 64, 3, 4, 5), torch.randn(1, 64, 3, 4, 5)
     fused = blk(pet, ct)
     assert fused.shape == pet.shape
-    assert torch.allclose(fused, pet)          # gamma parte en 0: al inicio C se comporta como B
+    assert not torch.allclose(fused, pet)      # gamma parte en 1: la atención participa desde el inicio
+    apagado = CrossAttentionFusion(64, heads=4, gamma_init=0.0)
+    assert torch.allclose(apagado(pet, ct), pet)  # con gamma = 0 el bloque es la identidad (la ablación de scripts/09)
     w = blk.attention_maps(pet, ct)
     assert w.shape == (1, 60, 60) and torch.allclose(w.sum(-1), torch.ones(1, 60), atol=1e-5)
     pe = sincos_pos_3d((3, 4, 5), 64, "cpu", torch.float32)

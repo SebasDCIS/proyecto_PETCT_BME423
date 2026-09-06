@@ -382,9 +382,20 @@ consultas y etiquetas: ocho preguntas distintas a la vez, cuyas respuestas se ju
 como una bolsa de puntos). Se le suma a cada posición un código fijo de senos y cosenos que
 depende de sus coordenadas (z, y, x), para que "arriba" y "abajo" existan. Sin parámetros.
 
-**Ganancia aprendible (gamma).** Un número que multiplica la salida de la atención y parte
-en 0: al inicio C es idéntico a B, y durante el entrenamiento la red sube gamma solo si la
-atención le sirve. Estabiliza el arranque y hace honesta la comparación.
+**Ganancia aprendible (gamma).** Un número que multiplica la salida de la atención antes de
+sumarla al mapa PET. En la primera versión de C partía en 0 (idea "ReZero": C nace siendo B y
+sube gamma solo si la atención le sirve). En la práctica no funcionó: tras 25 000 iteraciones
+gamma llegó a 0,0125, la rama de atención aportaba un 0,3 % de la señal y al apagarla en
+inferencia (`scripts/09 --sin-atencion`) no cambiaba ni un vóxel. Desde el 2026-09-07 gamma
+parte en 1 (el residual estándar de un bloque transformer pre-LN, donde la atención aporta
+~25 % de la señal al inicio) y sigue siendo aprendible, así que la red puede bajarlo.
+Analogía: un micrófono con el volumen en cero; si nadie lo sube, da igual lo que se diga por
+él. Ahora arranca a volumen normal y la mezcla decide.
+
+**Ablación.** Quitar una pieza de un modelo ya entrenado y volver a medir, para saber qué
+aportaba. Aquí: poner gamma = 0 al evaluar C. Si el resultado no cambia, la pieza no estaba
+haciendo nada; si empeora, la pieza importaba. Es la prueba más directa de que un mecanismo
+funciona, y la que hay que tener antes de atribuirle una mejora.
 
 **Control de capacidad (A+).** La misma arquitectura de A con canales ×1,5 para igualar
 los parámetros de B. Separa dos explicaciones posibles de un resultado: "gana porque

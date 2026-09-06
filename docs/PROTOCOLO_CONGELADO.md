@@ -56,7 +56,8 @@ Verificada en `runs/*/resumen.json` de A, A_s2, A_s3, B, B_s2, B_s3, C: todos lo
 
 Modelos: A (fusión temprana, U-Net MONAI 32-64-128-256-320, 12,9 M parámetros, 37 GFLOP por
 parche); B (dos codificadores + concatenación, 24,0 M, 59 GFLOP); C (B + atención cruzada en el
-cuello, 24,4 M). Las tres se entrenan con este mismo bucle sin ningún cambio.
+cuello, 24,4 M; gamma inicial 1 desde el 2026-09-07, ver bitácora). Las tres se entrenan con este
+mismo bucle sin ningún cambio.
 
 ## 3. Auditoría de fugas: qué revisé y qué encontré
 
@@ -121,6 +122,5 @@ modelo ha visto, y por eso se abre una sola vez.
 | B | terminada | 13 000 | 0,603 |
 | B_s2 | terminada | 19 000 | 0,606 |
 | B_s3 | terminada | 22 000 | 0,628 |
-| C | terminada | 23 000 | 0,624 |
-| C_s2 | en curso | | |
-| C_s3 | en cola | | |
+| C piloto (gamma inicial 0) | terminada; descartada como corrida oficial: la atención quedó inerte (ablación idéntica vóxel a vóxel) | 23 000 | 0,624 |
+| C, C_s2, C_s3 (gamma inicial 1) | en cola | | |

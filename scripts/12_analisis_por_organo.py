@@ -39,7 +39,7 @@ def corridas_con_mascaras(runs: Path, particion: str):
     out = {}
     for d in sorted(runs.glob("*/")):
         m = d / f"mascaras_{particion}"
-        if m.exists() and not d.name.startswith("humo"):
+        if m.exists() and not (d.name.startswith("humo") or "piloto" in d.name):
             modelo = re.match(r"([A-Z]\+?)", d.name).group(1)
             out[d.name] = (modelo, m)
     return out

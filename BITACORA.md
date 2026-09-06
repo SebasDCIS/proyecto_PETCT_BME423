@@ -628,3 +628,44 @@ captación fisiológica, no para dibujar mejor el borde), pero con una semilla n
 B_s2 tuvo FPV 26 y B 20 con la misma arquitectura. C_s2 lanzada; si las tres semillas de C
 quedan bajo 20 mL con A y B en 21–23, el análisis por órgano del Paso 5 dirá dónde se ganó.
 Pendiente: leer `gamma` del checkpoint para saber cuánto usa C la atención.
+
+## 2026-09-07. Ablación de C: la atención no estaba haciendo nada
+
+Antes de lanzar C_s2 quise saber cuánto usaba C la atención. `gamma`, la ganancia que
+multiplica la salida del bloque de atención antes de sumarla al mapa PET, partió en 0 y
+terminó en **0,0125**. Para saber si eso es poco o mucho hice la prueba directa: agregué
+`--sin-atencion` a `scripts/09_evaluar.py` (carga el mismo `mejor.pt`, pone gamma = 0 y evalúa)
+y comparé con la evaluación normal en los 26 de validación.
+
+**Resultado: idéntico vóxel a vóxel.** Dice, FPV, FNV, MTV predicho y SUVmax predicho
+coinciden en todos los decimales en los 26 estudios (`results/modelo_C_sin_atencion_val.csv`
+frente a `results/modelo_C_val.csv`). Con gamma = 0,0125 la rama de atención aporta un 0,3 %
+de la señal del mapa PET (medido con tensores de la forma del cuello: ‖atención‖/‖q‖ ≈ 0,25
+con gamma 1, por 0,0125 → 0,003), y ese 0,3 % no alcanza a cambiar ni un argmax. En otras
+palabras, la C que entrené es B con otra inicialización, y **los 16 mL de FPV frente a los
+21–23 de A y B son ruido de semilla, no efecto de la atención**. Menos mal que lo medí antes
+de contarlo como hallazgo.
+
+**Por qué pasó.** La idea de partir en 0 (estilo ReZero, "C nace siendo B") suponía que la red
+subiría gamma si la atención le servía. Pero el gradiente que llega a gamma es pequeño cuando
+la salida de la atención es todavía ruido y la red ya resuelve la tarea por el camino de la
+concatenación; con lr 3e-4 y decaimiento polinomial, gamma se movió al principio (0,012 en la
+prueba de humo de 100 iteraciones) y después no volvió a crecer. Un dial que arranca en cero
+y nadie tiene motivo para subir se queda en cero.
+
+**Decisión (propuesta, pendiente de confirmar antes de lanzar C_s2).** Cambiar la inicialización
+de gamma a 1, que es el residual estándar de un bloque transformer pre-LN (la atención aporta
+~25 % de la señal al inicio y la red puede bajarla), y repetir las tres semillas de C. El
+resto de la arquitectura, los datos y el protocolo no cambian. La corrida hecha pasa a
+`runs/C_piloto_gamma0/` y sus resultados a `results/modelo_C_piloto_gamma0_val.csv`; los
+scripts 10, 12 y 13 ignoran las carpetas con "piloto" en el nombre. Costo: tres noches en
+vez de dos. Beneficio: la pregunta del proyecto se responde de verdad; con gamma en 0,0125
+las tres semillas de C habrían medido tres veces "C = B" por una razón trivial.
+
+Código: `CrossAttentionFusion(gamma_init=1.0)`, `DualEncoderUNet(gamma_init=...)`, prueba
+actualizada (`gamma_init=0` sigue dando la identidad, que es lo que usa la ablación); 41
+pruebas pasan. Glosario: entradas "gamma" (reescrita) y "ablación" (nueva).
+
+**Para la defensa.** Esto es lo que debe verse en el informe: un mecanismo no se da por
+funcionando porque esté en el diagrama; se apaga y se mide. Y una mejora no se atribuye a
+un mecanismo hasta que la ablación lo confirme.

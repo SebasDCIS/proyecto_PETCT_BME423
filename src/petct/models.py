@@ -164,12 +164,17 @@ class CrossAttentionFusion(nn.Module):
     del PET, de qué regiones del CT tomar información. Ocho cabezas: ocho "preguntas"
     distintas en paralelo. Normalización previa (pre-LN) para estabilidad."""
 
-    def __init__(self, channels: int, heads: int = 8, dropout: float = 0.0):
+    def __init__(self, channels: int, heads: int = 8, dropout: float = 0.0, gamma_init: float = 1.0):
         super().__init__()
         self.norm_q = nn.LayerNorm(channels)
         self.norm_kv = nn.LayerNorm(channels)
         self.attn = nn.MultiheadAttention(channels, heads, dropout=dropout, batch_first=True)
-        self.gamma = nn.Parameter(torch.zeros(1))   # la atención empieza "apagada" y la red decide cuánto usarla
+        # Ganancia aprendible de la rama de atención. La primera versión partía en 0 (estilo
+        # ReZero, "C nace siendo B") y en 25 000 iteraciones solo llegó a 0,0125: al apagarla
+        # en inferencia no cambiaba ni un vóxel (bitácora 2026-09-07), o sea que la rama quedó
+        # inerte. Ahora parte en 1, el residual estándar de un bloque transformer pre-LN, y la
+        # red sigue pudiendo bajarla si no le sirve.
+        self.gamma = nn.Parameter(torch.full((1,), float(gamma_init)))
 
     def forward(self, pet: torch.Tensor, ct: torch.Tensor) -> torch.Tensor:
         n, c, d, h, w = pet.shape
@@ -197,7 +202,7 @@ class DualEncoderUNet(nn.Module):
     """B (fusion='concat') y C (fusion='cross_attention'). Ver el docstring del módulo."""
 
     def __init__(self, fusion: str = "concat", channels: Sequence[int] = CHANNELS_FULL,
-                 out_channels: int = 2, heads: int = 8):
+                 out_channels: int = 2, heads: int = 8, gamma_init: float = 1.0):
         super().__init__()
         if fusion not in ("concat", "cross_attention"):
             raise ValueError(fusion)
@@ -206,7 +211,7 @@ class DualEncoderUNet(nn.Module):
         self.enc_pet = Encoder(1, channels)
         self.enc_ct = Encoder(1, channels)
         cb = channels[-1]
-        self.cross = CrossAttentionFusion(cb, heads=heads) if fusion == "cross_attention" else None
+        self.cross = CrossAttentionFusion(cb, heads=heads, gamma_init=gamma_init) if fusion == "cross_attention" else None
         # la mezcla del fondo es idéntica en B y en C: 1×1×1 de 2·cb a cb
         self.fuse = Convolution(3, 2 * cb, cb, strides=1, kernel_size=1, norm="instance")
         self.dec = Decoder(channels, skip_mult=2, out_channels=out_channels)
