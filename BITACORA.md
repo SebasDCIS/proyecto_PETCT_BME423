@@ -601,3 +601,30 @@ medible con tres semillas; la diferencia de Dice (0,009) es menor que la desviac
 semillas de cualquiera de los dos. B tiende a dejar escapar un poco menos (FNV 5,4 vs 6,0) y
 a inventar un poco más (FPV 22,8 vs 20,9), también dentro del ruido. `results/comparacion_modelos.csv`
 y `docs/figuras/curvas_entrenamiento.png` actualizados con `scripts/10`. C semilla 423 lanzada.
+
+## 2026-09-07. Primera corrida de C: mismo Dice, un cuarto menos de falsos positivos
+
+`runs/C`, semilla 423, 5 h 56 min (0,86 s/it: la atención en el cuello casi no cuesta tiempo
+frente a B), pérdida final 0,444 (la más baja de las siete corridas), mejor checkpoint en la
+iteración 23 000 (validación rápida 0,548). En los 26 con la regla de exclusión: Dice 0,624
+(mediana 0,717), **FPV 16,0 mL**, FNV 4,9 mL, **FPV en negativos 24,6 mL**.
+
+| | Dice (positivos) | FPV (mL) | FNV (mL) | FPV negativos (mL) |
+|---|---|---|---|---|
+| A (3 semillas) | 0,621 ± 0,016 | 20,9 ± 2,5 | 6,0 ± 0,4 | 36 |
+| B (3 semillas) | 0,612 ± 0,014 | 22,8 ± 3,1 | 5,4 ± 0,8 | 39 |
+| C, semilla 423 | 0,624 | 16,0 | 4,9 | 25 |
+
+El Dice es el mismo de siempre (pulmón 0,76, linfoma 0,70, melanoma 0,38), pero los falsos
+positivos bajan un 25–30 % respecto a A y B, y es la primera vez que un modelo se sale de la
+banda de ruido en alguna métrica. Dónde baja: en `1a90052cb2` (negativo evaluable) pasa de
+43–66 mL a 28; en `742a9413db` de 68–74 a 48; en `ea6c621616` de 29–31 a 20; cuatro de los seis
+negativos quedan bajo 5 mL. Dónde no baja: `f6295a93a6` sigue en 110 mL (los tres modelos
+inventan lo mismo ahí; hay que ver qué es con el mapa de órganos) y `94962fe878` sigue en
+78 mL. El FNV no cambia.
+
+Es exactamente la dirección de la hipótesis (la atención al CT debería servir para descartar
+captación fisiológica, no para dibujar mejor el borde), pero con una semilla no se afirma nada:
+B_s2 tuvo FPV 26 y B 20 con la misma arquitectura. C_s2 lanzada; si las tres semillas de C
+quedan bajo 20 mL con A y B en 21–23, el análisis por órgano del Paso 5 dirá dónde se ganó.
+Pendiente: leer `gamma` del checkpoint para saber cuánto usa C la atención.

@@ -33,7 +33,7 @@ y el código de `src/petct` y `scripts/`.
 
 ## 2. Configuración de entrenamiento (idéntica en las nueve corridas)
 
-Verificada en `runs/*/resumen.json` de A, A_s2, A_s3, B, B_s2, B_s3: todos los campos coinciden salvo `modelo` y `semilla`.
+Verificada en `runs/*/resumen.json` de A, A_s2, A_s3, B, B_s2, B_s3, C: todos los campos coinciden salvo `modelo` y `semilla`.
 
 | Parámetro | Valor | Dónde vive |
 |---|---|---|
@@ -121,5 +121,6 @@ modelo ha visto, y por eso se abre una sola vez.
 | B | terminada | 13 000 | 0,603 |
 | B_s2 | terminada | 19 000 | 0,606 |
 | B_s3 | terminada | 22 000 | 0,628 |
-| C | en curso (semilla 423) | | |
-| C_s2, C_s3 | en cola | | |
+| C | terminada | 23 000 | 0,624 |
+| C_s2 | en curso | | |
+| C_s3 | en cola | | |

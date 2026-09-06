@@ -1,6 +1,7 @@
 modelo,particion,n_corridas,dice_pos,dice_pos_sd,fpv_ml,fpv_ml_sd,fnv_ml,fnv_ml_sd,fpv_ml_neg
 A,val,3,0.621,0.016,20.933,2.504,6.02,0.439,36.327
 B,val,3,0.612,0.014,22.782,3.076,5.363,0.825,38.535
+C,val,1,0.624,,15.953,,4.914,,24.642
 clasica,test,1,0.182,,832.504,,2.117,,987.066
 clasica,train,1,0.185,,949.319,,3.294,,1049.687
 clasica,val,1,0.18,,1191.868,,5.592,,1224.369
