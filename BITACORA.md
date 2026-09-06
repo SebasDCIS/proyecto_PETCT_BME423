@@ -579,3 +579,25 @@ A_s2 24 000, A_s3 22 000, B 13 000, B_s2 19 000 (B llega antes a su mejor punto)
 Limpieza menor: la sección `evaluacion` del YAML decía `hd95` y una lista de órganos vieja;
 ahora refleja lo que realmente se calcula. No afecta a B_s3 (leyó el YAML al arrancar y solo
 usa `entrenamiento`/`preprocesamiento`).
+
+## 2026-09-06 (tarde). Modelo B cerrado con tres semillas
+
+**B, semilla 3** (`runs/B_s3`, 6 h 20 min, mejor checkpoint 22 000, validación rápida 0,557):
+en los 26 con la regla de exclusión, Dice 0,628 (mediana 0,704), FPV 21,9 mL, FNV 4,4 mL,
+FPV en negativos 36 mL. Es la mejor de las tres B y la que menos deja escapar (en
+`e03b96666f` el FNV baja de ~80 a 64 mL).
+
+| | Dice (positivos) | FPV (mL) | FNV (mL) | FPV negativos (mL) |
+|---|---|---|---|---|
+| B, semilla 423 | 0,603 | 20,3 | 5,8 | 36 |
+| B, semilla 2 | 0,606 | 26,2 | 5,8 | 44 |
+| B, semilla 3 | 0,628 | 21,9 | 4,4 | 36 |
+| **B, media ± sd** | **0,612 ± 0,014** | **22,8 ± 3,1** | **5,4 ± 0,8** | 39 |
+| A, media ± sd | 0,621 ± 0,016 | 20,9 ± 2,5 | 6,0 ± 0,4 | 36 |
+
+Por diagnóstico (media de las tres semillas): A pulmón 0,74 / linfoma 0,70 / melanoma 0,40;
+B pulmón 0,75 / linfoma 0,69 / melanoma 0,35. Lectura: separar los embudos no cambia nada
+medible con tres semillas; la diferencia de Dice (0,009) es menor que la desviación entre
+semillas de cualquiera de los dos. B tiende a dejar escapar un poco menos (FNV 5,4 vs 6,0) y
+a inventar un poco más (FPV 22,8 vs 20,9), también dentro del ruido. `results/comparacion_modelos.csv`
+y `docs/figuras/curvas_entrenamiento.png` actualizados con `scripts/10`. C semilla 423 lanzada.
