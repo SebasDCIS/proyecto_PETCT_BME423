@@ -669,3 +669,49 @@ pruebas pasan. Glosario: entradas "gamma" (reescrita) y "ablación" (nueva).
 **Para la defensa.** Esto es lo que debe verse en el informe: un mecanismo no se da por
 funcionando porque esté en el diagrama; se apaga y se mide. Y una mejora no se atribuye a
 un mecanismo hasta que la ablación lo confirme.
+
+## 2026-09-07 (tarde). C con gamma inicial 1: la atención sigue sin cambiar un vóxel, y ahora sé por qué
+
+`runs/C`, semilla 423, gamma inicial 1, 5 h 57 min, pérdida final 0,448. Gamma terminó en
+1,00002 (no se movió: la proyección de salida de la atención absorbe cualquier escala, así
+que el gradiente hacia gamma promedia cero; el número no informa). El checkpoint elegido es
+el de la iteración **9 000**, un pico aislado de la validación rápida (8 000: 0,437; 9 000:
+0,551; 10 000: 0,390; luego meseta en 0,45–0,52). Es la limitación (a) del protocolo pegando
+fuerte: el modelo evaluado está a un tercio del entrenamiento.
+
+En los 26 con exclusión: Dice 0,603 (mediana 0,639), FPV 16,1 mL, **FNV 7,8 mL** (el más alto de
+todas las corridas, por `5255c79083` con 31 mL y `e03b96666f` con 89), FPV en negativos 37 mL.
+Perfil de error distinto a A y B: `f6295a93a6` baja de 104–110 a 42 mL, `0f4ee9e078` sube de
+Dice 0,2 a 0,57, pero `4a72eeb991` (negativo) sube de 2–5 a 55 mL y `1a90052cb2` a 91.
+
+**Ablación: idéntica otra vez.** Con gamma forzado a 0, las 26 filas coinciden en todos los
+decimales (`results/modelo_C_sin_atencion_val.csv`). Con la atención participando desde la
+iteración 0 y recibiendo gradiente completo, su salida sigue sin cambiar ningún argmax.
+
+**El mecanismo (medido en el sandbox con la red chica y pesos aleatorios).** La salida de la
+atención es en un 99 % *constante entre posiciones*: los pesos de atención son casi uniformes
+sobre las 216 posiciones del cuello (peso máximo medio 0,033 frente a 0,016 uniforme), así que
+cada posición del PET recibe prácticamente el mismo vector, el promedio global del CT. Y la
+mezcla del cuello (`fuse`: conv 1×1 → **norma de instancia** → activación) resta a cada canal su
+media espacial: un vector constante entre posiciones desaparece exactamente. Solo pasa la parte
+que varía con la posición, que es un 4 % de ‖q‖ al inicio; el efecto sobre los logits es del
+0,9 % y cambia 81 de 32 768 vóxeles con pesos aleatorios, y tras el entrenamiento, ninguno.
+Toda la red (codificadores y decodificador) usa norma de instancia, así que un "contexto
+global" solo puede entrar como patrón espacial, nunca como constante. La atención en el
+cuello, tal como está diseñada (aditiva, pre-LN, posición sinusoidal), produce sobre todo
+contexto global, y la red no llegó a afinarla hacia algo posicional porque el gradiente que
+recibe pasa solo por esa parte pequeña.
+
+**Conclusión provisional, más interesante que un pequeño Dice:** en una U-Net con norma de
+instancia, la atención cruzada aditiva en el cuello de botella es estructuralmente inerte.
+Un revisor lo puede leer como "C ≡ B por diseño". Se demuestra con las dos ablaciones
+(gamma 0,0125 y gamma 1) y con la medición de la constancia.
+
+**Decisión.** C_s2 y C_s3 se corren como están (protocolo intacto; C es "la atención tal
+como suele implementarse", y su nulidad es un resultado con mecanismo). Como brazo adicional,
+declarado post hoc, se diseña una variante D en la que el contexto de la atención entra por
+un camino que la norma de instancia no cancela: modulación de los parámetros afines de la
+norma del cuello (estilo FiLM/AdaIN) con el vector global, más la parte posicional aditiva.
+D se pilotea una noche y, si la ablación muestra que la atención cambia el resultado, se
+corre con tres semillas si el calendario lo permite. Si no, queda como trabajo futuro con
+la evidencia del mecanismo.

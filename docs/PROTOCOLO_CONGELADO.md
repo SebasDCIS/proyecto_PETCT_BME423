@@ -123,4 +123,6 @@ modelo ha visto, y por eso se abre una sola vez.
 | B_s2 | terminada | 19 000 | 0,606 |
 | B_s3 | terminada | 22 000 | 0,628 |
 | C piloto (gamma inicial 0) | terminada; descartada como corrida oficial: la atención quedó inerte (ablación idéntica vóxel a vóxel) | 23 000 | 0,624 |
-| C, C_s2, C_s3 (gamma inicial 1) | en cola | | |
+| C (gamma inicial 1) | terminada; ablación idéntica otra vez (mecanismo: atención uniforme + norma de instancia, bitácora 2026-09-07 tarde) | 9 000 | 0,603 |
+| C_s2, C_s3 | en cola (protocolo intacto) | | |
+| D (atención vía modulación de la norma) | brazo post hoc, en diseño | | |

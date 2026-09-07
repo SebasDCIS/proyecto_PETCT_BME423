@@ -392,6 +392,14 @@ parte en 1 (el residual estándar de un bloque transformer pre-LN, donde la aten
 Analogía: un micrófono con el volumen en cero; si nadie lo sube, da igual lo que se diga por
 él. Ahora arranca a volumen normal y la mezcla decide.
 
+**Norma de instancia y las constantes.** La norma de instancia resta a cada canal su media
+espacial y divide por su desviación, estudio por estudio. Consecuencia poco intuitiva: una
+señal que es igual en todas las posiciones (un "contexto global") desaparece exactamente al
+pasar por ella. En una red donde toda convolución lleva norma de instancia, el contexto solo
+puede viajar como patrón espacial. Por eso la atención cruzada de C, cuya salida es casi
+constante entre posiciones, no llega al resultado (bitácora 2026-09-07). Analogía: si a cada
+alumno le descuentas la nota media del curso, subirle un punto a todos no cambia nada.
+
 **Ablación.** Quitar una pieza de un modelo ya entrenado y volver a medir, para saber qué
 aportaba. Aquí: poner gamma = 0 al evaluar C. Si el resultado no cambia, la pieza no estaba
 haciendo nada; si empeora, la pieza importaba. Es la prueba más directa de que un mecanismo
