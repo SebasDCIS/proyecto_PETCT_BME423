@@ -35,3 +35,5 @@ logs/
 
 # Apuntes personales (no se comparten)
 notas_personales/
+data/processed_organos/*
+!data/processed_organos/.gitkeep
