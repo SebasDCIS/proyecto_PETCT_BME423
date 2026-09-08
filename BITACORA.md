@@ -790,3 +790,80 @@ del último checkpoint de las nueve (para acotar el costo del criterio de selecc
 TotalSegmentator sobre validación y el análisis por órgano, intervalos por bootstrap,
 detección por tamaño de lesión y ensamble de semillas. El test se abre una sola vez, al final,
 con todos los brazos, incluidos los de la segunda parte.
+
+## 2026-09-08 (tarde). Paso 5: dónde se equivoca cada quién, por órgano
+
+TotalSegmentator sobre los 26 de validación (26/26 mapas), y `scripts/12` sobre las nueve
+corridas más la referencia clásica. Es el análisis que llevábamos semanas esperando y cambia
+el plan de la segunda parte.
+
+**Falsos positivos por órgano (mL por estudio, media sobre semillas):**
+
+| grupo | A | B | C | clásica |
+|---|---|---|---|---|
+| hígado | 0,2 | 1,0 | 1,0 | **349,1** |
+| otro (tejido sin órgano asignado) | 6,6 | 7,7 | 8,7 | 217,8 |
+| corazón | 0,4 | 1,7 | 1,7 | **141,9** |
+| vejiga | 0,6 | 0,1 | 0,4 | **132,4** |
+| riñones | 0,4 | 0,6 | 0,7 | **111,8** |
+| intestino | 5,1 | 3,0 | 3,0 | 102,8 |
+| bazo | 0,0 | 0,0 | 0,0 | 29,3 |
+| hueso | 0,4 | 0,4 | 0,3 | 28,9 |
+| músculo | 2,6 | 3,3 | 2,8 | 25,8 |
+| vasos | 0,2 | 0,1 | 0,1 | 24,9 |
+| pulmón | 2,5 | 2,5 | 2,1 | 7,7 |
+| fuera del cuerpo | 1,7 | 1,5 | 1,4 | 0,0 |
+| **TOTAL** | **20,9** | **22,8** | **23,2** | **1 191,9** |
+
+**Hallazgo 1: el 74 % del fracaso de la referencia clásica es anatomía.** De sus 1 192 mL,
+879 caen en órganos con captación fisiológica conocida (hígado, riñones, vejiga, corazón,
+bazo, intestino, estómago). El umbral fijo de SUV 2,5 no sabe dónde está.
+
+**Hallazgo 2: las redes ya resolvieron eso, y por eso ganan.** En los mismos órganos, A pone
+6,7 de sus 20,9 mL, y la mayor parte es intestino (5,1), el de captación más variable. Hígado
+0,2 contra 349. Riñones 0,4 contra 112. Vejiga 0,6 contra 132. Encéfalo y bazo, cero. La
+ventaja de cincuenta veces del aprendizaje profundo **es exactamente esto**: aprendió la
+anatomía funcional que el umbral ignora. Ahora podemos decirlo con números y no con intuición.
+
+**Hallazgo 3, el que redirige la segunda parte.** El error que le queda a las redes NO está en
+los órganos brillantes. Está en "otro" (6,6–8,7 mL: tejido blando sin órgano asignado, que es
+donde viven los ganglios), en intestino, en músculo y en pulmón. Consecuencia para la rama N
+(atlas de normalidad por órgano): **mejoraría muchísimo el brazo clásico y prácticamente nada
+las redes**, porque ataca un problema que las redes ya tienen resuelto. Hay que decirlo antes
+de gastar noches, y hay que reformular la rama (ver abajo).
+
+**Los casos difíciles, diseccionados** (media de las nueve corridas):
+
+- `f6295a93a6` (negativo, ~105 mL): **53 mL en pulmón** y 46 en "otro". Un paciente sin lesión
+  anotada con algo captando en el pulmón. Candidato a proceso inflamatorio o infeccioso, o a
+  un hallazgo no anotado. Hay que mirar la figura.
+- `94962fe878` (melanoma, ~86 mL): **69 mL en músculo**. Captación muscular, el artefacto
+  clásico del PET (tensión, ejercicio previo, o grasa parda).
+- `1a90052cb2` (melanoma, ~74 mL): **37 mL en intestino** más 16 en "otro". Actividad
+  intestinal, otro clásico.
+- `4a72eeb991` (negativo, ~20 mL): casi todo en "otro".
+
+Es decir: los tres casos que arrastran la media de FP **no son fallos de fusión ni de
+arquitectura**; son captación fisiológica variable (músculo, intestino) y un caso pulmonar que
+parece patología no tumoral. Ningún cambio de arquitectura los arregla.
+
+**Dónde se pierden lesiones (FNV por órgano):** hueso 1,1–1,3 mL y "otro" 1,3–1,6 son los
+mayores, con pulmón 0,9. Y dónde están las lesiones anotadas: "otro" 71,3 mL por estudio (la
+carga ganglionar del linfoma), pulmón 36,5, hueso 17,2. O sea, **"otro" es a la vez donde vive
+la mayor parte del tumor y donde la red se equivoca más**: es la región genuinamente difícil,
+y nuestra agrupación de órganos la deja sin resolver.
+
+**Acciones que salen de aquí.**
+1. Desglosar "otro" con las 117 etiquetas finas de TotalSegmentator (ya guardadas en el campo
+   `ts` de cada npz). Si buena parte es tejido ganglionar o subcutáneo, el informe puede
+   nombrarlo. Cuesta código, no cómputo.
+2. Reformular la rama N: el atlas de normalidad por órgano se propone como **mejora de la
+   referencia clásica** (donde ataca el 74 % de sus errores), no como mejora de las redes. Eso
+   sigue siendo un resultado fuerte y muy del espíritu del curso (híbrido clásico + IA), y es
+   honesto.
+3. Para las redes, la vía que sugieren estos números es la variabilidad fisiológica de músculo
+   e intestino, no la anatomía estática: ahí un modelo de normalidad tendría que capturar
+   distribuciones, no promedios.
+
+Figuras: `docs/figuras/fp_por_organo_val.png` (barras apiladas) y `docs/figuras/casos_val.png`
+(los cuatro casos con A, B y C, falsos positivos coloreados por órgano).
