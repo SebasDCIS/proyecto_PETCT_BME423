@@ -740,3 +740,53 @@ Estado con dos semillas de C:
 | C (2 semillas) | 0,611 ± 0,011 | 20,1 ± 5,6 | 6,5 ± 1,7 | 40 |
 
 Los tres modelos caben dentro del mismo intervalo. C_s3 lanzada; con ella se cierra el acto 1.
+
+## 2026-09-08. Acto 1 cerrado: nueve corridas, tres ablaciones, una conclusión
+
+`runs/C_s3`, 6 h 36 min (algo más lenta que las otras por acortamiento térmico, sin
+consecuencias), mejor checkpoint en la iteración 22 000. En los 26 con exclusión: Dice 0,615
+(mediana 0,713), FPV 29,4 mL, FNV 4,7 mL, FPV en negativos 53 mL. **Tercera ablación:
+diferencia exactamente cero** en las 26 filas y las cinco columnas.
+
+**Resultado principal del proyecto (validación, 26 estudios, 3 semillas por modelo):**
+
+| | Dice (positivos) | FPV (mL) | FNV (mL) | FPV negativos (mL) |
+|---|---|---|---|---|
+| Referencia clásica (umbral SUV 2,5) | 0,180 | 1 192 | 5,6 | 1 224 |
+| **A** · fusión temprana | **0,621 ± 0,016** | 20,9 ± 2,5 | 6,0 ± 0,4 | 36 |
+| **B** · dos codificadores + concatenación | **0,612 ± 0,014** | 22,8 ± 3,1 | 5,4 ± 0,8 | 39 |
+| **C** · B + atención cruzada | **0,612 ± 0,008** | 23,2 ± 6,7 | 5,9 ± 1,6 | 45 |
+
+B y C coinciden hasta la tercera cifra; A queda 0,009 por encima, menos que su propia
+desviación entre semillas. Por diagnóstico, el patrón se repite en los tres modelos y las nueve
+corridas: pulmón 0,70–0,78, linfoma 0,67–0,72, melanoma 0,33–0,44. Frente a la referencia
+clásica, cualquiera de los tres reduce los falsos positivos unas cincuenta veces.
+
+**Las tres afirmaciones que sostiene el acto 1.**
+
+1. *Cómo se fusionan PET y CT no cambia el resultado.* Con el mismo presupuesto de datos,
+   entrenamiento y evaluación, y con tres semillas por brazo, las diferencias entre fusión
+   temprana, codificadores separados y atención cruzada caben dentro del ruido de semillas.
+2. *La atención cruzada aditiva en el cuello es inerte, y hay un mecanismo.* Tres corridas
+   independientes (gamma inicial 0 en la piloto; gamma inicial 1 en las semillas 423, 2 y 3),
+   y en las tres apagar el módulo en inferencia no cambia un solo vóxel. Causa medida: la
+   atención converge a pesos casi uniformes, su salida es ~99 % constante entre posiciones, y
+   la normalización de instancia (presente en toda la red) cancela exactamente cualquier señal
+   constante. Gamma no informa: quedó en 0,0125, 1,00002, 0,9996 y 1,0046 en las cuatro
+   corridas, es decir, no se movió en ninguna dirección.
+3. *El aprendizaje profundo sí aporta, pero por otro lado.* El salto grande no está entre A, B
+   y C: está entre cualquiera de ellos y el umbral clásico, y se produce en los falsos
+   positivos, no en el Dice.
+
+**Lo que limita el resultado, según los propios datos.** Las lesiones pequeñas (melanoma,
+lesiones de 3 a 9 mL) y no la fusión; y unos pocos estudios que los nueve modelos fallan
+igual (`f6295a93a6` con 104–128 mL de FP, `94962fe878` con 60–141, `e03b96666f` con 64–89 mL
+de FNV). El análisis por órgano del Paso 5 dirá qué son.
+
+**Estado del protocolo.** Nueve corridas terminadas con configuración idéntica salvo modelo y
+semilla (verificado en los `resumen.json`); la piloto de C con gamma 0 queda documentada como
+tal en `runs/C_piloto_gamma0`; el conjunto de prueba sigue sin abrirse. Siguiente: evaluación
+del último checkpoint de las nueve (para acotar el costo del criterio de selección),
+TotalSegmentator sobre validación y el análisis por órgano, intervalos por bootstrap,
+detección por tamaño de lesión y ensamble de semillas. El test se abre una sola vez, al final,
+con todos los brazos, incluidos los de la segunda parte.

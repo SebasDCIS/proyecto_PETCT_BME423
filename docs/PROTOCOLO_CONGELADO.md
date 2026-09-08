@@ -112,17 +112,24 @@ checkpoint están dentro de los 26 que reporto en validación, así que la valid
 levemente optimista. Por eso la comparación definitiva es en test (49 estudios), que ningún
 modelo ha visto, y por eso se abre una sola vez.
 
-## 5. Estado de las corridas (2026-09-06)
+## 5. Estado de las corridas (cerrado el 2026-09-08)
 
-| Corrida | Estado | mejor.pt (it) | Dice val (26, con exclusión) |
-|---|---|---|---|
-| A | terminada | 23 000 | 0,603 |
-| A_s2 | terminada | 24 000 | 0,632 |
-| A_s3 | terminada | 22 000 | 0,630 |
-| B | terminada | 13 000 | 0,603 |
-| B_s2 | terminada | 19 000 | 0,606 |
-| B_s3 | terminada | 22 000 | 0,628 |
-| C piloto (gamma inicial 0) | terminada; descartada como corrida oficial: la atención quedó inerte (ablación idéntica vóxel a vóxel) | 23 000 | 0,624 |
-| C (gamma inicial 1) | terminada; ablación idéntica otra vez (mecanismo: atención uniforme + norma de instancia, bitácora 2026-09-07 tarde) | 9 000 | 0,603 |
-| C_s2, C_s3 | en cola (protocolo intacto) | | |
-| D (atención vía modulación de la norma) | brazo post hoc, en diseño | | |
+| Corrida | mejor.pt (it) | Dice val 26 | FPV (mL) | FNV (mL) | Ablación |
+|---|---|---|---|---|---|
+| A | 23 000 | 0,603 | 18,0 | 6,5 | — |
+| A_s2 | 24 000 | 0,632 | 22,2 | 5,9 | — |
+| A_s3 | 22 000 | 0,630 | 22,5 | 5,6 | — |
+| **A media ± sd** | | **0,621 ± 0,016** | 20,9 ± 2,5 | 6,0 ± 0,4 | |
+| B | 13 000 | 0,603 | 20,3 | 5,8 | — |
+| B_s2 | 19 000 | 0,606 | 26,2 | 5,8 | — |
+| B_s3 | 22 000 | 0,628 | 21,9 | 4,4 | — |
+| **B media ± sd** | | **0,612 ± 0,014** | 22,8 ± 3,1 | 5,4 ± 0,8 | |
+| C | 9 000 | 0,603 | 16,1 | 7,8 | diferencia 0 |
+| C_s2 | 19 000 | 0,618 | 24,0 | 5,3 | diferencia 0 |
+| C_s3 | 22 000 | 0,615 | 29,4 | 4,7 | diferencia 0 |
+| **C media ± sd** | | **0,612 ± 0,008** | 23,2 ± 6,7 | 5,9 ± 1,6 | |
+| C piloto (gamma inicial 0) | 23 000 | 0,624 | 16,0 | 4,9 | diferencia 0 |
+| Referencia clásica (val) | — | 0,180 | 1 192 | 5,6 | — |
+
+Test (49 estudios): **sin abrir**. Se abrirá una sola vez, al final, con todos los brazos
+(los de este protocolo y los de la segunda parte), según `docs/TRASPASO_RAMAS.md`.
