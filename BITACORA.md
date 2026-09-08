@@ -715,3 +715,28 @@ norma del cuello (estilo FiLM/AdaIN) con el vector global, más la parte posicio
 D se pilotea una noche y, si la ablación muestra que la atención cambia el resultado, se
 corre con tres semillas si el calendario lo permite. Si no, queda como trabajo futuro con
 la evidencia del mecanismo.
+
+## 2026-09-08. C semilla 2: segunda ablación, misma respuesta
+
+`runs/C_s2`, 5 h 57 min, mejor checkpoint en la iteración **19 000** (validación rápida 0,526).
+Que esta semilla eligiera 19 000 y la anterior 9 000 confirma que aquel pico temprano fue mala
+suerte de la semilla 423 y no algo sistemático de C.
+
+En los 26 con exclusión: Dice 0,618 (mediana 0,716), FPV 24,0 mL, FNV 5,3 mL, FPV en negativos
+44 mL. Por diagnóstico: pulmón 0,763, linfoma 0,715, melanoma 0,337, el mismo patrón de siempre.
+Gamma terminó en 0,9996 (partió en 1; tampoco se movió).
+
+**Ablación, segunda vez: diferencia exactamente cero** en las 26 filas y en las cinco columnas
+(`results/modelo_C_s2_sin_atencion_val.csv`). Ya son dos semillas con gamma inicial 1, más la
+piloto con gamma inicial 0: tres corridas independientes en las que apagar la atención cruzada
+no cambia un solo vóxel. La afirmación deja de ser una anécdota de una corrida.
+
+Estado con dos semillas de C:
+
+| | Dice (positivos) | FPV (mL) | FNV (mL) | FPV negativos |
+|---|---|---|---|---|
+| A (3 semillas) | 0,621 ± 0,016 | 20,9 ± 2,5 | 6,0 ± 0,4 | 36 |
+| B (3 semillas) | 0,612 ± 0,014 | 22,8 ± 3,1 | 5,4 ± 0,8 | 39 |
+| C (2 semillas) | 0,611 ± 0,011 | 20,1 ± 5,6 | 6,5 ± 1,7 | 40 |
+
+Los tres modelos caben dentro del mismo intervalo. C_s3 lanzada; con ella se cierra el acto 1.
