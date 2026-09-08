@@ -53,7 +53,25 @@ Test (49) sigue cerrado; se abre una sola vez al final con los nueve `mejor.pt`.
   función del volumen, por modelo y diagnóstico. Solo código sobre las máscaras guardadas.
 - **Bootstrap** (1 000 remuestreos sobre los 26 / 49) para intervalos en todas las tablas.
 - **A+** (control de capacidad, 24,3 M) solo si sobra tiempo; B ya sugiere que no hace falta.
-- Propuesta propia de Sebastián: pendiente de escuchar en el hilo 2.
+- **N · aprender lo normal (propuesta de Sebastián, 2026-09-07).** Invertir el problema: en vez
+  de enseñarle a la red qué es un tumor, enseñarle qué es un PET normal y que señale lo que se
+  sale de esa norma. Dos niveles de ambición:
+  - **N1, atlas de normalidad por órgano (barato, interpretable, híbrido clásico + IA).** Con
+    los mapas de TotalSegmentator, estimar en el conjunto de entrenamiento la distribución
+    normal de SUV *por grupo de órgano* (usando los 35 negativos **y** todo el tejido no
+    lesional de los 141 positivos: la normalidad es por región, no por paciente → hay 176
+    estudios de tejido normal, no 35). Un vóxel es sospechoso si su SUV supera lo esperable
+    **para su órgano** (z-score o percentil), en vez del umbral fijo 2,5 de la referencia
+    clásica. Predicción: debería reducir mucho los 1 192 mL de FP de la referencia clásica
+    (encéfalo, corazón, riñones, vejiga dejan de ser positivos por definición). Costo: sin
+    entrenamiento, solo `scripts/11` sobre los 251 + código.
+  - **N2, modelo generativo de normalidad (ambicioso).** Autoencoder/difusión entrenado solo
+    con tejido normal; la lesión aparece como error de reconstrucción. Riesgo declarado: en la
+    literatura la detección de anomalías rinde por debajo de lo supervisado (Dice ~0,2–0,4 vs
+    0,6–0,7); NO sustituye a A/B/C, se propone como brazo complementario y como fuente de un
+    canal de "atipicidad" para alimentar al modelo supervisado o para post-procesar.
+  - Uso combinado sugerido: el mapa de atipicidad de N1 como cuarto canal de entrada, o como
+    filtro de falsos positivos sobre las máscaras ya guardadas (evaluable sin reentrenar).
 
 ## Reglas que no cambian en ninguna rama
 
