@@ -36,7 +36,27 @@ Test (49) sigue cerrado; se abre una sola vez al final con los nueve `mejor.pt`.
 5. Casos que todos fallan igual: `f6295a93a6` (negativo, 104–110 mL de FP en A y B; 42 en C),
    `94962fe878` (68–86 mL FP), `e03b96666f` (64–89 mL FNV, mayoría en zona borrada).
 
-## Ramas candidatas (para el hilo 2)
+## DECISIÓN 2026-09-09: el hilo 2 no abre ramas nuevas
+
+Tras chocar con el límite de la anotación (ver `BITACORA.md`, entrada del 2026-09-09), se
+acordó **no entrenar más brazos** y cerrar el proyecto traduciendo el acto 1 a lenguaje
+clínico. Las ramas de abajo quedan como trabajo futuro documentado, no como plan.
+
+Motivo, en una frase: autoPET anota solo lesión tumoral ávida, así que ninguna rama que
+dependa de distinguir "falso positivo real" de "captación benigna no anotada" es resoluble
+con estos datos. La regla de cierre es no hacer preguntas que la anotación no pueda contestar
+sola.
+
+Trabajo de cierre acordado (todo sin entrenar, salvo los pasos 6 y 7 que solo son inferencia):
+1. Detección lesión por lesión y por tamaño.
+2. Carga de corrección en mL (borrar + añadir) frente a dibujar desde cero.
+3. Concordancia de MTV con Bland-Altman.
+4. Ensamble de las tres semillas y mapa de desacuerdo.
+5. Bootstrap en todas las tablas.
+6. Último checkpoint de las nueve corridas.
+7. Prueba (49), una sola vez, al final.
+
+## Ramas candidatas (trabajo futuro, NO en curso)
 
 - **D · atención que la norma no cancela.** Misma red que C, pero el vector de contexto de la
   atención modula los parámetros afines de la norma de instancia del cuello (FiLM/AdaIN:

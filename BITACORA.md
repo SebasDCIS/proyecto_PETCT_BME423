@@ -867,3 +867,113 @@ y nuestra agrupación de órganos la deja sin resolver.
 
 Figuras: `docs/figuras/fp_por_organo_val.png` (barras apiladas) y `docs/figuras/casos_val.png`
 (los cuatro casos con A, B y C, falsos positivos coloreados por órgano).
+
+## 2026-09-09. Decisión: la segunda parte se acota a lo que la anotación sostiene
+
+Persiguiendo el falso positivo de `f6295a93a6` llegamos a un límite del conjunto de datos, y
+conviene dejarlo escrito porque cambia el plan.
+
+**El límite.** autoPET anotó lesiones tumorales ávidas de FDG y nada más: la captación
+reactiva, inflamatoria o granulomatosa no está marcada, y no hay informes ni contexto clínico
+ni seguimiento. Medí el tejido que los modelos marcan en ese estudio: los vóxeles con SUV ≥ 15
+tienen HU mediana 65 (RIC 53–76), densidad de partes blandas; solo el 1,1 % pasa de 150 HU, así
+que no es grasa, ni contraste, ni calcio. Son ganglios hiliares y mediastínicos captantes en una
+mujer de 81 años (estudio `PET-CT Ganzkoerper primaer mit KM`, 2006), con SUVmax 20,7. Sean
+reactivos, granulomatosos o un hallazgo no anotado, **el conjunto no permite adjudicarlo**.
+
+**La consecuencia.** Cualquier pregunta del tipo "¿este falso positivo es un error del modelo o
+captación real que el protocolo excluyó?" es irresoluble con estos datos. No es que estén mal
+anotados: están anotados para segmentar tumor ávido, y nosotros nos deslizamos hacia
+interpretar la captación no tumoral, que es otra pregunta.
+
+**Lo que NO cambia.** El acto 1 es internamente válido: A, B y C se compararon contra la misma
+anotación, con el mismo protocolo y tres semillas. Que la anotación excluya lo inflamatorio no
+favorece a ninguno de los tres. La conclusión se sostiene tal cual.
+
+**Regla nueva para el cierre:** no hacer ninguna pregunta que la anotación no pueda contestar
+por sí sola, es decir, que no se responda comparando la máscara del experto con la del modelo.
+
+**Plan acordado (sin más entrenamientos).** Traducir el acto 1 a lenguaje clínico con análisis
+que la anotación sostiene al 100 %:
+
+1. Detección lesión por lesión y en función del tamaño (sensibilidad por volumen y por
+   diagnóstico). Responde "¿a partir de qué tamaño el modelo encuentra la lesión?".
+2. Carga de corrección: mililitros que el médico tendría que borrar y que tendría que añadir,
+   frente a dibujar desde cero. Es la utilidad clínica real de la propuesta automática.
+3. Concordancia de carga tumoral metabólica (MTV) predicha contra anotada, con Bland-Altman.
+   Es el número que se usa para seguir respuesta al tratamiento.
+4. Ensamble de las tres semillas por voto mayoritario, y mapa de desacuerdo como incertidumbre.
+5. Intervalos de confianza por bootstrap en todas las tablas.
+6. Evaluación del último checkpoint de las nueve corridas, para acotar el costo del criterio
+   de selección ruidoso.
+7. Prueba (49 estudios), **una sola vez**, al final, con todos los brazos.
+
+Descartado por ahora: las ramas D, E y N del documento de traspaso, y cualquier brazo que
+dependa de distinguir falso positivo real de anotación incompleta. Queda escrito como trabajo
+futuro con la razón por la que no se hizo, que es un resultado en sí mismo: **para estudiar
+falsos positivos fisiológicos en PET hace falta un conjunto anotado también para lo benigno**.
+
+## 2026-09-09. Los resultados en lenguaje clínico (`scripts/16`)
+
+Primer bloque del cierre, sin entrenar nada: todo sale de las máscaras ya guardadas y de la
+anotación, que es lo único que estos datos pueden sostener.
+
+**1. Detección lesión por lesión, por tamaño.** Cada componente 26-conexa de la anotación es
+una lesión; se cuenta detectada si la predicción la toca. Sobre las 256 lesiones evaluables de
+los 26 estudios de validación:
+
+| tamaño de la lesión | lesiones | A | B | C |
+|---|---|---|---|---|
+| < 1 mL | 100 | 0,22 | 0,23 | 0,21 |
+| 1–3 mL | 75 | 0,58 | 0,63 | 0,56 |
+| 3–10 mL | 43 | 0,81 | 0,83 | 0,86 |
+| 10–30 mL | 24 | 1,00 | 1,00 | 0,99 |
+| 30–100 mL | 8 | 1,00 | 1,00 | 1,00 |
+| ≥ 100 mL | 6 | 1,00 | 1,00 | 1,00 |
+
+Este es el resultado más útil del proyecto para un clínico, y es el mismo en los tres modelos:
+**por encima de 10 mL el modelo no pierde ninguna lesión; por debajo de 1 mL pierde cuatro de
+cada cinco.** La transición está entre 1 y 10 mL. Explica de una vez el Dice bajo en melanoma
+(lesiones de 3 a 9 mL, justo en la zona de transición) sin recurrir a "el modelo es peor en
+melanoma", que era una lectura equivocada: es peor en lesiones pequeñas, y el melanoma las
+tiene pequeñas.
+
+**2. Carga de corrección** (mL por estudio, media sobre semillas):
+
+| | borrar | añadir | corregir en total | dibujar desde cero | ahorro |
+|---|---|---|---|---|---|
+| A | 20,9 | 43,7 | 64,6 | 151,7 | 57 % |
+| B | 22,8 | 43,5 | 66,3 | 151,7 | 56 % |
+| C | 23,2 | 45,9 | 69,1 | 151,7 | 55 % |
+
+Aviso honesto: compara **volúmenes**, no esfuerzo. Borrar un componente entero es más rápido
+que delinear ese mismo volumen, así que el ahorro real probablemente sea mayor; pero esto es
+un sustituto, no un estudio de tiempos. Se reporta como tal.
+
+**3. Ensamble de las tres semillas por voto mayoritario** (solo inferencia, sin entrenar):
+
+| | Dice (IC 95 %) | FPV | FNV | desacuerdo entre semillas |
+|---|---|---|---|---|
+| A | **0,662** (0,559–0,757) | 17,1 | 6,4 | 53 mL/estudio |
+| B | 0,630 (0,521–0,731) | 17,9 | 5,4 | 60 mL/estudio |
+| C | 0,643 (0,541–0,737) | 18,9 | 5,4 | 80 mL/estudio |
+
+El ensamble sube A de 0,621 a **0,662** y baja el FPV de 20,9 a 17,1, gratis, a costa de tres
+veces el tiempo de inferencia. Que un ensamble supere a sus miembros es esperable y conocido;
+lo interesante es que el orden entre modelos no cambia y que C es el que más varía entre
+semillas (80 mL de desacuerdo contra 53 de A), coherente con su mayor desviación en FPV. El
+mapa de desacuerdo tiene además una lectura clínica directa: es dónde las tres semillas no se
+ponen de acuerdo, es decir, dónde conviene que mire el médico.
+
+**4. Concordancia de carga tumoral metabólica (MTV).** Sesgo medio −30,2 mL (el modelo
+subestima), límites de concordancia de −244,5 a +184,1 mL. Son límites **anchos**, dominados
+por los pocos casos de carga enorme. Conclusión honesta y negativa: con este rendimiento la
+MTV automática no sirve todavía para seguir respuesta al tratamiento en pacientes de carga
+alta, que es justo donde se usaría. Es una limitación que hay que declarar, no esconder.
+
+Los intervalos son anchos porque solo hay 20 positivos evaluables en validación; en test habrá
+39, y ahí las cifras serán más firmes.
+
+Salidas: `results/deteccion_lesiones_val.csv`, `deteccion_por_tamano_val.csv`,
+`correccion_val.csv`, `ensamble_val.csv`, `resumen_clinico_val.csv`;
+figura `docs/figuras/clinico_val.png`.

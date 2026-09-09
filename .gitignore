@@ -37,3 +37,4 @@ logs/
 notas_personales/
 data/processed_organos/*
 !data/processed_organos/.gitkeep
+docs/figuras/visor_datos.js
