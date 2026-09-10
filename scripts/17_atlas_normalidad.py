@@ -50,35 +50,50 @@ import pandas as pd
 from scipy import ndimage
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from petct.organs import GROUP_NAMES  # noqa: E402
+from petct.organs import GROUP_NAMES, internal_reference  # noqa: E402
 
-# Histograma acumulado: 0 a 40 de SUV en pasos de 0,01. Guardar el histograma en vez de
-# todos los vóxeles permite recorrer 176 estudios sin acumular gigabytes en memoria, y da
-# percentiles con una precisión de 0,01 de SUV, que es más de la que necesitamos.
+# Dos histogramas por órgano, con la misma mecánica y distinta escala:
+#   ABSOLUTO : SUV tal cual, de 0 a 40 en pasos de 0,01.
+#   RELATIVO : SUV dividido por el hígado DEL PROPIO paciente (la lógica de Deauville), de
+#              0 a 25 en pasos de 0,01. La vejiga normal ronda 24 de SUV y 11 en esta escala.
+# Guardar histogramas en vez de vóxeles permite recorrer 176 estudios sin llenar la memoria.
 SUV_MAX_HIST = 40.0
 N_BINS = 4000
 BORDES = np.linspace(0.0, SUV_MAX_HIST, N_BINS + 1)
 CENTROS = 0.5 * (BORDES[:-1] + BORDES[1:])
+
+REL_MAX_HIST = 25.0
+N_BINS_REL = 2500
+BORDES_REL = np.linspace(0.0, REL_MAX_HIST, N_BINS_REL + 1)
+CENTROS_REL = 0.5 * (BORDES_REL[:-1] + BORDES_REL[1:])
+
 MARGEN_LESION = 2          # vóxeles de dilatación alrededor de la lesión anotada (6 mm)
 PERCENTILES = [25, 50, 75, 90, 95, 99]
 
 
-def percentiles_de_histograma(hist: np.ndarray, qs=PERCENTILES) -> dict:
+def percentiles_de_histograma(hist: np.ndarray, qs=PERCENTILES, centros=None) -> dict:
     """Percentiles a partir de un histograma acumulado. Devuelve NaN si no hay datos."""
+    c = CENTROS if centros is None else centros
     total = hist.sum()
     if total == 0:
         return {f"p{q}": float("nan") for q in qs}
     acum = np.cumsum(hist) / total
-    return {f"p{q}": float(CENTROS[int(np.searchsorted(acum, q / 100.0))]) for q in qs}
+    return {f"p{q}": float(c[min(int(np.searchsorted(acum, q / 100.0)), len(c) - 1)]) for q in qs}
 
 
-def media_sd_de_histograma(hist: np.ndarray) -> tuple:
+def media_sd_de_histograma(hist: np.ndarray, centros=None) -> tuple:
+    c = CENTROS if centros is None else centros
     total = hist.sum()
     if total == 0:
         return float("nan"), float("nan")
-    media = float((hist * CENTROS).sum() / total)
-    var = float((hist * (CENTROS - media) ** 2).sum() / total)
+    media = float((hist * c).sum() / total)
+    var = float((hist * (c - media) ** 2).sum() / total)
     return media, float(np.sqrt(max(var, 0.0)))
+
+
+def a_bins(valores: np.ndarray, tope: float, n_bins: int) -> np.ndarray:
+    v = np.clip(valores, 0.0, tope - 1e-6)
+    return np.minimum((v / tope * n_bins).astype(np.int32), n_bins - 1)
 
 
 def estudios_del_subconjunto(sub: pd.DataFrame, cual: str) -> pd.DataFrame:
@@ -114,6 +129,7 @@ def main():
 
     n_grupos = len(GROUP_NAMES)
     hist = np.zeros((n_grupos, N_BINS), dtype=np.int64)
+    hist_rel = np.zeros((n_grupos, N_BINS_REL), dtype=np.int64)
     por_paciente = []
     usados, faltantes = 0, []
 
@@ -140,14 +156,20 @@ def main():
             halo = ndimage.binary_dilation(seg, iterations=MARGEN_LESION)
             valido &= ~halo                            # fuera la lesión y su borde difuso
 
-        g = groups[valido]
-        v = np.clip(suv[valido], 0.0, SUV_MAX_HIST - 1e-6)
-        idx_bin = np.minimum((v / SUV_MAX_HIST * N_BINS).astype(np.int32), N_BINS - 1)
+        # Referencia interna del paciente (hígado propio): la escala de Deauville
+        ref, origen_ref = internal_reference(suv, groups, valido)
 
-        # Un solo bincount 2D: grupo * N_BINS + bin
-        plano = g.astype(np.int64) * N_BINS + idx_bin
-        conteo = np.bincount(plano, minlength=n_grupos * N_BINS).reshape(n_grupos, N_BINS)
+        g = groups[valido].astype(np.int64)
+        idx_bin = a_bins(suv[valido], SUV_MAX_HIST, N_BINS)
+        conteo = np.bincount(g * N_BINS + idx_bin, minlength=n_grupos * N_BINS).reshape(n_grupos, N_BINS)
         hist += conteo
+
+        conteo_rel = None
+        if np.isfinite(ref) and ref > 0:
+            idx_rel = a_bins(suv[valido] / ref, REL_MAX_HIST, N_BINS_REL)
+            conteo_rel = np.bincount(g * N_BINS_REL + idx_rel,
+                                     minlength=n_grupos * N_BINS_REL).reshape(n_grupos, N_BINS_REL)
+            hist_rel += conteo_rel
 
         # Estadísticos de este paciente, para medir la variabilidad entre personas
         for k, nombre in enumerate(GROUP_NAMES):
@@ -157,9 +179,15 @@ def main():
             if n < 100:                                 # menos de 100 vóxeles: no es medible
                 continue
             pc = percentiles_de_histograma(conteo[k])
-            por_paciente.append({"patient_id": r.patient_id, "diagnosis": r.diagnosis,
-                                 "organo": nombre, "n_voxeles": n,
-                                 "mediana": pc["p50"], "p95": pc["p95"]})
+            fila = {"patient_id": r.patient_id, "diagnosis": r.diagnosis,
+                    "organo": nombre, "n_voxeles": n,
+                    "mediana": pc["p50"], "p95": pc["p95"],
+                    "ref_interna": round(ref, 3) if np.isfinite(ref) else np.nan,
+                    "origen_ref": origen_ref}
+            if conteo_rel is not None:
+                pcr = percentiles_de_histograma(conteo_rel[k], centros=CENTROS_REL)
+                fila["mediana_rel"] = pcr["p50"]
+            por_paciente.append(fila)
         usados += 1
         if i % 20 == 0 or i == len(estudios):
             print(f"  {i}/{len(estudios)} · {usados} usados", flush=True)
@@ -178,19 +206,24 @@ def main():
         n = int(hist[k].sum())
         pc = percentiles_de_histograma(hist[k])
         media, sd = media_sd_de_histograma(hist[k])
+        pcr = percentiles_de_histograma(hist_rel[k], centros=CENTROS_REL)
         sub_p = dfp[dfp.organo == nombre]
+        # Variabilidad ENTRE personas, en las dos escalas. Es la cifra que decide si hacen
+        # falta más pacientes... o si la referencia interna ya resolvió el problema sin
+        # necesidad de bajar un solo estudio más.
+        cv = lambda col: (round(float(sub_p[col].std() / sub_p[col].median()), 3)
+                          if col in sub_p and len(sub_p) > 1 and sub_p[col].median() > 0 else float("nan"))
         filas.append({
             "organo": nombre,
             "n_pacientes": int(sub_p.patient_id.nunique()),
             "n_voxeles": n,
             "media": round(media, 3), "sd": round(sd, 3),
             **{k2: round(v2, 3) for k2, v2 in pc.items()},
-            # Variabilidad ENTRE personas: la desviación de las medianas individuales. Es la
-            # cifra que dice si 35 pacientes alcanzan para caracterizar ese órgano.
+            **{f"rel_{k2}": round(v2, 3) for k2, v2 in pcr.items()},
             "mediana_entre_pacientes": round(float(sub_p.mediana.median()), 3) if len(sub_p) else float("nan"),
             "sd_entre_pacientes": round(float(sub_p.mediana.std()), 3) if len(sub_p) > 1 else float("nan"),
-            "cv_entre_pacientes": (round(float(sub_p.mediana.std() / sub_p.mediana.median()), 3)
-                                   if len(sub_p) > 1 and sub_p.mediana.median() > 0 else float("nan")),
+            "cv_entre_pacientes": cv("mediana"),
+            "cv_entre_pacientes_rel": cv("mediana_rel"),
         })
 
     df = pd.DataFrame(filas).sort_values("n_voxeles", ascending=False)
@@ -199,16 +232,29 @@ def main():
     df.to_csv(f1, index=False)
     dfp.to_csv(f2, index=False)
     np.savez_compressed(out / f"atlas_hist_{a.subconjunto}.npz",
-                        hist=hist, bordes=BORDES, grupos=np.array(GROUP_NAMES))
+                        hist=hist, bordes=BORDES, hist_rel=hist_rel, bordes_rel=BORDES_REL,
+                        grupos=np.array(GROUP_NAMES))
 
     print(f"\nAtlas de captación normal · subconjunto '{a.subconjunto}' · {usados} estudios\n")
-    cols = ["organo", "n_pacientes", "mediana_entre_pacientes", "p50", "p75", "p95", "p99", "cv_entre_pacientes"]
-    print(df[cols].to_string(index=False))
+    print("(1) escala absoluta: SUV tal cual\n")
+    cols = ["organo", "n_pacientes", "n_voxeles", "p50", "p75", "p95", "p99", "cv_entre_pacientes"]
+    print(df[df.n_pacientes > 0][cols].to_string(index=False))
+    print("\n(2) escala relativa: SUV dividido por el hígado del propio paciente (Deauville)\n")
+    cols_r = ["organo", "n_pacientes", "rel_p50", "rel_p75", "rel_p95", "rel_p99", "cv_entre_pacientes_rel"]
+    print(df[df.n_pacientes > 0][cols_r].to_string(index=False))
+    if "origen_ref" in dfp:
+        print(f"\nDe dónde salió la referencia interna: "
+              f"{dfp.drop_duplicates('patient_id').origen_ref.value_counts().to_dict()}")
     print(f"\n{f1}\n{f2}")
-    print("\nCómo leerlo: 'p95' es el SUV que solo supera el 5 % del tejido normal de ese órgano; "
-          "un foco por encima de ese valor ya es raro para ese órgano. 'cv_entre_pacientes' es la "
-          "variabilidad de persona a persona: por debajo de 0,2 la referencia es sólida, por encima "
-          "de 0,5 el órgano es demasiado variable para usarlo como referencia con esta muestra.")
+    print("\nCómo leerlo:\n"
+          "  'p95' es el SUV que solo supera el 5 % del tejido normal de ese órgano: un foco por\n"
+          "  encima de ese valor ya es raro para ese órgano.\n"
+          "  'cv_entre_pacientes' es la variabilidad de persona a persona. Por debajo de 0,2 la\n"
+          "  referencia es sólida; por encima de 0,5 el órgano es demasiado variable con esta muestra.\n"
+          "  La comparación que importa es cv_entre_pacientes contra cv_entre_pacientes_rel: si el\n"
+          "  relativo es bastante menor, la referencia interna ya cancela esa variabilidad y NO hace\n"
+          "  falta bajar más estudios. Si son parecidos, la variabilidad es real del órgano y la\n"
+          "  única salida es más pacientes.")
 
 
 def comparar(out: Path):

@@ -71,6 +71,35 @@ GROUP_NAMES: List[str] = ["fuera", "otro"] + list(GROUPS.keys())   # 0 = fuera d
 GROUP_CODE: Dict[str, int] = {n: i for i, n in enumerate(GROUP_NAMES)}
 
 
+# Órganos que sirven como referencia interna del propio paciente, en orden de preferencia.
+# Es la lógica de la escala de Deauville: en vez de comparar el SUV de un foco contra una
+# tabla poblacional, se lo compara contra el hígado (o el fondo vascular) DEL MISMO estudio.
+# Así se cancelan de un golpe la dosis inyectada, el tiempo de captación, la glicemia y el
+# peso, que son las causas reales de que el "hígado normal" varíe tanto de persona a persona.
+REF_INTERNA_ORDEN: List[str] = ["higado", "vasos", "bazo"]
+MIN_VOXELES_REF = 500          # por debajo de esto la mediana del órgano no es fiable
+
+
+def internal_reference(suv: np.ndarray, groups: np.ndarray, valid: np.ndarray) -> Tuple[float, str]:
+    """Referencia interna del paciente: mediana de SUV de su propio hígado.
+
+    `valid` debe traer ya excluidos el aire, la zona borrada por el defacing y la lesión
+    anotada (con su margen). Si el hígado no está disponible o quedó demasiado chico, baja
+    al fondo vascular y después al bazo; como último recurso usa la mediana de todo el
+    cuerpo, que es peor pero nunca falla. Devuelve (valor, de dónde salió).
+    """
+    for name in REF_INTERNA_ORDEN:
+        m = valid & (groups == GROUP_CODE[name])
+        if int(m.sum()) >= MIN_VOXELES_REF:
+            v = float(np.median(suv[m]))
+            if v > 0:
+                return v, name
+    if int(valid.sum()) == 0:
+        return float("nan"), "ninguna"
+    v = float(np.median(suv[valid]))
+    return (v, "cuerpo") if v > 0 else (float("nan"), "ninguna")
+
+
 def _match(name: str, patterns: Iterable[str]) -> bool:
     for p in patterns:
         if p == "*":

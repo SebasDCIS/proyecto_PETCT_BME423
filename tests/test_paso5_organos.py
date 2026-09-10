@@ -69,3 +69,38 @@ def test_organs_to_grid_alinea_con_preprocesamiento():
     assert crop.shape == (4, 7, 12)
     assert set(np.unique(crop)) <= {0, 2, 5}
     assert (crop[..., :5] == 5).mean() > 0.9 and (crop[..., -4:] == 2).mean() > 0.9
+
+
+def test_referencia_interna_usa_el_higado_y_cae_a_los_vasos():
+    """La referencia de Deauville sale del hígado del propio paciente; si no hay hígado
+    utilizable, baja al fondo vascular, y nunca devuelve un valor de una zona excluida."""
+    from petct.organs import GROUP_CODE, internal_reference, MIN_VOXELES_REF
+
+    shape = (20, 20, 20)
+    groups = np.full(shape, GROUP_CODE["otro"], np.uint8)
+    groups[:10] = GROUP_CODE["higado"]
+    groups[10:15] = GROUP_CODE["vasos"]
+    suv = np.zeros(shape, np.float32)
+    suv[groups == GROUP_CODE["higado"]] = 2.5
+    suv[groups == GROUP_CODE["vasos"]] = 1.7
+    suv[groups == GROUP_CODE["otro"]] = 0.8
+    valido = np.ones(shape, bool)
+
+    v, origen = internal_reference(suv, groups, valido)
+    assert origen == "higado" and abs(v - 2.5) < 1e-5
+
+    # Con el hígado casi todo excluido (por ejemplo, ocupado por lesión) baja a los vasos.
+    sin_higado = valido.copy()
+    sin_higado[groups == GROUP_CODE["higado"]] = False
+    v, origen = internal_reference(suv, groups, sin_higado)
+    assert origen == "vasos" and abs(v - 1.7) < 1e-5
+
+    # Un hígado más chico que el mínimo tampoco se usa.
+    chico = np.full(shape, GROUP_CODE["otro"], np.uint8)
+    chico.reshape(-1)[:MIN_VOXELES_REF - 1] = GROUP_CODE["higado"]
+    valor, origen = internal_reference(suv, chico, valido)
+    assert origen != "higado"
+
+    # Sin nada válido, NaN en vez de una división por cero más adelante.
+    valor, origen = internal_reference(suv, groups, np.zeros(shape, bool))
+    assert np.isnan(valor) and origen == "ninguna"

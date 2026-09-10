@@ -16,10 +16,16 @@ Cómo funciona:
      FPV. Cada componente es "un hallazgo".
   2. Un hallazgo que toca la lesión anotada es verdadero (VP); uno que no la toca es falso
      (FP). Es exactamente la definición de autoPET, no una nueva.
-  3. A cada hallazgo se le calculan tres puntuaciones:
+  3. A cada hallazgo se le calculan cinco puntuaciones, de la más ingenua a la más clínica:
         SUVmáx crudo                    lo que se usa hoy
         SUVmáx / p95 del órgano         cuántas veces se pasa del techo normal de ESE órgano
         z robusto del órgano            (SUVmáx − mediana) / (RIC / 1,349)
+        veces el hígado propio          SUVmáx dividido por el hígado DEL MISMO paciente. Es
+                                        la escala de Deauville: cancela dosis inyectada,
+                                        tiempo de captación, glicemia y peso, que son la causa
+                                        real de que el "hígado normal" varíe entre personas.
+        veces el hígado / p95 del órgano  las dos cosas juntas: referencia interna del paciente
+                                        Y techo específico del órgano.
   4. Se mide con qué eficacia cada puntuación ordena los verdaderos por encima de los falsos.
      La medida es el AUC: la probabilidad de que un hallazgo verdadero tomado al azar tenga
      puntuación más alta que un falso tomado al azar. 0,5 es azar puro; 1,0 es separación
@@ -45,13 +51,20 @@ import pandas as pd
 from scipy import ndimage
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from petct.organs import GROUP_NAMES  # noqa: E402
+from petct.organs import GROUP_NAMES, internal_reference  # noqa: E402
 
 CONN = np.ones((3, 3, 3), dtype=bool)
-PUNTUACIONES = ["suvmax", "suv_rel_p95", "z_robusto"]
-ETIQUETAS = {"suvmax": "SUVmáx crudo",
-             "suv_rel_p95": "SUVmáx / p95 del órgano",
-             "z_robusto": "z robusto del órgano"}
+MARGEN_LESION = 2      # igual que en el atlas: no contaminar la referencia con el halo del tumor
+
+# Cuatro formas de puntuar un hallazgo, de la más ingenua a la más clínica:
+PUNTUACIONES = ["suvmax", "suv_rel_p95", "z_robusto", "veces_higado", "rel_organo"]
+ETIQUETAS = {
+    "suvmax": "SUVmáx crudo",
+    "suv_rel_p95": "SUVmáx / p95 poblacional del órgano",
+    "z_robusto": "z robusto poblacional del órgano",
+    "veces_higado": "veces el hígado del propio paciente",       # Deauville puro
+    "rel_organo": "veces el hígado propio / p95 del órgano",     # Deauville + órgano
+}
 
 
 def auc(pos: np.ndarray, neg: np.ndarray) -> float:
@@ -114,9 +127,13 @@ def main():
     if not f_atlas.exists():
         sys.exit(f"No existe {f_atlas}. Corre antes scripts/17_atlas_normalidad.py --subconjunto {a.atlas}")
     atlas = pd.read_csv(f_atlas).set_index("organo")
-    ref = {o: {"p50": float(atlas.loc[o, "p50"]), "p25": float(atlas.loc[o, "p25"]),
-               "p75": float(atlas.loc[o, "p75"]), "p95": float(atlas.loc[o, "p95"])}
+    col = lambda o, c: float(atlas.loc[o, c]) if c in atlas.columns else float("nan")
+    ref = {o: {"p50": col(o, "p50"), "p25": col(o, "p25"), "p75": col(o, "p75"),
+               "p95": col(o, "p95"), "rel_p95": col(o, "rel_p95")}
            for o in atlas.index}
+    if "rel_p95" not in atlas.columns:
+        print("[aviso] el atlas no trae la escala relativa (rel_p95). Vuelve a correr "
+              "scripts/17_atlas_normalidad.py para tenerla.", flush=True)
 
     sub = pd.read_csv(a.manifest)
     estudios = sub[sub.split == a.particion]
@@ -136,10 +153,18 @@ def main():
         suv = d["suv"].astype(np.float32) * float(d["suv_top"])
         gt = d["seg"].astype(bool)
         ml = float(np.prod(d["spacing"].astype(float)) / 1000.0)
+        body = d["body"].astype(bool)
         groups = np.load(f_org)["groups"].astype(np.uint8)
         # Misma regla de exclusión que la evaluación oficial: la zona borrada no cuenta.
         visible = suv > 0.0
         gt_v = gt & visible
+
+        # Referencia interna del propio paciente, calculada igual que en el atlas: sobre
+        # tejido válido y con la lesión anotada (y su halo) fuera.
+        valido = body & visible
+        if gt.any():
+            valido &= ~ndimage.binary_dilation(gt, iterations=MARGEN_LESION)
+        ref_pac, origen_ref = internal_reference(suv, groups, valido)
 
         antes = len(filas)
         for corrida in corridas:
@@ -165,18 +190,25 @@ def main():
                 verdadero = bool(gt_v[sl][m].any())
                 smax = float(suv_c.max())
                 p = ref.get(organo)
+                rel = z = rel_org = float("nan")
                 if p and np.isfinite(p["p95"]) and p["p95"] > 0:
                     rel = smax / p["p95"]
                     ric = max(p["p75"] - p["p25"], 1e-3)
                     z = (smax - p["p50"]) / (ric / 1.349)
-                else:
-                    rel, z = float("nan"), float("nan")
+                # Deauville: el foco medido en unidades del hígado del propio paciente
+                veces = smax / ref_pac if np.isfinite(ref_pac) and ref_pac > 0 else float("nan")
+                if p and np.isfinite(veces) and np.isfinite(p["rel_p95"]) and p["rel_p95"] > 0:
+                    rel_org = veces / p["rel_p95"]
                 filas.append({
                     "corrida": corrida, "modelo": corrida.split("_")[0], "patient_id": r.patient_id,
                     "diagnosis": r.diagnosis, "organo": organo, "vol_ml": round(vol, 3),
                     "suvmax": round(smax, 3), "suvmedia": round(float(suv_c.mean()), 3),
+                    "ref_interna": round(ref_pac, 3) if np.isfinite(ref_pac) else np.nan,
+                    "origen_ref": origen_ref,
                     "suv_rel_p95": round(rel, 3) if np.isfinite(rel) else np.nan,
                     "z_robusto": round(z, 3) if np.isfinite(z) else np.nan,
+                    "veces_higado": round(veces, 3) if np.isfinite(veces) else np.nan,
+                    "rel_organo": round(rel_org, 3) if np.isfinite(rel_org) else np.nan,
                     "verdadero": verdadero,
                 })
         print(f"  {r.patient_id}: {len(filas) - antes} hallazgos", flush=True)
@@ -256,7 +288,7 @@ def figura(df: pd.DataFrame, dres: pd.DataFrame, destino: Path):
     import matplotlib.pyplot as plt
 
     destino.parent.mkdir(parents=True, exist_ok=True)
-    fig, ax = plt.subplots(2, len(PUNTUACIONES), figsize=(4.6 * len(PUNTUACIONES), 8))
+    fig, ax = plt.subplots(2, len(PUNTUACIONES), figsize=(3.7 * len(PUNTUACIONES), 8))
     for j, p in enumerate(PUNTUACIONES):
         v = df.loc[df.verdadero, p].dropna().values
         f_ = df.loc[~df.verdadero, p].dropna().values
