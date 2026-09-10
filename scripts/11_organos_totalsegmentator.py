@@ -14,11 +14,22 @@ Para cada estudio de la partición:
      la grilla del `.npz` (remuestreo sobre la SUV, 3 mm, mismo recorte) y guarda
      `data/processed_organos/<pid>__<uid>.npz` con `groups` (uint8) y `ts` (etiquetas crudas).
 
-La primera vez TotalSegmentator descarga sus pesos (~1 GB). En `mps` tarda del orden de un
-minuto por CT con `--fast`; en CPU, varios. Se corre solo sobre validación y prueba (75
-estudios), que es donde se analizan los errores; no hace falta para entrenar.
+La primera vez TotalSegmentator descarga sus pesos (~1 GB). En `mps` tarda del orden de
+medio minuto por CT con `--fast`; en CPU, varios minutos.
+
+Al principio (2026-09-06) esto se corrió solo sobre validación y prueba, que es donde se
+analizan los errores. Desde el 2026-09-10 también sobre entrenamiento, porque el atlas de
+captación normal por órgano (`scripts/17_atlas_normalidad.py`) necesita los 176 estudios.
+TotalSegmentator es una red preentrenada pública que solo mira el CT de cada estudio por
+separado: no ve nuestras anotaciones ni nuestras particiones, así que no introduce fuga de
+información entre entrenamiento, validación y prueba.
+
+El script es reanudable: salta los estudios que ya tienen su `.npz`, así que se puede cortar
+y volver a lanzar sin perder trabajo. Lanzarlo dos veces a la vez tampoco lo rompe (cada
+proceso usa temporales propios), pero es trabajo duplicado: conviene una sola instancia.
 """
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -44,14 +55,32 @@ def dispositivo_ts() -> str:
     return "cpu"
 
 
+def temporal(destino: Path, sufijo: str) -> Path:
+    """Nombre temporal propio de este proceso.
+
+    Lleva el PID a propósito. El 2026-09-10 el script quedó lanzado dos veces por error:
+    las dos instancias tomaban el mismo estudio, escribían en el mismo `.tmp`, la primera
+    lo movía a su destino y la segunda reventaba con FileNotFoundError al intentar mover un
+    temporal que ya no existía. Con el PID adentro, cada instancia trabaja en su propio
+    archivo y lo peor que puede pasar es repetir trabajo, nunca corromperlo.
+    """
+    return destino.with_name(destino.name.replace(sufijo, f".tmp{os.getpid()}{sufijo}"))
+
+
 def correr_ts(ct: Path, salida: Path, device: str, fast: bool = True) -> None:
     salida.parent.mkdir(parents=True, exist_ok=True)
-    tmp = salida.with_suffix(".tmp.nii.gz")
+    tmp = temporal(salida, ".nii.gz")
     cmd = ["TotalSegmentator", "-i", str(ct), "-o", str(tmp), "--ml", "-ta", "total", "--device", device]
     if fast:
         cmd.append("--fast")
-    subprocess.run(cmd, check=True)
-    tmp.replace(salida)
+    try:
+        subprocess.run(cmd, check=True)
+        if salida.exists():          # otra instancia se adelantó: su resultado vale igual
+            tmp.unlink(missing_ok=True)
+            return
+        tmp.replace(salida)
+    finally:
+        tmp.unlink(missing_ok=True)  # no dejar basura si TotalSegmentator falló
 
 
 def main():
@@ -102,7 +131,7 @@ def main():
             body = npz["body"].astype(bool)
             assert ts_grid.shape == body.shape, (ts_grid.shape, body.shape)
             groups = group_labels(ts_grid, cmap, body)
-            tmp = out.with_suffix(".tmp.npz")
+            tmp = temporal(out, ".npz")
             np.savez_compressed(tmp, groups=groups, ts=ts_grid, group_names=np.array(GROUP_NAMES))
             tmp.replace(out)
             frac = {GROUP_NAMES[k]: round(float(v) / body.sum(), 3) for k, v in
