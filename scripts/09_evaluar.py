@@ -19,7 +19,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from petct.data import split_files  # noqa: E402
 from petct.device import pick_device  # noqa: E402
 from petct.infer import evaluate_files, summarize  # noqa: E402
-from petct.models import build_model  # noqa: E402
+from petct.models import build_model, needs_reference  # noqa: E402
+from petct.reference import REF_POBLACIONAL, load_reference_table  # noqa: E402
 from petct.train import load_weights  # noqa: E402
 
 
@@ -37,6 +38,12 @@ def main():
     ap.add_argument("--etiqueta", default=None, help="nombre de la corrida en la tabla (por defecto modelo_<M>; para semillas: modelo_A_s2)")
     ap.add_argument("--salida", default=None)
     ap.add_argument("--incluir-zona-borrada", action="store_true", help="no excluir la caja del defacing (métrica cruda del reto)")
+    ap.add_argument("--referencias", default="data/manifests/referencias_internas.csv",
+                    help="CSV de referencias internas; solo lo usa el modelo E")
+    ap.add_argument("--sin-referencia", action="store_true",
+                    help="ablación para E: sustituye la referencia de cada paciente por la constante "
+                         "poblacional, con lo que el tercer canal deja de contener información individual "
+                         "y pasa a ser un reescalado del canal de SUV. Los pesos no se tocan.")
     ap.add_argument("--sin-atencion", action="store_true",
                     help="ablación para C: pone gamma = 0 al evaluar, es decir, apaga la atención cruzada y deja el resto de la red intacta")
     a = ap.parse_args()
@@ -64,6 +71,20 @@ def main():
     print(f"checkpoint de la iteración {ck.get('iter')} (Dice val {ck.get('best_dice', float('nan')):.3f}); "
           f"red {'chica' if small else 'completa'}; parche {roi}; dispositivo {device}", flush=True)
 
+    refs = None
+    if needs_reference(a.modelo):
+        if a.sin_referencia:
+            # Diccionario vacío: cada estudio cae en la constante poblacional. El canal sigue
+            # existiendo (la red necesita sus tres entradas), pero ya no dice nada del paciente.
+            refs = {}
+            print(f"[ablación] referencia interna apagada: todos los estudios usan la constante "
+                  f"poblacional {REF_POBLACIONAL:g}; los pesos son los mismos", flush=True)
+        else:
+            refs = load_reference_table(a.referencias)
+            print(f"referencias internas: {len(refs)} estudios desde {a.referencias}", flush=True)
+    elif a.sin_referencia:
+        sys.exit("--sin-referencia solo tiene sentido con un modelo que use el canal de referencia (E)")
+
     files = split_files(a.manifest, a.procesado, a.particion)
     if a.limite:
         files = files[: a.limite]
@@ -72,7 +93,7 @@ def main():
     masks = ck_path.parent / f"mascaras_{a.particion}" if a.guardar_mascaras else None
     df = evaluate_files(model, files, device, roi=roi, amp=(device.type == "cuda"),
                         variante=etiqueta, save_masks_dir=masks, verbose=True,
-                        exclude_blank=not a.incluir_zona_borrada)
+                        exclude_blank=not a.incluir_zona_borrada, refs=refs)
     out.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(out, index=False)
     print("\nresumen:", {k: (round(v, 3) if isinstance(v, float) else v) for k, v in summarize(df).items()})

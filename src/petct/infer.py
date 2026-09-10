@@ -25,13 +25,14 @@ from monai.inferers import sliding_window_inference
 
 from .metrics import evaluate_study
 from .preprocess import load_study
+from .reference import reference_for, stack_input
 
 
 @torch.no_grad()
 def predict_volume(model: torch.nn.Module, x: torch.Tensor, device: torch.device,
                    roi=(96, 96, 96), overlap: float = 0.5, sw_batch_size: int = 2,
                    amp: bool = False) -> np.ndarray:
-    """x: (2, D, H, W) float32 en CPU. Devuelve máscara binaria (D, H, W) uint8."""
+    """x: (C, D, H, W) float32 en CPU (C = 2 para A/B/C, 3 para E). Máscara binaria (D, H, W)."""
     model.eval()
     xb = x[None].to(device)
     with torch.autocast(device_type=device.type, dtype=torch.float16, enabled=amp and device.type == "cuda"):
@@ -44,13 +45,15 @@ def predict_volume(model: torch.nn.Module, x: torch.Tensor, device: torch.device
 def evaluate_files(model: torch.nn.Module, files: Sequence[Path], device: torch.device,
                    roi=(96, 96, 96), overlap: float = 0.5, amp: bool = False,
                    variante: str = "modelo", save_masks_dir: Optional[Path] = None,
-                   verbose: bool = False, exclude_blank: bool = True) -> pd.DataFrame:
+                   verbose: bool = False, exclude_blank: bool = True,
+                   refs: Optional[Dict[str, float]] = None) -> pd.DataFrame:
     """Predice y mide cada estudio; una fila por estudio, columnas como la referencia clásica."""
     rows: List[Dict] = []
     for i, f in enumerate(files):
         f = Path(f)
         vol = load_study(f)
-        x = torch.from_numpy(np.stack([vol["suv"], vol["ct"]]).astype(np.float32))
+        ref = None if refs is None else reference_for(refs, f.stem)
+        x = torch.from_numpy(stack_input(vol["suv"], vol["ct"], vol["suv_top"], ref))
         pred = predict_volume(model, x, device, roi, overlap, amp=amp)
         suv_real = vol["suv"] * vol["suv_top"]
         ml = float(np.prod(vol["spacing"])) / 1000.0

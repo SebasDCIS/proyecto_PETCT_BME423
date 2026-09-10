@@ -47,7 +47,8 @@ from torch.utils.data import DataLoader
 
 from .data import PatchDataset
 from .infer import evaluate_files, summarize
-from .models import build_model, count_parameters
+from .models import build_model, count_parameters, needs_reference
+from .reference import load_reference_table
 
 
 @dataclass
@@ -67,6 +68,7 @@ class TrainConfig:
     workers: int = 0                    # procesos de carga; con la caché en RAM basta 0 (cada worker tendría su propia caché)
     cache_estudios: int = 256
     small: bool = False                 # red chica para pruebas y humo
+    referencias: Optional[str] = None   # CSV de referencias internas; obligatorio para el modelo E
     max_minutos: Optional[float] = None  # parar con gracia (sesiones de Colab)
     log_cada: int = 20
 
@@ -130,6 +132,21 @@ def train(cfg: TrainConfig, train_files: Sequence[Path], val_files: Sequence[Pat
     seed_everything(cfg.semilla)
     use_amp = bool(cfg.precision_mixta and device.type == "cuda")
 
+    # Tabla de referencias internas: solo la cargan los modelos que la piden (hoy, E). Si el
+    # modelo la necesita y no está, es mejor cortar acá que nueve horas después con un error
+    # de tamaños en la primera convolución.
+    refs = None
+    if needs_reference(cfg.modelo):
+        if not cfg.referencias or not Path(cfg.referencias).exists():
+            raise SystemExit(f"el modelo {cfg.modelo} necesita la tabla de referencias internas y no "
+                             f"la encuentro en {cfg.referencias!r}. La genera "
+                             "scripts/19_referencias_internas.py")
+        refs = load_reference_table(cfg.referencias)
+        faltan = [f.stem for f in list(train_files) + list(val_files) if f.stem not in refs]
+        if faltan:
+            print(f"[aviso] {len(faltan)} estudios sin referencia interna; usarán la constante "
+                  f"poblacional: {faltan[:3]}{' ...' if len(faltan) > 3 else ''}", flush=True)
+
     model = build_model(cfg.modelo, small=cfg.small).to(device)
     n_params = count_parameters(model)
     optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
@@ -150,7 +167,7 @@ def train(cfg: TrainConfig, train_files: Sequence[Path], val_files: Sequence[Pat
 
     ds = PatchDataset(train_files, cfg.parche, cfg.prob_parche_con_lesion,
                       length=max(cfg.iteraciones * cfg.lote, 1000), cache_size=cfg.cache_estudios,
-                      augment=True, seed=cfg.semilla + start_it)
+                      augment=True, seed=cfg.semilla + start_it, refs=refs)
     loader = DataLoader(ds, batch_size=cfg.lote, shuffle=False, num_workers=cfg.workers,
                         pin_memory=(device.type == "cuda"), persistent_workers=cfg.workers > 0,
                         drop_last=True)
@@ -159,6 +176,7 @@ def train(cfg: TrainConfig, train_files: Sequence[Path], val_files: Sequence[Pat
     if verbose:
         print(f"modelo {cfg.modelo} ({'chico' if cfg.small else 'completo'}): {n_params / 1e6:.1f} M parámetros | "
               f"{len(train_files)} estudios de entrenamiento, {len(val_subset)} de validación rápida | "
+              f"entrada de {3 if refs is not None else 2} canales | "
               f"dispositivo {device} | AMP {'sí' if use_amp else 'no'} | lote {cfg.lote} | parche {tuple(cfg.parche)}", flush=True)
 
     log_hdr = ["iter", "loss", "lr", "seg_por_iter", "minutos"]
@@ -212,7 +230,7 @@ def train(cfg: TrainConfig, train_files: Sequence[Path], val_files: Sequence[Pat
             # elección del checkpoint sea la misma regla en las nueve corridas (A se entrenó así);
             # la evaluación final (scripts/09) sí excluye la zona sin imagen
             df = evaluate_files(model, val_subset, device, roi=cfg.parche, amp=use_amp, variante=cfg.modelo,
-                                exclude_blank=False)
+                                exclude_blank=False, refs=refs)
             s = summarize(df)
             improved = not math.isnan(s["dice_pos"]) and s["dice_pos"] > best
             if improved:

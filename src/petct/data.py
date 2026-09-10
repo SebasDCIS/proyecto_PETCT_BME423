@@ -41,6 +41,7 @@ import torch
 from torch.utils.data import Dataset
 
 from .preprocess import load_study, sample_patch
+from .reference import reference_for, stack_input
 
 
 # ---------------------------------------------------------------- particiones
@@ -102,10 +103,15 @@ class PatchDataset(Dataset):
 
     def __init__(self, files: Sequence[Path], patch_size=(96, 96, 96), p_lesion: float = 0.7,
                  length: int = 10_000, cache_size: int = 256, augment: bool = True,
-                 seed: Optional[int] = None):
+                 seed: Optional[int] = None, refs: Optional[Dict[str, float]] = None):
         if not files:
             raise ValueError("PatchDataset sin archivos")
         self.files = [Path(f) for f in files]
+        # Referencia interna por estudio (modelo E). Si es None, la entrada tiene 2 canales,
+        # exactamente como en A, B y C. Se resuelve acá y no en __getitem__ para no buscar en
+        # un diccionario 50 000 veces por corrida.
+        self.refs = ({f: reference_for(refs, f.stem) for f in self.files}
+                     if refs is not None else None)
         self.patch_size = tuple(int(s) for s in patch_size)
         self.p_lesion = float(p_lesion)
         self.length = int(length)
@@ -133,7 +139,9 @@ class PatchDataset(Dataset):
         f = self.files[rng.integers(len(self.files))]
         vol = self.cache.get(f)
         p = sample_patch(vol, self.patch_size, self.p_lesion, rng)
-        x = np.stack([p["suv"].astype(np.float32), p["ct"].astype(np.float32)])   # (2, D, H, W)
+        # (2, D, H, W) para A, B y C; (3, D, H, W) para E, con el SUV referido al hígado propio
+        x = stack_input(p["suv"], p["ct"], vol["suv_top"],
+                        None if self.refs is None else self.refs[f])
         y = p["seg"].astype(np.int64)[None]                                       # (1, D, H, W)
         if self.augment:
             for ax in (2, 3):          # ejes H (y) y W (x); z (eje 1) no se voltea
@@ -148,8 +156,9 @@ class PatchDataset(Dataset):
 class VolumeDataset(Dataset):
     """Estudios completos para validación/prueba. Devuelve (x, y, meta)."""
 
-    def __init__(self, files: Sequence[Path]):
+    def __init__(self, files: Sequence[Path], refs: Optional[Dict[str, float]] = None):
         self.files = [Path(f) for f in files]
+        self.refs = refs
 
     def __len__(self) -> int:
         return len(self.files)
@@ -157,7 +166,8 @@ class VolumeDataset(Dataset):
     def __getitem__(self, idx: int):
         f = self.files[idx]
         vol = load_study(f)
-        x = torch.from_numpy(np.stack([vol["suv"], vol["ct"]]).astype(np.float32))
+        ref = None if self.refs is None else reference_for(self.refs, f.stem)
+        x = torch.from_numpy(stack_input(vol["suv"], vol["ct"], vol["suv_top"], ref))
         y = torch.from_numpy(vol["seg"].astype(np.int64))[None]
         meta = {"file": str(f), "patient_id": f.stem.split("__")[0], "suv_top": vol["suv_top"],
                 "ml_per_voxel": float(np.prod(vol["spacing"])) / 1000.0,

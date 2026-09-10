@@ -138,3 +138,35 @@ modelo ha visto, y por eso se abre una sola vez.
 
 Test (49 estudios): **sin abrir**. Se abrirá una sola vez, al final, con todos los brazos
 (los de este protocolo y los de la segunda parte), según `docs/TRASPASO_RAMAS.md`.
+
+## 6. Extensión declarada el 2026-09-11: el brazo E
+
+Se agrega un cuarto modelo, decidido **antes** de abrir la prueba y con la prueba todavía
+cerrada, así que no hay ninguna elección hecha mirando el test.
+
+**Qué es.** E es la arquitectura de A sin ningún cambio (U-Net MONAI 32-64-128-256-320) con un
+tercer canal de entrada: el SUV de cada vóxel dividido por el SUV hepático de ese paciente, con
+tope en 8 veces (`src/petct/reference.py`). 12,9 M parámetros, los mismos que A salvo 864 pesos
+de la primera convolución. **Todo lo demás del protocolo —datos, partición, preprocesamiento,
+iteraciones, lote, parche, muestreo, aumento, optimizador, programa de lr, pérdida, criterio de
+checkpoint, semillas 423/2/3— es idéntico.** La única variable que se mueve es la entrada.
+
+**Por qué.** `docs/ANALISIS_ATLAS.md`, secciones 4 y 5.
+
+**Auditoría de fugas del canal nuevo.** Tres puntos, todos verificables:
+
+1. **La referencia se calcula sin la anotación.** `reference.liver_reference` toma la mediana
+   del SUV de todo el hígado, excluyendo únicamente el aire y la zona borrada por el defacing.
+   No mira `seg`. Es la única forma legal, porque en un estudio nuevo no hay anotación.
+   `scripts/19` calcula además la versión que sí excluye la lesión y reporta la diferencia
+   entre ambas, para que quede medido y no supuesto.
+2. **La misma regla en las tres particiones.** Entrenamiento, validación y prueba usan la
+   referencia calculada igual, con el mismo código y sin excepciones.
+3. **El mapa de órganos no introduce fuga.** TotalSegmentator es una red preentrenada pública
+   que se aplica al CT de cada estudio por separado; no ve nuestras etiquetas ni nuestro
+   sorteo de particiones.
+
+**Ablación obligatoria.** `scripts/09_evaluar.py --sin-referencia` sustituye la referencia de
+cada paciente por la constante poblacional (2,165, la mediana hepática de los 176 de
+entrenamiento). El canal sigue presente y los pesos son los mismos, pero deja de contener
+información individual: es la forma de aislar exactamente qué aporta la parte del paciente.

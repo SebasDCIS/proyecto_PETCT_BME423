@@ -46,6 +46,9 @@ def main():
     ap.add_argument("--max-minutos", type=float, default=None)
     ap.add_argument("--semilla", type=int, default=None, help="semilla (por defecto la del YAML, 423); para repeticiones usar 1, 2, 3...")
     ap.add_argument("--small", action="store_true", help="red chica (solo pruebas)")
+    ap.add_argument("--referencias", default="data/manifests/referencias_internas.csv",
+                    help="CSV de referencias internas (hígado propio de cada paciente). "
+                         "Solo lo usa el modelo E; los demás lo ignoran.")
     ap.add_argument("--sin-reanudar", action="store_true")
     a = ap.parse_args()
 
@@ -55,7 +58,7 @@ def main():
         parche=(a.parche,) * 3 if a.parche else None, validar_cada=a.validar_cada,
         checkpoint_cada=a.checkpoint_cada, max_estudios_val=a.max_estudios_val, workers=a.workers,
         cache_estudios=a.cache_estudios, max_minutos=a.max_minutos, small=a.small or None,
-        semilla=a.semilla)
+        semilla=a.semilla, referencias=a.referencias)
     device = pick_device(a.dispositivo)
     print("dispositivo:", describe_device() if a.dispositivo is None else device, flush=True)
 

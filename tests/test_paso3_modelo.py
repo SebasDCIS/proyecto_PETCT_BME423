@@ -177,3 +177,42 @@ def test_entrenar_reanudar_y_evaluar(datos, tmp_path):
     assert set(["dice", "fpv_ml", "fnv_ml", "estudio", "variante"]) <= set(df.columns)
     res = summarize(df)
     assert res["n"] == 1 and res["n_pos"] == 1
+
+
+def test_modelo_E_y_canal_de_referencia():
+    """E es A con un tercer canal: mismo tamaño, entrada distinta, y el canal codifica
+    'cuántas veces el hígado del propio paciente' con el hígado siempre en el mismo lugar."""
+    import numpy as np
+    from petct.models import build_model, count_parameters, needs_reference
+    from petct.reference import REF_POBLACIONAL, REL_TOP, reference_for, relative_channel, stack_input
+
+    assert needs_reference("E") and not needs_reference("A")
+    # El tercer canal casi no agrega parámetros: solo una fila más en la primera convolución.
+    assert abs(count_parameters(build_model("E")) - count_parameters(build_model("A"))) < 2000
+
+    e, a = build_model("E", small=True), build_model("A", small=True)
+    assert tuple(e(torch.zeros(1, 3, 32, 32, 32)).shape) == (1, 2, 32, 32, 32)
+    with pytest.raises(RuntimeError):
+        e(torch.zeros(1, 2, 32, 32, 32))          # E exige sus tres canales
+    with pytest.raises(RuntimeError):
+        a(torch.zeros(1, 3, 32, 32, 32))          # y A sigue exigiendo dos
+
+    # El canal es invariante al paciente: el hígado propio siempre cae en el mismo valor,
+    # que es justamente lo que la referencia interna busca conseguir.
+    top = 30.0
+    for higado in (1.8, 2.2, 3.1):
+        suv_norm = np.array([higado, 2.5 * higado], np.float32) / top
+        c = relative_channel(suv_norm, top, higado)
+        assert abs(c[0] - 1.0 / REL_TOP) < 1e-6           # el hígado, en 1×
+        assert abs(c[1] - 2.5 / REL_TOP) < 1e-6           # la frontera Deauville 4/5, en 2,5×
+    # Con tope: 20 veces el hígado satura en 1
+    assert relative_channel(np.array([20 * 2.2 / top], np.float32), top, 2.2)[0] == 1.0
+
+    # Sin referencia son dos canales; con referencia, tres
+    z = np.zeros((4, 4, 4), np.float32)
+    assert stack_input(z, z, top, None).shape[0] == 2
+    assert stack_input(z, z, top, 2.2).shape[0] == 3
+
+    # La ablación: tabla vacía → todos caen en la constante poblacional
+    assert reference_for({}, "cualquiera") == REF_POBLACIONAL
+    assert reference_for({"x__y": 2.9}, "x__y") == 2.9

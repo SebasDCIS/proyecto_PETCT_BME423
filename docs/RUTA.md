@@ -1,6 +1,6 @@
 # Ruta del proyecto: dónde estamos y qué sigue
 
-*Actualizado el 2026-09-10, 16:02. Este documento se reescribe cada vez que cambia el plan.*
+*Actualizado el 2026-09-11. Este documento se reescribe cada vez que cambia el plan.*
 
 El proyecto tiene dos mitades. La primera está **cerrada**. La segunda está **en curso**, y es
 la que puede tocar cualquier cosa hoy.
@@ -29,30 +29,26 @@ lo demás.
 normal de captación tumoral. Hoy la red tiene que deducir el órgano mirando el CT, con solo
 176 estudios. ¿Y si se lo damos ya masticado?
 
-Hay dos formas de dárselo, y todavía no sabemos cuál (ni si alguna sirve):
+Había dos formas de dárselo. **El 2026-09-11 quedó elegida la segunda**, con la evidencia de
+los pasos 2 a 4:
 
-- **E1 — canal de órgano.** Un canal extra que dice "esto es hígado". Precedente publicado
-  (Frontiers 2026: +16 % en detección de linfoma, con reducción de falsos positivos
-  concentrada en cerebro, tiroides y corazón).
-- **E2 — canal de SUV relativo.** Un canal extra que dice "este brillo es 3,6 veces lo normal
-  de este órgano". Es la escala de Deauville automatizada y generalizada a 17 órganos. Es
-  el aporte propio, sin precedente directo.
+- **E1 — canal de órgano.** Un canal extra que dice "esto es hígado". Descartado: el órgano es
+  deducible del CT dentro del parche, y se midió que la normalización poblacional por órgano no
+  cambia el AUC dentro de un mismo órgano.
+- **E — canal de SUV referido al hígado propio.** Un canal extra que dice "este brillo es 3,6
+  veces el hígado de este paciente". Es la lógica de la escala de Deauville. **Elegido**,
+  porque es información que un parche de 288 mm no puede contener.
 
-Y la regla que nos dimos: **medir antes de entrenar.** Los pasos 1 a 4 no gastan ni una noche
-de GPU y nos dicen si vale la pena seguir.
+Y la regla que nos dimos, que funcionó: **medir antes de entrenar.** Los pasos 1 a 4 no
+gastaron ni una noche de GPU y decidieron por nosotros.
 
 ---
 
-### 📍 Paso 1 — Mapas de órganos del entrenamiento · **AQUÍ ESTAMOS**
+### ~~Paso 1 — Mapas de órganos del entrenamiento~~ · ✅ hecho
 
-TotalSegmentator sobre los 176 estudios de entrenamiento (los 26 de validación ya estaban).
+202 de 202 (176 de entrenamiento + 26 de validación), en unas 3 horas.
 
-- **Estado:** 40 de 202 · va a ~40 s por estudio · faltan ~1 h 45 min
-- **Comando:** `nohup caffeinate -i python scripts/11_organos_totalsegmentator.py --particion train >> logs/organos_train.log 2>&1 &`
-- **Vigilar:** `ls data/processed_organos/*.npz | wc -l` · listo cuando llegue a **202**
-- **Quién:** tu Mac, solo. No hay nada que hacer mientras tanto.
-
-### Paso 2 — Construir el atlas de normalidad
+### ~~Paso 2 — Construir el atlas de normalidad~~ · ✅ hecho
 
 Dos tablas de "cuánto capta normalmente cada órgano": una con los 35 controles sin lesión,
 otra con los 176 completos excluyendo los vóxeles anotados.
@@ -64,7 +60,7 @@ python scripts/17_atlas_normalidad.py --subconjunto train
 
 - **Cuesta:** minutos · **Quién:** tú lo lanzas, me pegás la salida
 
-### Paso 3 — Comparar los dos atlas
+### ~~Paso 3 — Comparar los dos atlas~~ · ✅ hecho
 
 ```
 python scripts/17_atlas_normalidad.py --comparar
@@ -76,7 +72,7 @@ anómala no anotada hay. **Las dos salidas son información, ninguna es un fraca
 
 - **Cuesta:** segundos
 
-### Paso 4 — La prueba decisiva: ¿separa o no separa?
+### ~~Paso 4 — La prueba decisiva~~ · ✅ hecho
 
 ```
 python scripts/18_poder_separacion.py --atlas controles
@@ -88,25 +84,44 @@ SUVmáx crudo, SUVmáx / p95 del órgano, y z robusto del órgano.
 
 - **Cuesta:** minutos
 
-### 🔀 PUNTO DE DECISIÓN
+### ~~🔀 PUNTO DE DECISIÓN~~ · resuelto el 2026-09-11: **se entrena E**
 
-Según el AUC del paso 4:
+Resultados en `docs/ANALISIS_ATLAS.md`. En una línea: la referencia por órgano gana +0,030 de
+AUC (0,813 → 0,844) y gana en las nueve corridas sin excepción; y el desglose por órgano mostró
+que **toda esa ganancia viene de la referencia interna del paciente**, no de la tabla
+poblacional, porque dividir por una constante del órgano es una transformación monótona que no
+cambia el orden. Sumado a que un parche de 288 mm no puede ver el hígado desde la pelvis, es
+información que la red no tiene forma de deducir.
 
-| Si… | Entonces |
-|---|---|
-| El SUV relativo gana claramente al crudo (+0,03 o más) | **Entrenamos E2**, 3 semillas, 3 noches |
-| Empatan, pero el mapa de órganos se ve sólido | **Entrenamos E1**, 3 semillas, 3 noches |
-| Ninguno aporta | **No entrenamos nada.** Es un resultado, y refuerza la tesis: el techo está en la anotación, no en el modelo |
+De paso quedó cerrada la pregunta de si bajar más estudios: **no**. Quintuplicar la muestra
+mueve la referencia menos del 3 % en once de quince órganos.
 
-En cualquiera de los tres casos, el análisis de los pasos 2 a 4 **entra al informe**. No se
-tira nada.
+### 📍 Paso 5 — Entrenar el modelo E · **AQUÍ ESTAMOS**
 
-### Paso 5 — Entrenar el brazo elegido *(solo si el paso 4 lo justifica)*
+**Modelo E** = la arquitectura de A sin ningún cambio, con un tercer canal de entrada: el SUV
+de cada vóxel dividido por el SUV hepático de ese paciente, con tope en 8 veces. Mismo tamaño
+(12,9 M parámetros), mismo presupuesto de entrenamiento. **La única variable que se mueve es la
+entrada.**
 
-Tres corridas, ~9 h cada una, arquitectura A (la mejor y la más barata), cambiando **solo la
-entrada**. Ablación obligatoria: poner el canal nuevo en cero y volver a medir.
+Antes de entrenar, una vez:
 
-- **Cuesta:** 3 noches · **Quién:** tu Mac, enchufado
+```
+python scripts/19_referencias_internas.py
+```
+
+Después, las tres corridas (una por noche, el Mac enchufado):
+
+```
+caffeinate -i python scripts/07_entrenar.py --modelo E --semilla 423 --salida runs/E
+caffeinate -i python scripts/07_entrenar.py --modelo E --semilla 2   --salida runs/E_s2
+caffeinate -i python scripts/07_entrenar.py --modelo E --semilla 3   --salida runs/E_s3
+```
+
+- **Cuesta:** ~9 h cada una · **Quién:** tu Mac, enchufado
+- **Ablación obligatoria:** `--sin-referencia` en la evaluación sustituye la referencia de cada
+  paciente por la constante poblacional. El canal sigue existiendo, pero deja de contener
+  información individual. Si la predicción no cambia, el canal está inerte, igual que le pasó a
+  la atención cruzada de C.
 
 ### Paso 6 — Evaluar y repartir el error por órgano
 
@@ -149,5 +164,8 @@ del ramo (extensión, formato, secciones, rúbrica) para armar el esqueleto.
 
 ## Lo que hay que hacer AHORA MISMO
 
-**Nada.** Esperar a que el contador llegue a 202. Mientras tanto, si querés adelantar: buscá
-la pauta del informe y pasámela.
+1. `python scripts/19_referencias_internas.py` — un minuto, y hay que leer lo que imprime:
+   la diferencia entre calcular la referencia con y sin la anotación es la comprobación de que
+   el canal no tiene fuga.
+2. Lanzar la primera corrida de E esta noche, con el Mac enchufado.
+3. Si querés adelantar el paso 9: buscá la pauta del informe y pasámela.

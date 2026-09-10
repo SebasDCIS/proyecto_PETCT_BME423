@@ -241,12 +241,34 @@ def early_fusion_wide(small: bool = False) -> nn.Module:
     return early_fusion_unet(small=small, channels=None if small else CHANNELS_WIDE)
 
 
+def early_fusion_ref(small: bool = False) -> nn.Module:
+    """Modelo E: la misma red de A, con un tercer canal de entrada.
+
+    El canal es el SUV de cada vóxel dividido por el SUV hepático de ESE paciente (ver
+    `petct.reference`). No cambia nada más: misma arquitectura, mismo tamaño, mismo
+    presupuesto de entrenamiento. La única variable que se mueve es la entrada, que es lo
+    que permite atribuirle a ella cualquier diferencia."""
+    return early_fusion_unet(in_channels=3, small=small)
+
+
 _REGISTRY = {
     "A": ("fusión temprana: U-Net 3D con PET y CT como dos canales de entrada", early_fusion_unet),
     "A+": ("control de capacidad: A con canales ×1,375 (24,3 M, los parámetros de B); separa el efecto de tener más red del de fusionar distinto", early_fusion_wide),
+    "E": ("fusión temprana con referencia interna: A más un tercer canal, el SUV referido al hígado del propio paciente (la lógica de Deauville). Es información que un parche de 288 mm no puede contener", early_fusion_ref),
     "B": ("fusión intermedia: dos codificadores (PET, CT) concatenados en el cuello de botella y en los saltos", dual_concat),
     "C": ("fusión intermedia: dos codificadores con atención cruzada PET→CT en el cuello de botella (B + atención)", dual_cross_attention),
 }
+
+
+# Modelos que esperan el tercer canal de referencia interna. Lo declaro acá y no en cada
+# script para que entrenar y evaluar no puedan discrepar: si un modelo pide tres canales y se
+# le dan dos, PyTorch falla en la primera convolución con un error críptico sobre tamaños.
+MODELOS_CON_REFERENCIA = frozenset({"E"})
+
+
+def needs_reference(name: str) -> bool:
+    """¿Este modelo necesita la tabla de referencias internas para armar su entrada?"""
+    return name in MODELOS_CON_REFERENCIA
 
 
 def build_model(name: str = "A", small: bool = False) -> nn.Module:
