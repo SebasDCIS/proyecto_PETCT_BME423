@@ -977,3 +977,34 @@ Los intervalos son anchos porque solo hay 20 positivos evaluables en validación
 Salidas: `results/deteccion_lesiones_val.csv`, `deteccion_por_tamano_val.csv`,
 `correccion_val.csv`, `ensamble_val.csv`, `resumen_clinico_val.csv`;
 figura `docs/figuras/clinico_val.png`.
+
+## 2026-09-10. Cuánto costó el criterio de selección de checkpoint: casi nada
+
+La limitación (a) del protocolo era que `mejor.pt` se elige con una validación rápida de solo
+12 estudios, ruidosa (en la semilla 423 de C eligió la iteración 9 000 de 25 000). Para acotar
+su efecto evalué también el **último** checkpoint (iteración 25 000) de las nueve corridas y
+comparé. Es solo inferencia, sin entrenar nada.
+
+| | Dice (mejor) | Dice (último) | FPV (mejor) | FPV (último) |
+|---|---|---|---|---|
+| A | 0,621 ± 0,016 | 0,615 ± 0,020 | 20,9 ± 2,5 | 21,7 ± 0,5 |
+| B | 0,612 ± 0,014 | 0,607 ± 0,002 | 22,8 ± 3,1 | 22,1 ± 2,8 |
+| C | 0,612 ± 0,008 | 0,610 ± 0,007 | 23,2 ± 6,7 | 21,5 ± 1,8 |
+
+**La diferencia media es de 0,005 de Dice y la máxima en una corrida, 0,019.** Elegir por la
+validación rápida ganó casi nada respecto a quedarse simplemente con el último checkpoint, y
+**el orden entre modelos es idéntico con los dos criterios**: A ligeramente por delante, B y C
+empatados, los tres dentro del ruido de semillas.
+
+Lo importante es lo que esto cierra: la limitación estaba declarada pero sin cuantificar, y
+ahora tiene número. El criterio de selección no distorsionó la comparación. De hecho, con el
+último checkpoint las desviaciones entre semillas **bajan** (A pasa de 2,5 a 0,5 mL de FPV;
+C de 6,7 a 1,8), lo que confirma que parte de la dispersión que veíamos venía del criterio de
+selección y no de los modelos.
+
+Detalle menor: los gammas de C en la iteración 25 000 son 0,985, 1,001 y 1,005. Igual que en
+los checkpoints elegidos, no se movieron; la atención sigue sin activarse en ninguna semilla ni
+en ningún punto del entrenamiento.
+
+Tabla en `results/comparacion_criterio_checkpoint_val.csv`. Las nueve evaluaciones se guardaron
+con el sufijo `_ultimo` para que no se mezclen con la comparación principal.

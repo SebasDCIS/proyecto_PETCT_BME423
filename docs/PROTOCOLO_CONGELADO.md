@@ -107,6 +107,11 @@ no lo cambio ahora porque haría incomparables las cinco corridas terminadas (no
 checkpoints intermedios para reelegir). Mejora futura declarada: validar con los 26 o con
 una submuestra estratificada más grande.
 
+**Cuantificada el 2026-09-10:** se evaluó también el último checkpoint (iteración 25 000) de
+las nueve corridas. La diferencia media de Dice entre criterios es 0,005 (máxima 0,019 en una
+corrida) y el orden entre modelos no cambia. El criterio ruidoso no distorsionó la comparación.
+Ver `results/comparacion_criterio_checkpoint_val.csv`.
+
 **b) Los números de val son de "conjunto de selección".** Los 12 estudios que eligen el
 checkpoint están dentro de los 26 que reporto en validación, así que la validación es
 levemente optimista. Por eso la comparación definitiva es en test (49 estudios), que ningún
