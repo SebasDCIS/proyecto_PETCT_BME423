@@ -1,0 +1,1401 @@
+<title>Del positrón a la U-Net</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --paper:#EAEDF1; --surface:#FBFCFD; --surface-2:#F1F4F7; --surface-3:#E4E9EE;
+  --ink:#111820; --ink-2:#39454F; --muted:#5F6C79;
+  --line:#D2D9E0; --line-strong:#AEBAC5;
+  --pet:#B05A11;   --pet-soft:#F3E2CE;
+  --ct:#2F6285;    --ct-soft:#D8E5EF;
+  --net:#5C4B86;   --net-soft:#E3DEF0;
+  --ok:#2C6B4E;    --ok-soft:#D6E9DE;
+  --alert:#9E2A1C; --alert-soft:#F4D8D3;
+  --shadow:0 1px 2px rgba(17,24,32,.05), 0 10px 28px -16px rgba(17,24,32,.22);
+  --r:10px;
+  --f-d:"Zilla Slab", Georgia, "Times New Roman", serif;
+  --f-b:"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --f-m:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1418; --surface:#171E24; --surface-2:#1E262D; --surface-3:#262F37;
+    --ink:#E7EDF2; --ink-2:#BCC8D2; --muted:#8D9CA9;
+    --line:#29333B; --line-strong:#3D4A55;
+    --pet:#E09A52; --pet-soft:#3E2D18;
+    --ct:#7CB0D3; --ct-soft:#192B36;
+    --net:#A99AD1; --net-soft:#241E33;
+    --ok:#6FB394; --ok-soft:#16291F;
+    --alert:#E17E6C; --alert-soft:#33201B;
+    --shadow:0 1px 2px rgba(0,0,0,.45), 0 10px 30px -16px rgba(0,0,0,.75);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1418; --surface:#171E24; --surface-2:#1E262D; --surface-3:#262F37;
+  --ink:#E7EDF2; --ink-2:#BCC8D2; --muted:#8D9CA9;
+  --line:#29333B; --line-strong:#3D4A55;
+  --pet:#E09A52; --pet-soft:#3E2D18;
+  --ct:#7CB0D3; --ct-soft:#192B36;
+  --net:#A99AD1; --net-soft:#241E33;
+  --ok:#6FB394; --ok-soft:#16291F;
+  --alert:#E17E6C; --alert-soft:#33201B;
+  --shadow:0 1px 2px rgba(0,0,0,.45), 0 10px 30px -16px rgba(0,0,0,.75);
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper); color:var(--ink); font-family:var(--f-b);
+     font-size:16px; line-height:1.62; -webkit-font-smoothing:antialiased}
+.wrap{max-width:980px; margin:0 auto; padding-inline:20px; padding-block:0 80px}
+.col{width:100%; max-width:68ch; margin-inline:auto}
+
+h1,h2,h3,h4{font-family:var(--f-d); text-wrap:balance; line-height:1.2; margin:0}
+h1{font-size:clamp(2.1rem,5.4vw,3.3rem); font-weight:700; letter-spacing:-.018em}
+h2{font-size:clamp(1.45rem,3vw,1.9rem); font-weight:600; letter-spacing:-.01em}
+h3{font-size:1.16rem; font-weight:600}
+h4{font-size:1rem; font-weight:600}
+p{margin:0}
+a{color:var(--ct)}
+strong{font-weight:600}
+code,.n{font-family:var(--f-m); font-variant-numeric:tabular-nums}
+code{font-size:.88em; background:var(--surface-2); padding:.1em .34em; border-radius:4px;
+     border:1px solid var(--line)}
+.eyebrow{font-family:var(--f-m); font-size:.7rem; letter-spacing:.15em;
+         text-transform:uppercase; color:var(--muted)}
+.lead{font-size:1.1rem; color:var(--ink-2)}
+.small{font-size:.88rem; color:var(--muted)}
+
+/* --- navegación --- */
+.nav{position:sticky; top:0; z-index:30; background:var(--paper);
+     border-bottom:1px solid var(--line); margin-bottom:0}
+.nav-in{max-width:980px; margin:0 auto; padding:10px 20px; display:flex; gap:8px;
+        overflow-x:auto; align-items:center}
+.nav a{display:inline-flex; align-items:center; gap:7px; white-space:nowrap;
+       text-decoration:none; color:var(--ink-2); font-size:.84rem; font-weight:500;
+       padding:6px 11px; border-radius:99px; border:1px solid var(--line);
+       background:var(--surface)}
+.nav a:hover{border-color:var(--line-strong)}
+.nav a:focus-visible{outline:2px solid var(--ct); outline-offset:2px}
+.nav a .dot{width:9px; height:9px; border-radius:50%; flex:none}
+.nav a.m1 .dot{background:var(--pet)} .nav a.m2 .dot{background:var(--ct)}
+.nav a.m3 .dot{background:var(--net)} .nav a.m4 .dot{background:var(--ok)}
+.nav a.m5 .dot{background:var(--line-strong)}
+
+header.hero{display:flex; flex-direction:column; gap:18px; padding-block:54px 40px;
+            border-bottom:2px solid var(--ink)}
+
+section.mod{padding-block:52px; border-top:1px solid var(--line); scroll-margin-top:60px}
+section.mod:first-of-type{border-top:none}
+.mod-head{display:flex; flex-direction:column; gap:12px; margin-bottom:26px;
+          width:100%; max-width:68ch; margin-inline:auto}
+.mod-num{display:inline-flex; align-items:center; gap:10px; font-family:var(--f-m);
+         font-size:.72rem; letter-spacing:.14em; text-transform:uppercase}
+.mod-num b{width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
+           font-family:var(--f-d); font-size:.95rem; color:#fff; letter-spacing:0}
+.m1 .mod-num b{background:var(--pet)} .m1 .mod-num{color:var(--pet)}
+.m2 .mod-num b{background:var(--ct)}  .m2 .mod-num{color:var(--ct)}
+.m3 .mod-num b{background:var(--net)} .m3 .mod-num{color:var(--net)}
+.m4 .mod-num b{background:var(--ok)}  .m4 .mod-num{color:var(--ok)}
+
+.lesson{display:flex; flex-direction:column; gap:13px; padding-block:24px;
+        border-top:1px solid var(--line)}
+.lesson:first-of-type{border-top:none; padding-top:6px}
+.lesson > h3{margin-bottom:-2px}
+.stack{display:flex; flex-direction:column; gap:11px}
+
+/* --- fórmulas --- */
+.formula{background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+         overflow:hidden; box-shadow:var(--shadow)}
+.formula .eq{padding:16px 18px; background:var(--surface-2); border-bottom:1px solid var(--line);
+             font-family:var(--f-m); font-size:1rem; line-height:1.75; overflow-x:auto;
+             white-space:nowrap; color:var(--ink)}
+.formula .body{padding:14px 18px; display:flex; flex-direction:column; gap:9px; font-size:.94rem}
+.formula .body .tag{font-family:var(--f-m); font-size:.68rem; letter-spacing:.12em;
+                    text-transform:uppercase; color:var(--muted)}
+.formula dl{margin:0; display:grid; grid-template-columns:auto 1fr; gap:4px 14px; font-size:.9rem}
+.formula dt{font-family:var(--f-m); color:var(--pet); white-space:nowrap}
+.formula dd{margin:0; color:var(--ink-2)}
+
+/* --- llamadas --- */
+.note{border-left:3px solid var(--ct); background:var(--surface); padding:13px 17px;
+      border-radius:0 var(--r) var(--r) 0; display:flex; flex-direction:column; gap:6px}
+.note .ntitle{font-family:var(--f-m); font-size:.68rem; letter-spacing:.12em;
+              text-transform:uppercase; color:var(--muted)}
+.note.analogia{border-left-color:var(--pet)}
+.note.ojo{border-left-color:var(--alert)}
+.note.proyecto{border-left-color:var(--ok)}
+
+.pregunta{background:var(--surface); border:1px solid var(--line-strong); border-radius:var(--r);
+          padding:15px 18px; display:flex; flex-direction:column; gap:8px; box-shadow:var(--shadow)}
+.pregunta .q{font-family:var(--f-d); font-size:1.04rem; font-weight:600; line-height:1.35}
+.pregunta .lab{font-family:var(--f-m); font-size:.66rem; letter-spacing:.13em;
+               text-transform:uppercase; color:var(--alert)}
+.pregunta .a{font-size:.94rem; color:var(--ink-2)}
+
+/* --- tablas --- */
+.tbl{overflow-x:auto; border:1px solid var(--line); border-radius:var(--r); background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:.9rem; min-width:460px}
+th,td{text-align:left; padding:9px 13px; border-bottom:1px solid var(--line); vertical-align:top}
+th{font-family:var(--f-m); font-size:.67rem; letter-spacing:.1em; text-transform:uppercase;
+   color:var(--muted); font-weight:500; background:var(--surface-2)}
+td.n{font-family:var(--f-m); font-variant-numeric:tabular-nums; white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+
+/* --- interactivos --- */
+.demo{background:var(--surface); border:1px solid var(--line-strong); border-radius:var(--r);
+      box-shadow:var(--shadow); padding:20px; display:grid; gap:22px}
+.demo.two{grid-template-columns:1fr 260px; align-items:start}
+.ctrls{display:flex; flex-direction:column; gap:15px}
+.ctrl{display:flex; flex-direction:column; gap:6px}
+.ctrl .lab{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+.ctrl .lab span:first-child{font-size:.87rem; color:var(--ink-2)}
+.ctrl .cv{font-family:var(--f-m); font-size:.92rem; font-weight:500; color:var(--ink)}
+input[type=range]{width:100%; accent-color:var(--pet); height:22px; margin:0; cursor:pointer}
+input[type=range]:focus-visible{outline:2px solid var(--ct); outline-offset:3px; border-radius:4px}
+.chk{display:flex; align-items:center; gap:9px; font-size:.87rem; color:var(--ink-2); cursor:pointer}
+.chk input{width:16px; height:16px; accent-color:var(--alert); cursor:pointer}
+.out{background:var(--surface-2); border-radius:var(--r); padding:15px;
+     display:flex; flex-direction:column; gap:11px}
+.out .row{display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+          font-size:.88rem; color:var(--ink-2)}
+.out .row b{font-family:var(--f-m); font-size:1.02rem; font-weight:500; color:var(--ink);
+            font-variant-numeric:tabular-nums}
+.out .big{font-family:var(--f-d); font-size:2.3rem; font-weight:700; line-height:1; color:var(--ink)}
+.bar{position:relative; height:30px; border-radius:5px; overflow:hidden;
+     border:1px solid var(--line-strong)}
+.bar .mark{position:absolute; top:0; bottom:0; width:2px; background:var(--ink)}
+.bar .mark b{position:absolute; top:32px; left:50%; transform:translateX(-50%);
+             font-family:var(--f-m); font-size:.62rem; white-space:nowrap; color:var(--muted);
+             font-weight:400}
+.barwrap{display:flex; flex-direction:column; gap:34px; padding-top:4px}
+svg.grid{display:block; width:100%; height:auto; max-width:440px; margin-inline:auto}
+.leyenda{display:flex; flex-wrap:wrap; gap:6px 20px; justify-content:center; margin-top:12px;
+         font-family:var(--f-m); font-size:.72rem; color:var(--muted)}
+.leyenda span{display:inline-flex; align-items:center; gap:7px}
+.leyenda i{width:12px; height:12px; border:1.5px solid; border-radius:2px; flex:none}
+
+/* --- glosario --- */
+.glos{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:1px;
+      background:var(--line); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
+.glos div{padding:12px 15px; background:var(--surface); display:flex; flex-direction:column; gap:3px}
+.glos b{font-family:var(--f-m); font-size:.85rem; font-weight:500; color:var(--pet)}
+.glos span{font-size:.85rem; color:var(--ink-2); line-height:1.45}
+
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:13px}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+      padding:16px 18px; display:flex; flex-direction:column; gap:7px}
+.card h4{font-size:.98rem}
+.card p{font-size:.9rem; color:var(--ink-2)}
+
+ul,ol{margin:0; padding-left:20px; display:flex; flex-direction:column; gap:6px}
+li{padding-left:2px}
+li::marker{color:var(--muted)}
+
+footer{padding-block:36px 0; border-top:1px solid var(--line); color:var(--muted); font-size:.87rem}
+
+@media (max-width:820px){
+  .demo.two{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+
+<nav class="nav">
+  <div class="nav-in">
+    <a class="m1" href="#m1"><span class="dot"></span>1 · El examen</a>
+    <a class="m2" href="#m2"><span class="dot"></span>2 · Las imágenes</a>
+    <a class="m3" href="#m3"><span class="dot"></span>3 · La red</a>
+    <a class="m4" href="#m4"><span class="dot"></span>4 · Lo extra</a>
+    <a class="m5" href="#glosario"><span class="dot"></span>Glosario</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow col">BME423 · material de estudio para la defensa</div>
+  <h1 class="col">Del positrón a la U-Net</h1>
+  <p class="lead col">Todo lo que hay detrás del proyecto, en cuatro módulos: la física del examen,
+  los datos que salen de la máquina, la red que los procesa, y los análisis que agregamos después
+  de los resultados. Cada fórmula aparece con lo que dice en palabras y con el número exacto que
+  toma en tu código.</p>
+  <p class="small col">Escrito para responder preguntas, no para leerse de corrido. Si alguien
+  pregunta algo que no está acá, probablemente sea del módulo 4.</p>
+</header>
+
+<!-- ===================== MÓDULO 1 ===================== -->
+<section class="mod m1" id="m1">
+  <div class="mod-head">
+    <div class="mod-num"><b>1</b> El examen</div>
+    <h2>Qué es un PET, cómo se hace y en qué unidades mide</h2>
+    <p class="lead col">Este módulo termina en el número que tu red recibe como entrada. Todo lo
+    que viene antes explica de dónde sale ese número y por qué tiene los defectos que tiene.</p>
+  </div>
+
+  <div class="lesson col">
+    <h3>1.1 · El principio físico: dos fotones que salen en direcciones opuestas</h3>
+    <p>Se inyecta una molécula marcada con un isótopo que emite <strong>positrones</strong>, la
+    antipartícula del electrón. El positrón recorre una distancia muy corta dentro del tejido, se
+    encuentra con un electrón y los dos se aniquilan. Toda su masa se convierte en energía: dos
+    fotones de <strong>511 keV</strong> que salen en direcciones opuestas, separados 180 grados.</p>
+    <p>El anillo de detectores rodea al paciente. Cuando dos detectores opuestos registran un
+    fotón dentro de una ventana de unos pocos nanosegundos, el equipo asume que vienen de la misma
+    aniquilación y traza la recta que los une. Esa recta se llama <strong>línea de respuesta</strong>
+    (LOR). La aniquilación ocurrió en algún punto de esa línea.</p>
+    <p>Millones de líneas de respuesta, cruzándose, permiten reconstruir dónde estaba concentrado
+    el trazador. Eso es la tomografía.</p>
+    <div class="note analogia">
+      <div class="ntitle">Analogía</div>
+      <p>Imaginá que en una habitación a oscuras alguien enciende y apaga linternas. No ves las
+      linternas, pero en cada pared hay sensores. Cada vez que dos sensores opuestos se activan a
+      la vez, sabés que hubo un destello en algún punto de la recta que los une. Con suficientes
+      destellos, el cruce de todas esas rectas te dibuja dónde estaban las linternas.</p>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>1.2 · El trazador: por qué el FDG se queda atrapado</h3>
+    <p>El <strong>FDG</strong> (fluorodesoxiglucosa) es glucosa a la que se le reemplazó un grupo
+    hidroxilo por <strong>flúor-18</strong>, un isótopo radiactivo producido en ciclotrón, con una
+    semivida de <strong>109,8 minutos</strong>.</p>
+    <p>La célula lo reconoce como azúcar y lo introduce con los mismos transportadores (GLUT). La
+    hexoquinasa lo fosforila y produce FDG-6-fosfato. Y ahí se acaba el camino: por el cambio en la
+    molécula, ese producto <strong>no puede seguir la vía glucolítica</strong>, y como está cargado
+    tampoco puede salir de la célula. Queda atrapado.</p>
+    <p>Eso se llama <em>atrapamiento metabólico</em>, y es lo que hace útil al examen: la señal se
+    acumula en proporción a cuánta glucosa consume el tejido. Los tumores consumen mucha (efecto
+    Warburg), por eso brillan.</p>
+    <div class="note ojo">
+      <div class="ntitle">Ojo con esto, es la raíz de tu proyecto</div>
+      <p>El FDG <strong>no marca tumor</strong>. Marca consumo de glucosa. Todo lo que consuma
+      glucosa brilla igual: el encéfalo, el miocardio, el intestino, la grasa parda, un foco de
+      inflamación, una infección. Esa falta de especificidad es el problema técnico que tu trabajo
+      intenta resolver con la anatomía del CT.</p>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>1.3 · La preparación, y por qué cada regla existe</h3>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Regla</th><th>Razón</th><th>Si no se cumple</th></tr></thead>
+        <tbody>
+          <tr><td>Ayuno de 4 a 6 horas</td><td>baja la insulina y la glucosa en sangre</td><td>el FDG compite con glucosa endógena y se va al músculo</td></tr>
+          <tr><td>Glicemia bajo 150–200 mg/dL</td><td>misma razón, medida</td><td>el tumor capta menos: <strong>falso negativo</strong></td></tr>
+          <tr><td>Reposo, sin hablar, sin caminar</td><td>el músculo activo consume glucosa</td><td>captación muscular difusa que imita adenopatías</td></tr>
+          <tr><td>Sala tibia, manta</td><td>el frío activa la grasa parda</td><td>focos en cuello y supraclavicular que imitan ganglios</td></tr>
+          <tr><td>Esperar unos 60 minutos</td><td>tiempo de captación: el trazador se distribuye y se atrapa</td><td>a menos tiempo, menos contraste; el SUV no es comparable</td></tr>
+          <tr><td>Hidratar y miccionar antes</td><td>el FDG se elimina por orina</td><td>la vejiga llena oscurece la pelvis</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">Fijate que cinco de las seis reglas existen por la misma razón: evitar que algo
+    que no es tumor consuma glucosa. Es el mismo problema, atacado desde el protocolo en vez de
+    desde el software.</p>
+  </div>
+
+  <div class="lesson col">
+    <h3>1.4 · La adquisición</h3>
+    <p>El paciente entra con los brazos arriba, si los puede mantener, para que no atraviesen el
+    tórax y generen artefactos. Primero se adquiere el <strong>CT</strong>, que tarda segundos, y
+    después el <strong>PET</strong>, por posiciones de camilla, de dos a tres minutos cada una, seis
+    a ocho posiciones para cubrir de la base del cráneo a los muslos.</p>
+    <p>De ahí sale una asimetría que después va a importar mucho: <strong>el CT es una foto de un
+    instante y el PET es un promedio de minutos de respiración libre.</strong></p>
+  </div>
+
+  <div class="lesson col">
+    <h3>1.5 · Las unidades, y el decaimiento</h3>
+    <p>La radiactividad se mide en <strong>becquerel</strong> (Bq): una desintegración por segundo.
+    Las dosis se manejan en megabecquerel (MBq) y la concentración en la imagen en
+    <strong>kBq/mL</strong> o Bq/mL. Un estudio típico de FDG usa del orden de 3 a 4 MBq por
+    kilogramo.</p>
+    <p>Pero la actividad no se queda quieta: decae. Entre que se inyecta y que se adquiere pasa una
+    hora, y en ese tiempo el flúor-18 pierde algo más de un tercio de su actividad. Hay que
+    corregirlo o el SUV sale mal.</p>
+    <div class="formula">
+      <div class="eq">A(t) = A₀ · 2<sup>−t / T½</sup>        con T½ = 6588 s (109,8 min) para el ¹⁸F</div>
+      <div class="body">
+        <div class="tag">qué dice</div>
+        <p>La actividad que queda a los <code>t</code> segundos es la inicial multiplicada por
+        dos elevado a menos las semividas transcurridas. A una semivida queda la mitad; a dos, un
+        cuarto.</p>
+        <div class="tag">en tu código</div>
+        <p>Es la propiedad <code>decayed_dose_bq</code> de <code>src/petct/suv.py</code>, escrita
+        exactamente así: <code>dose * 2.0 ** (-decay_time_s / half_life_s)</code>. El tiempo sale de
+        restar la hora de inyección a la hora de la serie, con corrección si el estudio cruzó la
+        medianoche.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>1.6 · El SUV: el número que tu red recibe</h3>
+    <p>El equipo entrega concentración de actividad. Ese número depende de cuánto se inyectó y de
+    qué tan grande es el paciente, así que no sirve para comparar. El <strong>SUV</strong>
+    (valor de captación estandarizado) lo normaliza.</p>
+    <div class="formula">
+      <div class="eq">SUV = A<sub>vóxel</sub> [Bq/mL]  ÷  ( D<sub>corregida</sub> [Bq] / peso [g] )</div>
+      <div class="body">
+        <div class="tag">qué dice</div>
+        <p>Divide lo que hay en ese punto por lo que habría si toda la dosis se hubiera repartido
+        de manera perfectamente uniforme por el cuerpo. Es adimensional. <strong>SUV 1 significa
+        captación promedio</strong>; SUV 5, cinco veces el promedio.</p>
+        <div class="tag">las piezas</div>
+        <dl>
+          <dt>A<sub>vóxel</sub></dt><dd>concentración en el vóxel, ya con <code>RescaleSlope</code> aplicado</dd>
+          <dt>D<sub>corregida</sub></dt><dd>dosis inyectada, decaída hasta la hora de la adquisición</dd>
+          <dt>peso</dt><dd>del paciente, en gramos (de ahí el <code>× 1000</code> en el código)</dd>
+        </dl>
+        <div class="tag">en tu código</div>
+        <p><code>scale_factor = (weight_kg * 1000) / decayed_dose_bq</code>, y después
+        <code>SUV = actividad × scale_factor</code>. El código exige <code>Units == "BQML"</code> y
+        falla si el peso está fuera de 20 a 300 kg, porque un peso mal escrito en el DICOM arruina
+        todo el estudio en silencio.</p>
+      </div>
+    </div>
+
+    <h4>Tres sabores que hay que saber distinguir</h4>
+    <div class="cards">
+      <div class="card"><h4>SUVmáx</h4><p>El vóxel más caliente de la lesión. Es el que se informa
+      casi siempre porque no depende de dónde dibujes el contorno. A cambio es ruidoso: un solo
+      vóxel afortunado lo sube.</p></div>
+      <div class="card"><h4>SUVmedia</h4><p>Promedio dentro de un contorno. Más estable, pero
+      depende de cómo se dibujó ese contorno. Es el que entra en el TLG.</p></div>
+      <div class="card"><h4>SUL o SUVlbm</h4><p>En vez de dividir por el peso total divide por la
+      <strong>masa magra</strong>. La grasa capta poco, así que en un paciente obeso el SUV normal
+      se infla artificialmente. Es lo que usan los criterios PERCIST.</p></div>
+    </div>
+  </div>
+
+  <div class="lesson">
+    <h3 class="col">Probá la fórmula</h3>
+    <p class="col small">Movés los valores y mirás cómo se arma el SUV, paso a paso. Los valores de
+    partida son los de un estudio típico de 70 kg.</p>
+    <div class="demo two">
+      <div class="ctrls">
+        <div class="ctrl">
+          <label class="lab" for="s-dosis"><span>Dosis inyectada</span><span class="cv" id="v-dosis">260 MBq</span></label>
+          <input type="range" id="s-dosis" min="100" max="500" step="5" value="260">
+        </div>
+        <div class="ctrl">
+          <label class="lab" for="s-peso"><span>Peso del paciente</span><span class="cv" id="v-peso">70 kg</span></label>
+          <input type="range" id="s-peso" min="40" max="140" step="1" value="70">
+        </div>
+        <div class="ctrl">
+          <label class="lab" for="s-min"><span>Minutos desde la inyección</span><span class="cv" id="v-min">60 min</span></label>
+          <input type="range" id="s-min" min="0" max="180" step="1" value="60">
+        </div>
+        <div class="ctrl">
+          <label class="lab" for="s-act"><span>Actividad medida en el vóxel</span><span class="cv" id="v-act">12,0 kBq/mL</span></label>
+          <input type="range" id="s-act" min="0.5" max="60" step="0.1" value="12">
+        </div>
+        <div class="out" style="background:var(--surface-3)">
+          <div class="row"><span>Dosis que queda al momento del scan</span><b id="o-decay">—</b></div>
+          <div class="row"><span>Actividad esperada si fuera uniforme</span><b id="o-unif">—</b></div>
+          <div class="row"><span>Fracción de ¹⁸F que sobrevivió</span><b id="o-frac">—</b></div>
+        </div>
+      </div>
+      <div class="out">
+        <div class="eyebrow">SUV del vóxel</div>
+        <div class="big" id="o-suv">—</div>
+        <div class="row"><span id="o-lectura" style="line-height:1.45">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>1.7 · Las correcciones, y la que le importa a tu proyecto</h3>
+    <p>Entre las cuentas detectadas y una imagen cuantitativa hay media docena de correcciones. La
+    primera es la que después vuelve en el módulo 4.</p>
+    <div class="formula">
+      <div class="eq">I = I₀ · e<sup>−μx</sup></div>
+      <div class="body">
+        <div class="tag">qué dice</div>
+        <p>Un haz de fotones que atraviesa un espesor <code>x</code> de un material con coeficiente
+        de atenuación <code>μ</code> sale debilitado de forma exponencial. Es la ley de
+        Beer-Lambert, la misma que rige el CT.</p>
+        <div class="tag">por qué importa</div>
+        <p>Un fotón que nace en el centro del abdomen atraviesa 20 cm de tejido y llega mucho más
+        debilitado que uno que nace bajo la piel. Sin corregir, el interior del paciente aparecería
+        artificialmente frío. <strong>El CT sirve como mapa de μ</strong>: se convierten sus
+        unidades Hounsfield a coeficientes de atenuación a 511 keV con una conversión bilineal, y
+        con eso se calcula cuánto hay que amplificar cada línea de respuesta.</p>
+        <div class="tag">la consecuencia</div>
+        <p>Si el CT y el PET no coinciden, la corrección se aplica con el mapa equivocado. Ese es
+        exactamente el problema que medimos en el módulo 4.</p>
+      </div>
+    </div>
+    <p>Las otras, en una línea cada una:</p>
+    <ul>
+      <li><strong>Dispersión</strong> (scatter): fotones que se desviaron antes de salir y trazan
+      una línea falsa. Se estima y se resta.</li>
+      <li><strong>Coincidencias aleatorias</strong> (randoms): dos fotones de aniquilaciones
+      distintas que llegan juntos por casualidad. Se estiman con una ventana retrasada.</li>
+      <li><strong>Tiempo muerto</strong>: con mucha actividad el detector se satura y pierde
+      cuentas.</li>
+      <li><strong>Normalización</strong>: no todos los detectores del anillo tienen la misma
+      eficiencia; se calibra.</li>
+      <li><strong>Tiempo de vuelo</strong> (TOF): si se mide la diferencia de llegada de los dos
+      fotones con precisión de picosegundos, se acota dónde en la línea ocurrió la aniquilación.
+      Mejora mucho la relación señal-ruido en pacientes grandes.</li>
+    </ul>
+  </div>
+
+  <div class="lesson col">
+    <h3>1.8 · Los límites físicos que ninguna red puede arreglar</h3>
+    <ul>
+      <li><strong>Rango del positrón.</strong> El positrón viaja antes de aniquilarse, de forma que
+      la señal no nace exactamente donde estaba la molécula. Para el ¹⁸F es corto, bajo el
+      milímetro, que es una de las razones por las que es buen trazador.</li>
+      <li><strong>No colinealidad.</strong> Los dos fotones no salen exactamente a 180 grados, sino
+      con una desviación de unos 0,5 grados, lo que emborrona más cuanto más grande es el anillo.</li>
+      <li><strong>Resolución espacial.</strong> En la práctica clínica, del orden de 4 a 6 mm.</li>
+      <li><strong>Efecto de volumen parcial.</strong> Una lesión más chica que dos o tres veces la
+      resolución aparece <strong>más grande y más fría</strong> de lo que es: su actividad se
+      reparte con el tejido vecino. Por eso el SUVmáx de una lesión de 8 mm está subestimado.</li>
+    </ul>
+    <div class="note proyecto">
+      <div class="ntitle">Qué se lleva tu proyecto de este módulo</div>
+      <p>El volumen de SUV que tu red recibe es el producto final de toda esta cadena. Tres
+      consecuencias concretas: el SUV está topado en 30 por tu preprocesamiento, de modo que la
+      vejiga satura; la resolución de 4 a 6 mm sumada al remuestreo a 3 mm explica por qué las
+      lesiones bajo 1 cm se escapan; y la corrección de atenuación explica por qué la desalineación
+      entre PET y CT no es un detalle cosmético.</p>
+    </div>
+    <div class="pregunta">
+      <div class="lab">Te lo pueden preguntar</div>
+      <div class="q">¿Por qué un SUV de 8 no significa lo mismo en dos pacientes distintos?</div>
+      <p class="a">Porque el denominador de la fórmula depende de la dosis, del peso y del tiempo
+      transcurrido, y el numerador depende además de la glicemia y del protocolo. Por eso la
+      clínica compara contra una referencia interna del propio estudio, que es la escala de
+      Deauville, y por eso el módulo 4 la convierte en un canal de entrada.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MÓDULO 2 ===================== -->
+<section class="mod m2" id="m2">
+  <div class="mod-head">
+    <div class="mod-num"><b>2</b> Las imágenes</div>
+    <h2>Qué datos salen de la máquina y qué les hace tu código</h2>
+    <p class="lead col">Del archivo DICOM crudo al arreglo de NumPy que entra a la red, con cada
+    transformación y por qué está.</p>
+  </div>
+
+  <div class="lesson col">
+    <h3>2.1 · DICOM: no es un formato de imagen, es una base de datos</h3>
+    <p><strong>DICOM</strong> es el estándar de imagen médica. Un archivo DICOM no es solo píxeles:
+    es un diccionario de <strong>etiquetas</strong>, cada una con un código de grupo y elemento,
+    donde los píxeles son una etiqueta más. Ahí viven el paciente, el equipo, la dosis, la hora, la
+    geometría y los parámetros de reconstrucción.</p>
+    <p>Un estudio se organiza en <strong>series</strong>. En un PET/CT hay al menos tres:</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Serie</th><th>Modality</th><th>Qué contiene</th></tr></thead>
+        <tbody>
+          <tr><td>PET</td><td class="n">PT</td><td>actividad por vóxel, normalmente en Bq/mL</td></tr>
+          <tr><td>CT</td><td class="n">CT</td><td>densidad en unidades Hounsfield</td></tr>
+          <tr><td>Segmentación</td><td class="n">SEG</td><td>la máscara del experto, en autoPET</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Las tres comparten el <code>FrameOfReferenceUID</code>, que es la etiqueta que declara que
+    están en el mismo sistema de coordenadas. Sin eso no se podrían superponer.</p>
+  </div>
+
+  <div class="lesson col">
+    <h3>2.2 · Las etiquetas exactas que lee tu código</h3>
+    <p>Esta tabla sale de <code>src/petct/suv.py</code>. Si te preguntan de dónde sacás el SUV, la
+    respuesta es esta lista.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Etiqueta</th><th>Código</th><th>Para qué</th></tr></thead>
+        <tbody>
+          <tr><td>PatientWeight</td><td class="n">(0010,1030)</td><td>el peso, en kg, denominador del SUV</td></tr>
+          <tr><td>RadionuclideTotalDose</td><td class="n">(0018,1074)</td><td>la dosis inyectada, en Bq</td></tr>
+          <tr><td>RadionuclideHalfLife</td><td class="n">(0018,1075)</td><td>la semivida, en segundos</td></tr>
+          <tr><td>RadiopharmaceuticalStartTime</td><td class="n">(0018,1072)</td><td>la hora de inyección</td></tr>
+          <tr><td>DecayCorrection</td><td class="n">(0054,1102)</td><td>a qué momento está referida la corrección</td></tr>
+          <tr><td>SeriesTime</td><td class="n">(0008,0031)</td><td>la hora de la serie, para el decaimiento</td></tr>
+          <tr><td>Units</td><td class="n">(0054,1001)</td><td>debe decir <code>BQML</code></td></tr>
+          <tr><td>RescaleSlope / Intercept</td><td class="n">(0028,1053/1052)</td><td>de entero almacenado a valor físico</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note ojo">
+      <div class="ntitle">Un detalle que da puntos</div>
+      <p><code>DecayCorrection</code> puede valer <code>START</code>, <code>ADMIN</code> o
+      <code>NONE</code>, y cada uno cambia contra qué hora hay que calcular el decaimiento. Tu
+      código maneja los tres. Y algunos equipos Philips entregan <code>CNTS</code> en vez de
+      <code>BQML</code>, que necesita un factor privado; tu código lo detecta y falla en vez de
+      producir un SUV silenciosamente incorrecto.</p>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>2.3 · Cómo un montón de cortes se convierte en un volumen</h3>
+    <p>Cada corte trae su posición en el espacio. Tres etiquetas arman la geometría:</p>
+    <ul>
+      <li><code>ImagePositionPatient</code>: dónde está, en milímetros, la esquina del primer
+      píxel de ese corte.</li>
+      <li><code>ImageOrientationPatient</code>: hacia dónde apuntan las filas y las columnas.</li>
+      <li><code>PixelSpacing</code> y <code>SliceThickness</code>: cuánto mide un vóxel.</li>
+    </ul>
+    <p>El sistema de coordenadas de DICOM se llama <strong>LPS</strong>: el eje x crece hacia la
+    izquierda del paciente, el y hacia atrás, y el z hacia la cabeza.</p>
+    <div class="note proyecto">
+      <div class="ntitle">Por eso existe head_at_end en tu código</div>
+      <p>Al ordenar los cortes, si la dirección de z es positiva el índice 0 del arreglo es el corte
+      más caudal y la cabeza queda al final. Tu preprocesamiento guarda ese dato como
+      <code>head_at_end</code>. No es un capricho: los scripts de análisis del módulo 4 lo usan
+      para saber para qué lado está el diafragma.</p>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>2.4 · Las unidades Hounsfield</h3>
+    <div class="formula">
+      <div class="eq">HU = 1000 · ( μ<sub>tejido</sub> − μ<sub>agua</sub> ) / μ<sub>agua</sub></div>
+      <div class="body">
+        <div class="tag">qué dice</div>
+        <p>Es una escala relativa al agua. Por construcción el <strong>agua vale 0</strong> y el
+        <strong>aire vale −1000</strong>. Todo lo demás se ubica en el medio o por encima: grasa
+        cerca de −100, tejido blando entre 20 y 60, músculo alrededor de 50, hueso esponjoso
+        algunos cientos, hueso cortical por encima de 1000.</p>
+        <div class="tag">antes de poder usarla</div>
+        <p>El archivo guarda enteros. Para llegar a HU hay que aplicar
+        <code>HU = píxel · RescaleSlope + RescaleIntercept</code>. Si te olvidás de eso, el aire
+        no vale −1000 y todos los umbrales fallan.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>2.5 · Reconstrucción: de las líneas de respuesta a la imagen</h3>
+    <p>Las coincidencias detectadas se acumulan en un <strong>sinograma</strong>: una tabla donde
+    cada fila es un ángulo y cada columna una distancia al centro, y cada celda cuenta cuántas
+    líneas de respuesta pasaron por ahí. Reconstruir es el problema inverso: dado el sinograma,
+    recuperar la imagen.</p>
+    <div class="cards">
+      <div class="card">
+        <h4>Retroproyección filtrada (FBP)</h4>
+        <p>Analítica y rápida. Se filtra cada proyección y se "esparce" de vuelta sobre la imagen.
+        Es exacta en teoría, pero amplifica el ruido, y el PET tiene muchísimo ruido. Hoy casi no se
+        usa en PET.</p>
+      </div>
+      <div class="card">
+        <h4>Iterativa (OSEM)</h4>
+        <p>Se parte de una imagen cualquiera, se simula qué sinograma produciría, se compara con el
+        real y se corrige. Y otra vez. Permite meter en el modelo la estadística de Poisson, la
+        atenuación, la dispersión y la respuesta del detector. Es el estándar actual.</p>
+      </div>
+      <div class="card">
+        <h4>Modelado de PSF y TOF</h4>
+        <p>La reconstrucción puede incluir cómo el detector emborrona un punto (PSF) y el tiempo de
+        vuelo. Mejoran resolución y contraste, pero cambian los valores de SUV, y por eso dos
+        equipos con reconstrucciones distintas no son directamente comparables.</p>
+      </div>
+    </div>
+    <div class="note ojo">
+      <div class="ntitle">Lo que esto te impide hacer</div>
+      <p>autoPET entrega imágenes <strong>ya reconstruidas y ya corregidas por atenuación</strong>,
+      no datos crudos. No se puede rehacer la reconstrucción con otro mapa de atenuación. Por eso,
+      en el módulo 4, el análisis de desalineación mide el desfase pero solo puede
+      <em>simular</em> de forma aproximada su efecto sobre el SUV, y hay que declararlo.</p>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>2.6 · Por qué se convierte a NIfTI</h3>
+    <p>DICOM es excelente para un PACS y muy incómodo para procesar: un archivo por corte, la
+    geometría repartida entre etiquetas, y metadatos del paciente que no deberían viajar.
+    <strong>NIfTI</strong> guarda el volumen completo en un solo archivo con una matriz de
+    transformación que lleva de índices a milímetros. Es el formato de trabajo de toda la
+    neuroimagen y de casi toda la investigación en imagen 3D.</p>
+    <p>El desafío distribuye los estudios ya convertidos: <code>SUV.nii.gz</code>,
+    <code>CTres.nii.gz</code> (el CT ya remuestreado a la grilla del PET) y
+    <code>SEG.nii.gz</code>. Tu paso 1 hace esa conversión y calcula el SUV.</p>
+  </div>
+
+  <div class="lesson col">
+    <h3>2.7 · Remuestreo e interpolación</h3>
+    <p>El PET tiene vóxeles de 2,04 × 2,04 × 3 mm. Tu proyecto lleva todo a <strong>3 mm
+    isotrópicos</strong>, o sea cubos parejos.</p>
+    <p>¿Por qué? Porque la red usa convoluciones cúbicas. Si un vóxel no es un cubo, el "vecindario"
+    que ve un filtro de 3×3×3 no es una esfera sino un elipsoide, y la red aprende una noción de
+    distancia distinta en cada eje. Además, a 3 mm el volumen entero cabe en memoria.</p>
+    <div class="note ojo">
+      <div class="ntitle">La regla de oro de la interpolación</div>
+      <p>Las <strong>imágenes</strong> se remuestrean con interpolación <strong>lineal</strong>: el
+      valor nuevo es un promedio ponderado de los vecinos, y tiene sentido físico. Las
+      <strong>máscaras</strong> se remuestrean con <strong>vecino más cercano</strong>: una etiqueta
+      "hígado" y una "riñón" no pueden promediarse en un "medio hígado". En tu código eso es el
+      argumento <code>is_mask=True</code> de <code>resample_iso</code>, y es el tipo de detalle que
+      un examinador de procesamiento de imágenes va a buscar.</p>
+    </div>
+  </div>
+
+  <div class="lesson">
+    <h3 class="col">2.8 · El ventaneo, y por qué el CT se recorta</h3>
+    <div class="col stack">
+      <div class="formula">
+        <div class="eq">v = clip( (HU − lo) / (hi − lo), 0, 1 )        con lo = −200, hi = 300</div>
+        <div class="body">
+          <div class="tag">qué dice</div>
+          <p>Todo lo que está por debajo de <code>lo</code> queda en 0, todo lo que está por encima
+          de <code>hi</code> queda en 1, y el medio se estira linealmente. Es exactamente la
+          operación puntual de ventana y nivel de la consola de radiología, escrita como fórmula.</p>
+          <div class="tag">por qué esos valores</div>
+          <p>La ventana de tejido blando. Fuera de ella solo hay aire y hueso denso, que no aportan
+          a decidir si un foco es tumor. Sin ventana, el rango numérico se lo comen el aire en
+          −1000 y el hueso en +1500, y todas las partes blandas quedan aplastadas en una franja
+          diminuta.</p>
+        </div>
+      </div>
+      <p class="small">Movés los extremos de la ventana y mirás a dónde va a parar cada tejido.</p>
+    </div>
+    <div class="demo">
+      <div class="ctrls">
+        <div class="ctrl">
+          <label class="lab" for="s-lo"><span>Límite inferior de la ventana</span><span class="cv" id="v-lo">−200 HU</span></label>
+          <input type="range" id="s-lo" min="-1000" max="200" step="10" value="-200">
+        </div>
+        <div class="ctrl">
+          <label class="lab" for="s-hi"><span>Límite superior</span><span class="cv" id="v-hi">300 HU</span></label>
+          <input type="range" id="s-hi" min="100" max="1500" step="10" value="300">
+        </div>
+      </div>
+      <div class="barwrap">
+        <div>
+          <div class="eyebrow" style="margin-bottom:7px">Escala Hounsfield completa, de −1000 a 1500</div>
+          <div class="bar" id="bar-hu"></div>
+        </div>
+        <div>
+          <div class="eyebrow" style="margin-bottom:7px">Después de la ventana: el valor que recibe la red, de 0 a 1</div>
+          <div class="bar" id="bar-win"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>2.9 · El preprocesamiento completo, en orden</h3>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Paso</th><th>Qué hace</th><th>Por qué</th></tr></thead>
+        <tbody>
+          <tr><td>Remuestreo</td><td class="n">3 × 3 × 3 mm</td><td>vóxeles cúbicos para convoluciones cúbicas</td></tr>
+          <tr><td>Ventana de CT</td><td class="n">−200 a 300 HU → [0,1]</td><td>aprovechar el rango en partes blandas</td></tr>
+          <tr><td>Tope de SUV</td><td class="n">SUV / 30, recortado</td><td>que la vejiga no comprima todo lo demás</td></tr>
+          <tr><td>Máscara corporal</td><td class="n">HU &gt; −500, mayor componente, huecos rellenos</td><td>fuera del paciente solo hay aire y camilla</td></tr>
+          <tr><td>Recorte a la caja</td><td class="n">bbox del cuerpo + 2 vóxeles</td><td>reduce el volumen a la mitad sin perder nada</td></tr>
+          <tr><td>Guardado</td><td class="n">.npz en float16</td><td>la mitad de memoria; se pasa a float32 al armar el parche</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">Todas las constantes son <strong>fijas</strong>, no se estiman sobre los datos.
+    Eso importa para la auditoría de fugas: si el tope del SUV se calculara, por ejemplo, como el
+    percentil 99 del conjunto, información de validación se filtraría al entrenamiento.</p>
+    <div class="pregunta">
+      <div class="lab">Te lo pueden preguntar</div>
+      <div class="q">¿Por qué el tope del SUV en 30 y no en otro valor?</div>
+      <p class="a">Porque hay que llevar el PET al mismo rango [0,1] que el CT y la vejiga puede
+      pasar de SUV 50. Con un tope alto, el hígado en 2,2 queda en 0,07 y todo el tejido normal se
+      aplasta contra el cero. Es una decisión de compromiso, está declarada, y tiene un costo
+      medido: en el atlas del módulo 4 la vejiga aparece saturada, con percentil 95 y 99 iguales.</p>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>2.10 · Las herramientas, y qué hace cada una</h3>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Herramienta</th><th>Qué es</th><th>Dónde la usás</th></tr></thead>
+        <tbody>
+          <tr><td><code>pydicom</code></td><td>lee archivos DICOM en Python y da acceso a las etiquetas por nombre</td><td>extraer los parámetros del SUV</td></tr>
+          <tr><td><code>SimpleITK</code></td><td>biblioteca de procesamiento de imagen médica; conoce la geometría, no solo los píxeles</td><td>leer NIfTI, remuestrear, recortar</td></tr>
+          <tr><td><code>NumPy</code></td><td>arreglos numéricos multidimensionales</td><td>todo lo demás</td></tr>
+          <tr><td><code>SciPy ndimage</code></td><td>morfología y componentes conexas en n dimensiones</td><td>máscara corporal, FPV, FNV</td></tr>
+          <tr><td><code>MONAI</code></td><td>capa de PyTorch especializada en imagen médica</td><td>la U-Net, la ventana deslizante, la pérdida</td></tr>
+          <tr><td><code>PyTorch</code></td><td>el motor de las redes: tensores y derivadas automáticas</td><td>entrenar</td></tr>
+          <tr><td><code>TotalSegmentator</code></td><td>red preentrenada que segmenta 117 estructuras en un CT</td><td>el análisis por órgano del módulo 4</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MÓDULO 3 ===================== -->
+<section class="mod m3" id="m3">
+  <div class="mod-head">
+    <div class="mod-num"><b>3</b> La red</div>
+    <h2>Qué es una U-Net y qué hace cada pieza de la tuya</h2>
+    <p class="lead col">De qué significa "aprender" hasta el bloque de atención cruzada que
+    resultó estar apagado.</p>
+  </div>
+
+  <div class="lesson col">
+    <h3>3.1 · Qué significa que una red aprenda</h3>
+    <p>Una red neuronal es una función con muchísimos números ajustables, los
+    <strong>parámetros</strong>. La tuya tiene 12,9 millones. No se programan a mano: se ajustan.</p>
+    <p>El ciclo es siempre el mismo, y se repite 25 000 veces:</p>
+    <ol>
+      <li>Se le muestra un ejemplo con la respuesta correcta.</li>
+      <li>Se compara su salida con la respuesta: eso es la <strong>pérdida</strong>.</li>
+      <li>Se calcula, para cada parámetro, en qué dirección habría que moverlo para que la pérdida
+      baje: eso es el <strong>gradiente</strong>, y lo calcula la derivación automática.</li>
+      <li>Se mueve cada parámetro un poquito en esa dirección. Cuánto es "un poquito" lo decide la
+      <strong>tasa de aprendizaje</strong>.</li>
+    </ol>
+    <div class="note analogia">
+      <div class="ntitle">Analogía</div>
+      <p>Estás en una ladera con niebla y querés llegar al fondo del valle. No ves el fondo, pero
+      podés sentir hacia dónde baja el suelo bajo tus pies. Das un paso en esa dirección, volvés a
+      sentir, das otro paso. La pendiente es el gradiente y el largo del paso es la tasa de
+      aprendizaje: pasos muy largos y rebotás de ladera a ladera, muy cortos y no llegás nunca.</p>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>3.2 · La convolución, que es de lo que está hecha la red</h3>
+    <p>Una <strong>convolución</strong> pasa una ventanita de pesos (el <em>kernel</em>, en tu red
+    de 3×3×3 vóxeles) por todo el volumen. En cada posición multiplica los 27 valores vecinos por
+    los 27 pesos y los suma. El resultado es un volumen nuevo.</p>
+    <p>Lo que aprende la red son esos pesos. Un kernel puede aprender a responder a bordes, otro a
+    zonas homogéneas brillantes, otro a transiciones de densidad.</p>
+    <p>Dos conceptos que conviene tener a mano:</p>
+    <ul>
+      <li><strong>Campo receptivo</strong>: de cuánto espacio original depende un valor en capas
+      profundas. Cada convolución y cada reducción lo agrandan. Es lo que permite que una posición
+      del fondo de la red "sepa" que está en el abdomen.</li>
+      <li><strong>Canales</strong>: en cada nivel no hay un solo kernel sino decenas o cientos, cada
+      uno buscando algo distinto. Los números 32, 64, 128, 256, 320 de tu red son cuántos kernels
+      hay en cada nivel.</li>
+    </ul>
+  </div>
+
+  <div class="lesson col">
+    <h3>3.3 · La U-Net: el embudo y la trompeta</h3>
+    <p>La forma de U explica lo que hace. Tu red tiene <strong>cinco niveles</strong>, con 32, 64,
+    128, 256 y 320 filtros, y en cada nivel el volumen se reduce a la mitad en cada eje.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Parte</th><th>Qué le pasa al volumen</th><th>Qué se gana y qué se pierde</th></tr></thead>
+        <tbody>
+          <tr><td>Codificador, el embudo</td><td class="n">96³ → 48³ → 24³ → 12³ → 6³</td><td>se pierde el <em>dónde</em> exacto, se gana el <em>qué</em> abstracto</td></tr>
+          <tr><td>Cuello de botella</td><td class="n">6³ con 320 canales</td><td>216 posiciones, cada una representando un cubo de unos 5 cm</td></tr>
+          <tr><td>Decodificador, la trompeta</td><td class="n">6³ → 12³ → 24³ → 48³ → 96³</td><td>se recupera el <em>dónde</em> para poder marcar vóxeles</td></tr>
+          <tr><td>Conexiones de salto</td><td class="n">de cada nivel del embudo al mismo de la trompeta</td><td>devuelven el detalle fino que la reducción había tirado</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>La salida tiene <strong>dos canales</strong>: uno para fondo y otro para lesión. Se aplica
+    softmax y gana el más alto. Eso da la máscara.</p>
+    <div class="note analogia">
+      <div class="ntitle">Analogía de las conexiones de salto</div>
+      <p>Un perito mira una foto cada vez más pequeña hasta poder decir "acá hay un tumor". Pero
+      ahora tiene que dibujar el contorno sobre la foto original, y la versión chica no tiene los
+      bordes. Las conexiones de salto son fotocopias de las versiones grandes que le devuelven
+      justo antes de dibujar.</p>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>3.4 · La normalización de instancia, que va a ser la protagonista</h3>
+    <p>Después de cada convolución se normalizan las activaciones: a cada mapa se le resta su media
+    y se lo divide por su desviación. Eso estabiliza el entrenamiento y evita que las escalas se
+    disparen.</p>
+    <p>Hay varias variantes. Con lotes chicos, como el tuyo de dos parches, la que se usa en imagen
+    médica es la <strong>normalización de instancia</strong>: las estadísticas se calculan por
+    ejemplo y por canal, no sobre el lote.</p>
+    <div class="note ojo">
+      <div class="ntitle">Retené esta consecuencia</div>
+      <p>Si a un mapa le sumás <strong>la misma cantidad en todas las posiciones</strong>, la
+      normalización se la lleva entera: la media sube en esa cantidad y al restarla vuelve a cero.
+      <strong>Un aporte espacialmente constante es invisible después de normalizar.</strong> Ese es
+      el mecanismo exacto por el que la atención cruzada de tu modelo C quedó inerte.</p>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>3.5 · La pérdida: Dice más entropía cruzada</h3>
+    <div class="formula">
+      <div class="eq">Dice = 2 |A ∩ B| / ( |A| + |B| )          pérdida = 1 − Dice</div>
+      <div class="body">
+        <div class="tag">qué dice</div>
+        <p>Dos veces lo que ambas máscaras tienen en común, dividido por la suma de sus tamaños.
+        Vale 1 si son idénticas y 0 si no se tocan.</p>
+        <div class="tag">por qué se usa acá</div>
+        <p>Porque las lesiones ocupan menos del 1 % del cuerpo. Si midieras el error vóxel a vóxel,
+        una red que dijera "no hay nada" acertaría el 99 % y la pérdida estaría feliz. El Dice
+        mira la proporción del solapamiento, así que no se deja engañar por el desbalance.</p>
+        <div class="tag">y la entropía cruzada</div>
+        <p>Se suma a la anterior. Penaliza vóxel por vóxel qué tan confiada estaba la red cuando se
+        equivocó. El Dice da la forma global; la entropía cruzada da gradientes estables al
+        principio, cuando la predicción todavía no toca la lesión y el Dice vale cero.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>3.6 · El optimizador y el programa de aprendizaje</h3>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Ajuste</th><th>Valor</th><th>Qué significa</th></tr></thead>
+        <tbody>
+          <tr><td>Optimizador</td><td class="n">AdamW</td><td>adapta el tamaño del paso por parámetro y aplica decaimiento de pesos de forma separada</td></tr>
+          <tr><td>Tasa de aprendizaje</td><td class="n">3·10⁻⁴</td><td>el largo del paso inicial</td></tr>
+          <tr><td>Decaimiento de pesos</td><td class="n">10⁻⁵</td><td>empuja los pesos hacia cero; regulariza</td></tr>
+          <tr><td>Programa</td><td class="n">polinomial, potencia 0,9</td><td>la tasa baja suavemente hasta cero en la iteración 25 000</td></tr>
+          <tr><td>Recorte de gradiente</td><td class="n">norma 12</td><td>si un gradiente sale enorme se acorta, para que un parche raro no destruya lo aprendido</td></tr>
+          <tr><td>Lote</td><td class="n">2 parches</td><td>lo que cabe en la memoria del equipo</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>3.7 · Parches y aumento de datos</h3>
+    <p>Un estudio completo no cabe en memoria, así que la red se entrena con <strong>cubos de 96³
+    vóxeles</strong>, o sea 288 mm de lado. En cada iteración se sortea un estudio y se recorta un
+    cubo.</p>
+    <p>El sorteo está <strong>sesgado</strong>: el 70 % de las veces el centro del cubo cae sobre un
+    vóxel de lesión. Sin ese sesgo, con lesiones que ocupan menos del 1 %, la red vería casi solo
+    fondo y aprendería a no marcar nada.</p>
+    <p>El <strong>aumento</strong> es deliberadamente escaso: solo volteos izquierda-derecha y
+    adelante-atrás. <strong>Nunca en el eje cabeza-pies</strong>, porque esa asimetría es
+    informativa: la vejiga está abajo y el corazón arriba, y queremos que la red lo use.</p>
+    <div class="pregunta">
+      <div class="lab">Te lo pueden preguntar</div>
+      <div class="q">¿Por qué tan poco aumento de datos?</div>
+      <p class="a">Porque el proyecto compara arquitecturas, no recetas de aumento. Si cada modelo
+      tuviera su propio aumento, cualquier diferencia sería inatribuible. El mismo aumento mínimo
+      para los tres deja la arquitectura como única variable. Vale la pena agregar que el ganador
+      de la edición data-centric del desafío ganó justamente con aumento, así que es una vía
+      conocida de mejora que este diseño deja fuera a propósito.</p>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>3.8 · La inferencia: ventana deslizante</h3>
+    <p>La red se entrenó con cubos de 96³, así que no puede tragarse un estudio entero de una vez.
+    En inferencia se recorre el volumen con cubos que se <strong>solapan al 50 %</strong>, se predice
+    cada uno, y en las zonas de solape se promedia con un <strong>peso gaussiano</strong>: más
+    confianza al centro del cubo que a sus bordes, donde la red tiene menos contexto alrededor.</p>
+    <p>Es la misma función para la validación rápida durante el entrenamiento y para la evaluación
+    final, de modo que los números son comparables.</p>
+  </div>
+
+  <div class="lesson col">
+    <h3>3.9 · La atención cruzada</h3>
+    <p>Es el mecanismo detrás de los modelos de lenguaje. La idea: para cada posición de una fuente,
+    calcular cuánto le importa cada posición de otra fuente, y armar un resumen ponderado.</p>
+    <div class="formula">
+      <div class="eq">Atención(Q, K, V) = softmax( Q·Kᵀ / √d ) · V</div>
+      <div class="body">
+        <div class="tag">las tres piezas, en tu modelo C</div>
+        <dl>
+          <dt>Q, consulta</dt><dd>sale del mapa PET: "en esta posición veo mucha actividad, ¿qué hay acá?"</dd>
+          <dt>K, clave</dt><dd>sale del mapa CT: el índice de lo que cada posición anatómica ofrece</dd>
+          <dt>V, valor</dt><dd>también del CT: el contenido que se devuelve</dd>
+        </dl>
+        <div class="tag">qué hace cada parte</div>
+        <p><code>Q·Kᵀ</code> mide el parecido de cada consulta con cada clave. La división por
+        <code>√d</code> evita que esos productos crezcan con la dimensión y saturen el softmax. El
+        <code>softmax</code> los convierte en pesos que suman 1. Multiplicar por <code>V</code> es
+        armar el promedio ponderado.</p>
+        <div class="tag">por qué en el cuello de botella</div>
+        <p>Porque la atención compara todas las posiciones contra todas. En el cuello hay 6³ = 216
+        posiciones, así que son 216² comparaciones: trivial. A resolución completa serían 884 736
+        posiciones, imposible. Y la pregunta que importa, "¿qué órgano hay acá?", se responde a la
+        escala de 5 cm por posición, no a la de 3 mm.</p>
+        <div class="tag">dos detalles propios</div>
+        <p>La atención no sabe dónde está cada posición, así que se le suma una
+        <strong>codificación posicional sinusoidal 3D</strong>, fija y sin parámetros. Y la salida
+        del bloque se multiplica por una ganancia aprendible, <code>gamma</code>, antes de sumarse
+        al mapa PET: la red puede subirla o bajarla según le sirva.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>3.10 · Los tres modelos, y qué cambia exactamente</h3>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Modelo</th><th>Fusión</th><th>Parámetros</th><th>Qué aporta a la comparación</th></tr></thead>
+        <tbody>
+          <tr><td class="n">A</td><td>temprana: PET y CT como dos canales de entrada</td><td class="n">12,9 M</td><td>el estándar del campo; el punto de comparación</td></tr>
+          <tr><td class="n">B</td><td>intermedia: dos codificadores, concatenación en el cuello</td><td class="n">24,0 M</td><td>control de capacidad</td></tr>
+          <tr><td class="n">C</td><td>B más atención cruzada antes de concatenar</td><td class="n">24,4 M</td><td>aísla el efecto de la atención</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note proyecto">
+      <div class="ntitle">Por qué B existe</div>
+      <p>Sin B, si C ganara no se sabría si fue por la atención o simplemente por tener el doble de
+      red. B tiene el doble de red y ninguna atención. <strong>La diferencia B contra C son 0,4
+      millones de parámetros: solo el bloque de atención.</strong> Esa es la comparación limpia, y
+      es una decisión de diseño experimental que vale la pena defender explícitamente.</p>
+    </div>
+  </div>
+
+  <div class="lesson">
+    <h3 class="col">3.11 · Las tres métricas, y por qué se separan</h3>
+    <div class="col stack">
+      <p>Las definiciones son las oficiales del desafío autoPET, y se calculan sobre
+      <strong>componentes conexas</strong> con vecindad completa de 26 vecinos: dos vóxeles
+      pertenecen a la misma "isla" si se tocan aunque sea por un vértice.</p>
+      <ul>
+        <li><strong>Dice</strong>: cuánto se superponen los dos dibujos. Responde <em>¿dibuja bien
+        lo que hay?</em> Solo se calcula en estudios con lesión.</li>
+        <li><strong>FPV</strong>: mililitros de las islas predichas que <strong>no tocan ninguna
+        lesión anotada</strong>. Responde <em>¿cuánto inventa?</em></li>
+        <li><strong>FNV</strong>: mililitros de las lesiones anotadas que la predicción
+        <strong>no tocó ni con un vóxel</strong>. Responde <em>¿cuánto se le escapa?</em></li>
+      </ul>
+      <p class="small">Fijate en la palabra "toca". Una isla predicha que roza la lesión anotada
+      por un solo vóxel ya no cuenta como falso positivo, aunque el resto esté mal. Es una
+      definición generosa, y es la del desafío: hay que usarla tal cual para poder comparar.</p>
+      <p class="small">Movés la predicción y mirás cómo cambian las tres. La verdad anotada tiene
+      dos lesiones: una grande y una chica, a la derecha. Cada celda vale 1 mL.</p>
+    </div>
+    <div class="demo two">
+      <div>
+        <svg class="grid" id="svg-metricas" viewBox="0 0 336 224" role="img"
+             aria-label="Cuadrícula que compara la máscara anotada con la predicha"></svg>
+        <div class="leyenda">
+          <span><i style="background:var(--ok-soft); border-color:var(--ok)"></i>lesión anotada</span>
+          <span><i style="background:var(--pet-soft); border-color:var(--pet)"></i>predicción</span>
+        </div>
+      </div>
+      <div class="ctrls">
+        <div class="ctrl">
+          <label class="lab" for="s-dx"><span>Mover la predicción ←→</span><span class="cv" id="v-dx">0</span></label>
+          <input type="range" id="s-dx" min="-4" max="12" step="1" value="0">
+        </div>
+        <div class="ctrl">
+          <label class="lab" for="s-dy"><span>Mover la predicción ↑↓</span><span class="cv" id="v-dy">0</span></label>
+          <input type="range" id="s-dy" min="-3" max="6" step="1" value="0">
+        </div>
+        <div class="ctrl">
+          <label class="lab" for="s-tam"><span>Tamaño de la predicción</span><span class="cv" id="v-tam">7 × 6</span></label>
+          <input type="range" id="s-tam" min="2" max="10" step="1" value="7">
+        </div>
+        <label class="chk" for="c-isla">
+          <input type="checkbox" id="c-isla">
+          <span>Agregar una isla inventada en el pulmón</span>
+        </label>
+        <div class="out">
+          <div class="row"><span>Dice</span><b id="o-dice">—</b></div>
+          <div class="row"><span>FPV</span><b id="o-fpv">—</b></div>
+          <div class="row"><span>FNV</span><b id="o-fnv">—</b></div>
+          <p class="small" id="o-nota" style="margin-top:2px">—</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>3.12 · La higiene del experimento</h3>
+    <div class="cards">
+      <div class="card"><h4>Partición por paciente</h4><p>176 / 26 / 49 estudios, y ningún paciente
+      en dos particiones. Si un paciente apareciera en entrenamiento y en prueba, la red podría
+      reconocerlo en vez de generalizar.</p></div>
+      <div class="card"><h4>Tres semillas</h4><p>Una red se inicializa al azar y ve los parches en
+      orden azaroso. Con una sola corrida no se puede separar una diferencia real del azar. Tres
+      semillas por modelo permiten reportar promedio y desviación.</p></div>
+      <div class="card"><h4>Ablación obligatoria</h4><p>Todo módulo nuevo se apaga y se vuelve a
+      medir. Si al apagarlo no cambia nada, no estaba haciendo nada, por elegante que sea el
+      diagrama.</p></div>
+      <div class="card"><h4>La prueba se abre una vez</h4><p>49 estudios que ningún modelo vio. Si
+      se abren antes y después se ajusta algo, dejan de ser una prueba y pasan a ser entrenamiento
+      disfrazado.</p></div>
+    </div>
+    <div class="pregunta">
+      <div class="lab">Te lo pueden preguntar</div>
+      <div class="q">¿Cómo sabés que no hay fuga de información?</div>
+      <p class="a">Está auditado punto por punto en <code>docs/PROTOCOLO_CONGELADO.md</code>: la
+      partición es por paciente y verificada; la validación rápida solo elige el checkpoint y nunca
+      aporta gradiente; el preprocesamiento usa constantes fijas y no estadísticas del conjunto;
+      los mapas de órganos se calculan del CT de cada estudio por separado; y no existe ningún
+      archivo de resultados sobre la prueba. Se declaran además dos limitaciones que no son fugas
+      pero hay que decir: la validación elige el checkpoint con 12 estudios, y esos 12 están dentro
+      de los 26 que se reportan.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MÓDULO 4 ===================== -->
+<section class="mod m4" id="m4">
+  <div class="mod-head">
+    <div class="mod-num"><b>4</b> Lo extra</div>
+    <h2>Lo que se hizo después de los resultados, y por qué</h2>
+    <p class="lead col">Las tres fusiones empataron. Este módulo es lo que vino después: entender
+    por qué, medir dónde, y probar una idea que viene de la clínica.</p>
+  </div>
+
+  <div class="lesson col">
+    <h3>4.1 · El reparto del error por órgano</h3>
+    <p>El desafío reporta tres números globales. Eso no dice <em>dónde</em> se equivoca el modelo.
+    Con <strong>TotalSegmentator</strong>, una red preentrenada que identifica 117 estructuras en un
+    CT, agrupadas en 17 grupos, se pudo repartir cada mililitro de error entre órganos.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Órgano</th><th>Umbral clásico SUV 2,5</th><th>Las redes</th></tr></thead>
+        <tbody>
+          <tr><td>Hígado</td><td class="n">349 mL</td><td class="n">0,2 mL</td></tr>
+          <tr><td>Vejiga</td><td class="n">132 mL</td><td class="n">0,6 mL</td></tr>
+          <tr><td>Riñones</td><td class="n">112 mL</td><td class="n">0,4 mL</td></tr>
+          <tr><td><strong>Total del estudio</strong></td><td class="n"><strong>1 192 mL</strong></td><td class="n"><strong>20,9 mL</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>El 74 % del error del método clásico vive en órganos que captan FDG de forma fisiológica. Las
+    redes ponen ahí 6,7 de sus 20,9 mL. <strong>Esa tabla es lo que demuestra que la fusión
+    funciona</strong>, y es una medición que la evaluación oficial del desafío no hace.</p>
+  </div>
+
+  <div class="lesson col">
+    <h3>4.2 · El hallazgo: la atención estaba apagada</h3>
+    <p>Los tres modelos dieron lo mismo: A 0,621 ± 0,016, B 0,612 ± 0,014, C 0,612 ± 0,008. La
+    diferencia entre arquitecturas es menor que la variación entre semillas del mismo modelo.</p>
+    <p>Pero la ablación dio algo más fuerte que un empate. Al poner <code>gamma = 0</code>, o sea al
+    apagar la atención dejando todos los demás pesos intactos, la predicción no cambió
+    <strong>ni un vóxel</strong>, en 26 estudios, en cinco columnas de métricas, en las tres
+    semillas. Diferencia exactamente cero.</p>
+    <p>Y se pudo explicar el mecanismo: la salida de la atención resultó casi constante en el
+    espacio, y <strong>la normalización de instancia cancela exactamente los términos
+    constantes</strong> (lección 3.4). El bloque estaba conectado, consumía cómputo, y su aporte se
+    borraba una capa después.</p>
+    <div class="note proyecto">
+      <div class="ntitle">Por qué esto vale más que un empate</div>
+      <p>Un resultado negativo sin explicación es un callejón. Un resultado negativo con mecanismo
+      medido es una contribución: le dice al que venga después qué no hacer y por qué. Y coincide
+      con la conclusión oficial del desafío autoPET III, que reporta que la heterogeneidad de los
+      casos pesa más que la elección de algoritmo entre los mejores equipos.</p>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>4.3 · El atlas de captación normal</h3>
+    <p>Si el problema es distinguir lo fisiológico de lo tumoral, el primer paso es medir cuánto
+    capta cada órgano normalmente. Se construyó con los 35 controles sin lesión del entrenamiento y,
+    en una segunda versión, con los 176 completos excluyendo los vóxeles anotados y su halo.</p>
+    <p>Lo primero que hay que decir del atlas es que <strong>reproduce los valores publicados</strong>:
+    hígado con mediana 2,19 contra una SUVmedia de 2,34 en una serie de 531 pacientes, y aorta 1,69
+    contra 1,57. Eso lo vuelve creíble sin pedirle fe a nadie.</p>
+    <p>Y contestó una pregunta práctica: pasar de 35 a 176 pacientes movió el percentil 95 menos de
+    un 3 % en once de quince órganos. <strong>No hace falta bajar más estudios.</strong> Lo que
+    queda de variabilidad es fisiológico: la vejiga tiene un coeficiente de variación de 0,85 porque
+    depende de la hidratación.</p>
+  </div>
+
+  <div class="lesson col">
+    <h3>4.4 · La referencia interna del paciente, y el modelo E</h3>
+    <p>La clínica resolvió este problema hace décadas sin computadoras. La <strong>escala de
+    Deauville</strong>, estándar internacional para linfoma, no usa tablas poblacionales: compara
+    contra el <strong>mediastino y el hígado del propio estudio</strong>.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Deauville</th><th>Definición</th><th>Lectura</th></tr></thead>
+        <tbody>
+          <tr><td class="n">1</td><td>sin captación</td><td>respuesta completa</td></tr>
+          <tr><td class="n">2</td><td>≤ mediastino</td><td>respuesta completa</td></tr>
+          <tr><td class="n">3</td><td>&gt; mediastino, ≤ hígado</td><td>respuesta completa</td></tr>
+          <tr><td class="n">4</td><td>moderadamente &gt; hígado</td><td>enfermedad activa</td></tr>
+          <tr><td class="n">5</td><td>marcadamente &gt; hígado, o lesiones nuevas</td><td>enfermedad activa</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>Ningún punto de la escala menciona un valor de SUV.</strong> Toda está escrita en
+    unidades del propio paciente, porque el hígado normal cambia con la dosis, el tiempo de
+    captación, la glicemia y el peso.</p>
+    <p>De ahí sale el <strong>modelo E</strong>: la arquitectura de A sin ningún cambio, con un
+    tercer canal de entrada que vale <code>SUV del vóxel ÷ SUV hepático de ese paciente</code>, con
+    tope en 8 veces. Mismos 12,9 millones de parámetros. La única variable que se mueve es la
+    entrada.</p>
+    <div class="formula">
+      <div class="eq">canal₃ = clip( SUV / SUV<sub>hígado del paciente</sub> ÷ 8 , 0, 1 )</div>
+      <div class="body">
+        <div class="tag">por qué 8</div>
+        <p>Porque la frontera entre Deauville 4 y 5 está en 2 a 3 veces el hígado, así que todo lo
+        diagnósticamente relevante queda dentro del rango con resolución de sobra. El hígado propio
+        cae siempre en 0,125, sea cual sea el paciente.</p>
+        <div class="tag">el argumento que lo sostiene</div>
+        <p>La red entrena con parches de 288 mm de lado. <strong>Desde un parche centrado en la
+        pelvis, el hígado está fuera del campo.</strong> Es información que la red no puede deducir
+        del parche por mucho que se entrene. El módulo de atención fallaba porque su aporte era
+        cancelable; este canal aporta algo que la red demostrablemente no tiene.</p>
+        <div class="tag">el punto delicado, la fuga</div>
+        <p>La referencia se calcula <strong>sin mirar la anotación</strong>, porque en un estudio
+        nuevo no la habría: es la mediana del SUV de todo el hígado. La mediana es robusta, igual
+        que una ROI puesta en zona de aspecto sano. El script calcula además la versión que sí
+        excluye la lesión y reporta la diferencia, para que quede medido y no supuesto.</p>
+      </div>
+    </div>
+    <div class="pregunta">
+      <div class="lab">Te lo pueden preguntar</div>
+      <div class="q">¿Y si el hígado está lleno de metástasis?</div>
+      <p class="a">Los criterios PERCIST ya lo previeron: si el hígado está comprometido, se usa el
+      fondo vascular de la aorta. El código hace exactamente eso, en cascada: hígado, luego vasos,
+      luego bazo, luego el cuerpo entero, y hay un test que lo comprueba.</p>
+    </div>
+  </div>
+
+  <div class="lesson col">
+    <h3>4.5 · La desalineación entre PET y CT</h3>
+    <p>El CT es una foto de un instante respiratorio y el PET un promedio de minutos. En el
+    diafragma no coinciden, y la corrección de atenuación se aplica con el mapa equivocado
+    (lección 1.7). Un estudio con maniquí reporta 24 % de error de SUVmáx y 129 % de sobrestimación
+    de volumen para una lesión de 9 mm con 35 mm de excursión diafragmática.</p>
+    <p>Se midió en 200 estudios reales, comparando <strong>la misma magnitud en las dos
+    modalidades</strong>: el área de pulmón por corte, que en el CT sale de la máscara y en el PET
+    de lo que está por debajo de 0,5 veces el hígado propio.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Medida</th><th>Resultado</th></tr></thead>
+        <tbody>
+          <tr><td>Mediana del desfase absoluto</td><td class="n">2,2 mm</td></tr>
+          <tr><td>Media con signo</td><td class="n">+0,2 mm, sin sesgo</td></tr>
+          <tr><td>Percentil 95</td><td class="n">11,4 mm</td></tr>
+          <tr><td>Estudios sobre 10 mm</td><td class="n">6 %</td></tr>
+          <tr><td>Con lesión cerca del diafragma y desfase sobre 10 mm</td><td class="n">3,8 %</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>O sea que en esta cohorte el problema es real pero minoritario. <strong>El resultado
+    negativo también es un resultado</strong>: calibra con datos de rutina unas magnitudes que hasta
+    ahora venían de maniquíes, e identifica a quién sí le afecta.</p>
+  </div>
+
+  <div class="lesson col">
+    <h3>4.6 · Las cinco reglas que ordenaron todo</h3>
+    <ol>
+      <li><strong>Medir antes de construir.</strong> Los análisis del atlas no gastaron ni una noche
+      de entrenamiento y decidieron qué entrenar.</li>
+      <li><strong>Ablación obligatoria.</strong> Atrapó un módulo que en el diagrama se veía
+      conectado y no hacía nada.</li>
+      <li><strong>La prueba se abre una vez.</strong> Sigue cerrada.</li>
+      <li><strong>No hacer ninguna pregunta que la anotación no pueda contestar sola.</strong>
+      autoPET marca solo tumor ávido; lo benigno está sin etiquetar, así que no se puede adjudicar.</li>
+      <li><strong>Escribir la predicción antes del resultado.</strong> Una predicción cumplida vale;
+      una explicación posterior es una historia.</li>
+    </ol>
+    <div class="pregunta">
+      <div class="lab">La pregunta grande</div>
+      <div class="q">¿Qué aporta este trabajo si no mejora el estado del arte?</div>
+      <p class="a">No mejora el estado del arte, y no era el objetivo. Lo que aporta es una
+      caracterización: repartió el error por órgano, que la evaluación oficial no hace; midió el
+      umbral de competencia por tamaño de lesión y el ahorro real de trabajo clínico, un 57 %;
+      explicó mecánicamente por qué un módulo de atención quedó inerte, que es algo que el formato
+      de competencia no publica; y probó una información que la clínica usa desde hace décadas y que
+      la red no puede derivar de su campo de visión. Todo con protocolo congelado y auditoría de
+      fugas.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== GLOSARIO ===================== -->
+<section class="mod" id="glosario">
+  <div class="mod-head">
+    <div class="eyebrow">Referencia rápida</div>
+    <h2>Las siglas y los términos, una línea cada uno</h2>
+  </div>
+  <div class="glos">
+    <div><b>PET</b><span>Tomografía por emisión de positrones. Mide actividad metabólica.</span></div>
+    <div><b>CT / TAC</b><span>Tomografía computarizada. Mide densidad, aporta la anatomía.</span></div>
+    <div><b>FDG</b><span>Fluorodesoxiglucosa. Glucosa marcada con flúor-18.</span></div>
+    <div><b>LOR</b><span>Línea de respuesta: la recta entre los dos detectores que captaron la coincidencia.</span></div>
+    <div><b>Bq</b><span>Becquerel: una desintegración por segundo.</span></div>
+    <div><b>SUV</b><span>Valor de captación estandarizado. Adimensional; 1 es la captación promedio.</span></div>
+    <div><b>SUL</b><span>SUV normalizado por masa magra en vez de peso total.</span></div>
+    <div><b>HU</b><span>Unidades Hounsfield. Agua 0, aire −1000.</span></div>
+    <div><b>Vóxel</b><span>El píxel en tres dimensiones. Acá, un cubo de 3 mm de lado.</span></div>
+    <div><b>MIP</b><span>Proyección de máxima intensidad: la vista de cuerpo entero del PET.</span></div>
+    <div><b>MTV</b><span>Volumen metabólico tumoral, en mL.</span></div>
+    <div><b>TLG</b><span>Carga glucolítica: MTV por SUVmedia.</span></div>
+    <div><b>Deauville</b><span>Escala de 5 puntos para linfoma, referida a mediastino e hígado.</span></div>
+    <div><b>PERCIST</b><span>Criterios de respuesta metabólica en tumores sólidos.</span></div>
+    <div><b>DICOM</b><span>El estándar de imagen médica: píxeles más un diccionario de etiquetas.</span></div>
+    <div><b>NIfTI</b><span>Formato de volumen en un solo archivo, el habitual en investigación.</span></div>
+    <div><b>OSEM</b><span>Reconstrucción iterativa por subconjuntos ordenados.</span></div>
+    <div><b>TOF</b><span>Tiempo de vuelo: acota dónde en la línea ocurrió la aniquilación.</span></div>
+    <div><b>PSF</b><span>Función de dispersión de punto: cómo el sistema emborrona una fuente puntual.</span></div>
+    <div><b>Convolución</b><span>Pasar una ventanita de pesos por el volumen y sumar.</span></div>
+    <div><b>U-Net</b><span>Red en forma de U: embudo, trompeta y conexiones de salto.</span></div>
+    <div><b>Parche</b><span>El cubo de 96³ vóxeles con el que se entrena.</span></div>
+    <div><b>Época e iteración</b><span>Acá se cuenta por iteraciones: 25 000 pasos de ajuste.</span></div>
+    <div><b>Semilla</b><span>El número que fija el azar de la inicialización y del orden.</span></div>
+    <div><b>Ablación</b><span>Apagar una pieza y volver a medir para ver si aportaba.</span></div>
+    <div><b>Dice</b><span>Solapamiento entre dos máscaras, de 0 a 1.</span></div>
+    <div><b>FPV</b><span>Volumen de falso positivo: las islas predichas que no tocan lesión.</span></div>
+    <div><b>FNV</b><span>Volumen de falso negativo: las lesiones que no se tocaron.</span></div>
+    <div><b>HD95</b><span>Distancia de Hausdorff al percentil 95: cuánto se aleja el contorno.</span></div>
+    <div><b>AUC</b><span>Probabilidad de ordenar un caso verdadero por encima de uno falso.</span></div>
+    <div><b>FROC</b><span>Curva de detección: falsos por paciente contra lesiones encontradas.</span></div>
+    <div><b>autoPET</b><span>El conjunto público y el desafío internacional de este problema.</span></div>
+    <div><b>MONAI</b><span>Biblioteca de aprendizaje profundo para imagen médica, sobre PyTorch.</span></div>
+    <div><b>TotalSegmentator</b><span>Red preentrenada que segmenta 117 estructuras en un CT.</span></div>
+  </div>
+</section>
+
+<footer>
+  <p class="col">Material de estudio del mini-proyecto de BME423, Procesamiento de Imágenes Médicas,
+  Universidad de Valparaíso. Las cifras del proyecto salen de <code>results/</code> y de
+  <code>docs/PROTOCOLO_CONGELADO.md</code>; los rangos fisiológicos son orientativos y dependen del
+  protocolo de cada centro.</p>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var coma = function(x, d){ return x.toFixed(d).replace(".", ","); };
+
+  /* ---------- 1. calculadora de SUV ---------- */
+  var T_MEDIA = 109.8;                       // minutos, semivida del flúor-18
+  var els = {
+    dosis: document.getElementById("s-dosis"), peso: document.getElementById("s-peso"),
+    min: document.getElementById("s-min"), act: document.getElementById("s-act")
+  };
+  function suv(){
+    var D = +els.dosis.value, P = +els.peso.value, m = +els.min.value, A = +els.act.value;
+    document.getElementById("v-dosis").textContent = D + " MBq";
+    document.getElementById("v-peso").textContent = P + " kg";
+    document.getElementById("v-min").textContent = m + " min";
+    document.getElementById("v-act").textContent = coma(A,1) + " kBq/mL";
+
+    var frac = Math.pow(2, -m / T_MEDIA);
+    var Ddec = D * frac;                                  // MBq que quedan
+    var unif = (Ddec * 1000) / (P * 1000);                // kBq por gramo = kBq/mL si densidad 1
+    var s = A / unif;
+
+    document.getElementById("o-decay").textContent = coma(Ddec,1) + " MBq";
+    document.getElementById("o-unif").textContent = coma(unif,2) + " kBq/mL";
+    document.getElementById("o-frac").textContent = coma(100*frac,1) + " %";
+    document.getElementById("o-suv").textContent = coma(s,2);
+    var l;
+    if (s < 1.3) l = "Por debajo del promedio del cuerpo. Compatible con pulmón, grasa o músculo en reposo.";
+    else if (s < 2.8) l = "Del orden del hígado. Nada llamativo por sí solo.";
+    else if (s < 6) l = "Por encima del hígado. Sospechoso si no es un órgano que capte normalmente.";
+    else l = "Muy por encima del hígado. Tumor, o bien encéfalo, miocardio o vía urinaria.";
+    document.getElementById("o-lectura").textContent = l;
+  }
+  Object.keys(els).forEach(function(k){ els[k].addEventListener("input", suv); });
+  suv();
+
+  /* ---------- 2. ventana del CT ---------- */
+  var HU_MIN = -1000, HU_MAX = 1500;
+  var TEJIDOS = [
+    {hu:-1000, n:"aire"}, {hu:-800, n:"pulmón"}, {hu:-100, n:"grasa"},
+    {hu:0, n:"agua"}, {hu:50, n:"músculo"}, {hu:300, n:"hueso esponjoso"}, {hu:1000, n:"cortical"}
+  ];
+  var barHU = document.getElementById("bar-hu"), barW = document.getElementById("bar-win");
+  function pintarBarras(){
+    var lo = +document.getElementById("s-lo").value, hi = +document.getElementById("s-hi").value;
+    if (hi <= lo + 50) { hi = lo + 50; document.getElementById("s-hi").value = hi; }
+    document.getElementById("v-lo").textContent = lo + " HU";
+    document.getElementById("v-hi").textContent = hi + " HU";
+
+    var pHU = function(v){ return 100 * (v - HU_MIN) / (HU_MAX - HU_MIN); };
+    barHU.style.background = "linear-gradient(90deg, var(--surface-3) 0%, var(--surface-3) "
+      + pHU(lo) + "%, var(--ct-soft) " + pHU(lo) + "%, var(--ct) " + pHU(hi) + "%, var(--surface-3) "
+      + pHU(hi) + "%, var(--surface-3) 100%)";
+    barW.style.background = "linear-gradient(90deg, #000 0%, #fff 100%)";
+
+    barHU.innerHTML = ""; barW.innerHTML = "";
+    TEJIDOS.forEach(function(t){
+      var a = document.createElement("div");
+      a.className = "mark"; a.style.left = pHU(t.hu) + "%";
+      a.innerHTML = "<b>" + t.n + "</b>";
+      barHU.appendChild(a);
+      var v = Math.min(1, Math.max(0, (t.hu - lo) / (hi - lo)));
+      var b = document.createElement("div");
+      b.className = "mark"; b.style.left = (100 * v) + "%";
+      b.style.background = (v === 0 || v === 1) ? "var(--alert)" : "var(--ink)";
+      b.innerHTML = "<b>" + t.n + " · " + coma(v,2) + "</b>";
+      barW.appendChild(b);
+    });
+  }
+  document.getElementById("s-lo").addEventListener("input", pintarBarras);
+  document.getElementById("s-hi").addEventListener("input", pintarBarras);
+  pintarBarras();
+
+  /* ---------- 3. Dice, FPV y FNV ---------- */
+  var C = 14, COLS = 24, ROWS = 16;                 // celda de 14 px; cada celda vale 1 mL
+  var GT_A = {x:4, y:4, w:7, h:6};                  // lesión grande
+  var GT_B = {x:19, y:11, w:2, h:2};                // lesión chica
+  var ISLA = {x:18, y:2, w:3, h:2};                 // isla inventada, separada de todo
+  var svg = document.getElementById("svg-metricas");
+
+  function solapan(a, b){
+    return !(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y);
+  }
+  function areaComun(a, b){
+    if (!solapan(a, b)) return 0;
+    var w = Math.min(a.x+a.w, b.x+b.w) - Math.max(a.x, b.x);
+    var h = Math.min(a.y+a.h, b.y+b.h) - Math.max(a.y, b.y);
+    return w * h;
+  }
+  function rect(r, fill, stroke, extra){
+    return '<rect x="' + (r.x*C) + '" y="' + (r.y*C) + '" width="' + (r.w*C)
+      + '" height="' + (r.h*C) + '" fill="' + fill + '" stroke="' + stroke
+      + '" stroke-width="1.5" ' + (extra || "") + '/>';
+  }
+  function metricas(){
+    var dx = +document.getElementById("s-dx").value,
+        dy = +document.getElementById("s-dy").value,
+        t  = +document.getElementById("s-tam").value,
+        isla = document.getElementById("c-isla").checked;
+    var P = {x: GT_A.x + dx, y: GT_A.y + dy, w: t, h: Math.max(2, t - 1)};
+    document.getElementById("v-dx").textContent = (dx > 0 ? "+" : "") + dx;
+    document.getElementById("v-dy").textContent = (dy > 0 ? "+" : "") + dy;
+    document.getElementById("v-tam").textContent = P.w + " × " + P.h;
+
+    var areaGT = GT_A.w*GT_A.h + GT_B.w*GT_B.h;
+    var areaP  = P.w*P.h + (isla ? ISLA.w*ISLA.h : 0);
+    var inter  = areaComun(P, GT_A) + areaComun(P, GT_B);
+    var dice   = areaGT + areaP > 0 ? 2*inter / (areaGT + areaP) : 0;
+
+    // FPV: islas predichas que no tocan NINGUNA lesión anotada
+    var fpv = 0;
+    if (!solapan(P, GT_A) && !solapan(P, GT_B)) fpv += P.w*P.h;
+    if (isla) fpv += ISLA.w*ISLA.h;                       // la isla nunca toca la verdad
+    // FNV: lesiones anotadas que la predicción no tocó
+    var fnv = 0;
+    if (!solapan(P, GT_A)) fnv += GT_A.w*GT_A.h;
+    if (!solapan(P, GT_B)) fnv += GT_B.w*GT_B.h;
+
+    document.getElementById("o-dice").textContent = coma(dice, 3);
+    document.getElementById("o-fpv").textContent = fpv + " mL";
+    document.getElementById("o-fnv").textContent = fnv + " mL";
+    var nota;
+    if (fpv > 0 && fnv > 0) nota = "Inventa una isla y además pierde una lesión entera.";
+    else if (fpv > 0) nota = "Toda isla predicha que no roza la verdad cuenta completa como falso positivo.";
+    else if (fnv > 0) nota = "La lesión chica no fue tocada ni por un vóxel: cuenta entera como falso negativo.";
+    else if (dice > 0.85) nota = "Casi perfecto: alto solapamiento y ninguna isla suelta.";
+    else nota = "Solapa con las dos lesiones, así que no hay falsos por componente aunque el Dice sea bajo.";
+    document.getElementById("o-nota").textContent = nota;
+
+    var g = "";
+    for (var i = 0; i <= COLS; i++)
+      g += '<line x1="' + (i*C) + '" y1="0" x2="' + (i*C) + '" y2="' + (ROWS*C)
+        + '" stroke="var(--line)" stroke-width="0.5"/>';
+    for (var j = 0; j <= ROWS; j++)
+      g += '<line x1="0" y1="' + (j*C) + '" x2="' + (COLS*C) + '" y2="' + (j*C)
+        + '" stroke="var(--line)" stroke-width="0.5"/>';
+    g += rect(GT_A, "var(--ok-soft)", "var(--ok)");
+    g += rect(GT_B, "var(--ok-soft)", "var(--ok)");
+    g += rect(P, "var(--pet-soft)", "var(--pet)", 'fill-opacity="0.75"');
+    if (isla) g += rect(ISLA, "var(--alert-soft)", "var(--alert)", 'fill-opacity="0.8"');
+    svg.setAttribute("viewBox", "0 0 " + (COLS*C) + " " + (ROWS*C));
+    svg.innerHTML = g;
+  }
+  ["s-dx","s-dy","s-tam"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", metricas);
+  });
+  document.getElementById("c-isla").addEventListener("change", metricas);
+  metricas();
+})();
+</script>
