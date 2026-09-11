@@ -26,10 +26,10 @@ En cohortes distintas de autoPET, la fusión intermedia con atención ha rendido
 
 Objetivos específicos:
 
-1. Pipeline y referencia clásica. Conversión DICOM a NIfTI con cálculo de SUV normalizado por peso, remuestreo isotrópico a 3 mm, ventaneo de tejido blando (−200 a 300 HU), recorte del cuerpo y parches de 96³ vóxeles con muestreo sesgado a lesiones. Como punto de comparación se evalúa con las mismas métricas un método clásico del curso: umbral SUV ≥ 2,5, apertura morfológica y exclusión anatómica.
+1. Pipeline y referencia clásica. Conversión DICOM a NIfTI con cálculo de SUV normalizado por peso, remuestreo isotrópico a 3 mm, ventaneo de tejido blando (−200 a 300 HU), recorte del cuerpo y parches de 96³ vóxeles con muestreo sesgado a lesiones. Como punto de comparación se evalúa con las mismas métricas un método clásico del curso: umbral SUV ≥ 2,5, apertura morfológica y exclusión anatómica de órganos fisiológicos.
 2. Modelo A, fusión temprana. U-Net 3D con SUV y CT como dos canales de entrada, en MONAI, con pérdida Dice más entropía cruzada.
 3. Modelos B y C, fusión intermedia. Dos codificadores independientes y un decodificador común. En B las representaciones se concatenan en el cuello de botella, lo que sirve de control de capacidad. En C se combinan por atención cruzada, con el mapa PET como consulta y el CT como clave y valor, de modo que la anatomía module la sospecha metabólica. Comparar B contra C atribuye cualquier diferencia al mecanismo de atención y no a la duplicación del codificador.
-4. Evaluación comparativa. Dice, Hausdorff al percentil 95, FPV y FNV por estudio con el script oficial de autoPET; FPV desglosado por órgano (miocardio, riñones y vía urinaria, hígado, bazo, intestino, hueso, músculo) mediante máscaras anatómicas derivadas del CT; error absoluto en MTV y SUVmax por paciente; intervalos de confianza por bootstrap y análisis cualitativo de casos.
+4. Evaluación comparativa. Dice, Hausdorff al percentil 95, FPV y FNV por estudio con el script oficial de autoPET; FPV desglosado por órgano (miocardio, riñones y vía urinaria, hígado, bazo, intestino, hueso, músculo) mediante máscaras anatómicas derivadas del CT; error absoluto en MTV y SUVmax por paciente; intervalos de confianza por bootstrap sobre el conjunto de prueba y análisis cualitativo de casos.
 
 ## 3. Punto de partida
 
