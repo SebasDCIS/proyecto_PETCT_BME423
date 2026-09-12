@@ -105,16 +105,25 @@ def main():
             if r not in listos:
                 fallidos.append(r.patient_id)
 
-        # limpieza: solo de los pacientes de este lote que ya tienen su .npz,
-        # y nunca de los 251 originales
+        # Limpieza. Dos estructuras distintas, y confundirlas costó llenar el disco una vez:
+        #   data/raw          una carpeta por SERIE, nombrada con el SeriesInstanceUID
+        #   data/interim/nifti una carpeta por PACIENTE
+        # Solo se borra lo de los estudios de este lote que ya tienen su .npz, y nunca
+        # nada de los 251 originales.
         liberado = 0
-        for r in listos:
-            pid = str(r.patient_id)
-            if pid in protegidos:
-                continue
-            for base, borrar in ((a.raw, not a.conservar_dicom), (a.nifti, not a.conservar_nifti)):
-                d = RAIZ / base / pid
-                if borrar and d.exists():
+        listos_pid = {str(r.patient_id) for r in listos} - protegidos
+        if not a.conservar_dicom and ser.exists():
+            tabla = pd.read_csv(ser)
+            borrables = tabla[tabla.PatientID.astype(str).isin(listos_pid)]
+            for uid in borrables.SeriesInstanceUID.astype(str):
+                d = RAIZ / a.raw / uid
+                if d.exists():
+                    liberado += sum(f.stat().st_size for f in d.rglob("*") if f.is_file())
+                    shutil.rmtree(d, ignore_errors=True)
+        if not a.conservar_nifti:
+            for pid in listos_pid:
+                d = RAIZ / a.nifti / pid
+                if d.exists():
                     liberado += sum(f.stat().st_size for f in d.rglob("*") if f.is_file())
                     shutil.rmtree(d, ignore_errors=True)
         if liberado:
