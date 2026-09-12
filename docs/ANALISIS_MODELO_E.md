@@ -89,70 +89,83 @@ que no es significativa, pero que apunta en la misma dirección en los dos check
 
 ---
 
-## 5. Con la segunda semilla: el criterio de checkpoint es el verdadero hallazgo
+## 5. Cierre del paso 5: las tres semillas
 
-*Añadido el 2026-09-11, tras evaluar `runs/E_s2` con los dos checkpoints.*
+*2026-09-12. Tres semillas de E entrenadas y evaluadas con los dos checkpoints. Doce
+corridas en total entre los cuatro brazos.*
 
-La semilla 2 llegó a su mejor validación rápida en la iteración 16 000, no en la 9 000.
-El pico temprano de la semilla 423 no se repitió: en esta corrida la iteración 9 000 es uno
-de los peores puntos de toda la curva (Dice 0,360 contra 0,587 del mejor).
+### El resultado sobre el modelo E
 
-### Lo que aparece al poner los cuatro brazos lado a lado
+**Criterio `mejor.pt`, el del protocolo congelado:**
 
-**Criterio `mejor.pt`, el del protocolo** (media ± sd entre semillas, y los valores crudos):
-
-| brazo | Dice⁺ | FPV mL | FPV por semilla |
-|---|---|---|---|
-| A | 0,621 ± 0,016 | 20,93 ± 2,50 | 18,0 · 22,2 · 22,5 |
-| B | 0,612 ± 0,014 | 22,78 ± 3,08 | 20,3 · 26,2 · 21,9 |
-| C | 0,612 ± 0,008 | 23,18 ± 6,65 | 16,1 · 24,0 · 29,4 |
-| E | 0,628 ± 0,010 | 21,56 ± **13,78** | **11,8 · 31,3** |
-
-**Criterio `ultimo.pt`, las 25 000 iteraciones completas en los cuatro brazos:**
-
-| brazo | Dice⁺ | FPV mL | FPV por semilla |
-|---|---|---|---|
-| A | 0,615 ± 0,020 | 21,74 ± **0,49** | 21,8 · 21,2 · 22,2 |
-| B | 0,607 ± 0,002 | 22,11 ± 2,79 | 25,0 · 19,4 · 21,9 |
-| C | 0,610 ± 0,007 | 21,50 ± 1,76 | 21,2 · 19,9 · 23,4 |
-| E | 0,638 ± 0,009 | 22,03 ± **0,86** | 22,6 · 21,4 |
-
-La dispersión de FPV entre semillas, criterio contra criterio:
-
-| brazo | con `mejor` | con `ultimo` |
-|---|---|---|
-| A | 2,50 | 0,49 |
-| B | 3,08 | 2,79 |
-| C | 6,65 | 1,76 |
-| E | 13,78 | 0,86 |
-
-**En los cuatro brazos la dispersión baja al dejar de elegir checkpoint.** El caso de E es
-el extremo — el mismo brazo informa 11,8 o 31,3 mL de FPV según qué semilla se mire — pero
-la dirección es la misma en todos. Dicho de otro modo: **seleccionar el checkpoint con una
-validación rápida de 12 estudios mete más variabilidad en el resultado que la propia
-semilla de inicialización.** Eso está medido sobre once corridas, no es una anécdota.
-
-La razón es mecánica: la validación rápida mide Dice, pero al elegir el máximo de una
-curva ruidosa se arrastra cualquier cosa que haya acompañado a ese máximo, y el FPV es
-justamente lo que más se mueve entre mediciones consecutivas. El criterio optimiza una
-métrica y deja las otras dos al azar.
-
-### Y sobre E
-
-Con las 25 000 iteraciones, E queda en Dice 0,638 y es el único brazo por encima de 0,62.
-Pero el pareado por estudio no sostiene la ventaja:
-
-| | diferencia de Dice | IC95% | p | E mejor en |
+| brazo | Dice⁺ | FPV mL | FNV mL | FPV por semilla |
 |---|---|---|---|---|
-| E − A | +0,023 | [−0,003, +0,050] | 0,13 | 12/20 |
-| E − B | +0,031 | [−0,017, +0,089] | 0,67 | 11/20 |
-| E − C | +0,029 | [−0,014, +0,080] | 0,47 | 11/20 |
+| A | 0,621 ± 0,016 | 20,93 ± 2,50 | 6,02 | 18,0 · 22,2 · 22,5 |
+| B | 0,612 ± 0,014 | 22,78 ± 3,08 | 5,36 | 20,3 · 26,2 · 21,9 |
+| C | 0,612 ± 0,008 | 23,18 ± 6,65 | 5,93 | 16,1 · 24,0 · 29,4 |
+| E | 0,640 ± 0,022 | 21,97 ± 9,77 | 7,27 | 11,8 · 31,3 · 22,8 |
 
-El FPV es idéntico en los cuatro (diferencias por debajo de 0,6 mL, todas con p > 0,6).
+**Criterio `ultimo.pt`, las 25 000 iteraciones en los cuatro brazos:**
 
-Que E gane en 11 o 12 estudios de 20 —cuando un empate perfecto daría 10— dice que la
-ventaja no es sistemática: viene de ganar por bastante en unos pocos estudios, no de ser
-mejor en la mayoría. Con la tercera semilla se cierra, pero la lectura hoy es que **el
-canal de referencia interna no cambia el resultado de forma demostrable**, y que lo que sí
-apareció en el camino es un problema del protocolo de selección que afecta a los cuatro
-brazos por igual.
+| brazo | Dice⁺ | FPV mL | FNV mL | FPV por semilla |
+|---|---|---|---|---|
+| A | 0,615 ± 0,020 | 21,74 ± 0,49 | 5,85 | 21,8 · 21,2 · 22,2 |
+| B | 0,607 ± 0,002 | 22,11 ± 2,79 | 4,44 | 25,0 · 19,4 · 21,9 |
+| C | 0,610 ± 0,007 | 21,50 ± 1,76 | 4,45 | 21,2 · 19,9 · 23,4 |
+| E | 0,638 ± 0,006 | 23,63 ± 2,84 | 5,70 | 22,6 · 21,4 · 26,8 |
+
+El pareado por estudio, promediando las tres semillas de cada brazo:
+
+| | Dice | IC95% | p | E gana en |
+|---|---|---|---|---|
+| E − A | +0,024 | [−0,003, +0,051] | 0,23 | 11/20 |
+| E − B | +0,031 | [−0,019, +0,090] | 0,73 | 9/20 |
+| E − C | +0,029 | [−0,015, +0,080] | 0,57 | 11/20 |
+
+Y con el criterio del protocolo, E gana en 8, 6 y 8 estudios de 20 — **menos de la mitad**.
+El FPV no se distingue en ninguna comparación (todas las p por encima de 0,30).
+
+**Conclusión del paso 5: el canal de referencia interna no cambia el resultado.** La
+ventaja aparente de Dice es ruido de muestreo: apunta siempre en la misma dirección pero
+ningún intervalo excluye el cero y E no gana en la mayoría de los estudios. La hipótesis
+—darle a la red cuántas veces el hígado del propio paciente brilla cada vóxel— queda
+descartada con el mismo rigor con que quedó descartada la atención cruzada de C.
+
+Con una diferencia importante entre las dos: la atención de C estaba **muerta** (apagarla
+no movía un vóxel); el canal de E está **vivo** (cambia 23 de 26 predicciones) pero su
+efecto neto se cancela. Son dos fracasos distintos y conviene contarlos distinto.
+
+### El resultado que no buscábamos
+
+La dispersión de FPV entre semillas, según qué criterio elija el checkpoint:
+
+| brazo | con `mejor` | con `ultimo` | factor |
+|---|---|---|---|
+| A | 2,50 | 0,49 | **5,1×** |
+| B | 3,08 | 2,79 | 1,1× |
+| C | 6,65 | 1,76 | **3,8×** |
+| E | 9,77 | 2,84 | **3,4×** |
+
+**En los cuatro brazos la dispersión baja al dejar de elegir checkpoint**, y en tres de
+cuatro baja entre tres y cinco veces. Dicho de otro modo: **seleccionar el checkpoint con
+una validación rápida de doce estudios mete en el resultado más variabilidad que la propia
+semilla de inicialización** — que era justamente el ruido contra el que se corrieron tres
+semillas por brazo.
+
+El mecanismo es directo y se puede defender sin apelar a nada sofisticado: el criterio
+busca el máximo de Dice en una curva ruidosa y arrastra consigo lo que haya acompañado a
+ese máximo. El FPV es lo que más se mueve entre mediciones consecutivas, así que queda
+decidido por azar. **El criterio optimiza una métrica y deja las otras dos sueltas.** El
+caso extremo es E, donde las tres semillas eligieron checkpoint en las iteraciones 9 000,
+16 000 y 18 000, con FPV de 5,0, 17,6 y 20,6 mL en la validación rápida.
+
+Es el mismo error que elegir el punto de corte de un marcador en la misma muestra donde se
+lo descubrió: en aprendizaje automático se hace de forma rutinaria y casi nunca se reporta.
+
+### Qué queda
+
+El paso 5 está cerrado. Lo que sigue es una decisión, no un cálculo: abrir el conjunto de
+prueba con los cuatro brazos tal como están, o antes de eso correr lo que quedó escrito en
+la rama `exploracion/umbral-y-atlas` (ver `docs/EXPLORACION_PENDIENTE.md`). Sea cual sea la
+elección, **el test se abre una sola vez, al final, cuando no quede ninguna decisión
+pendiente.**

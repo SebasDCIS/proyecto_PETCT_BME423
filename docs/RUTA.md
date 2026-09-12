@@ -1,6 +1,6 @@
 # Ruta del proyecto: dónde estamos y qué sigue
 
-*Actualizado el 2026-09-11. Este documento se reescribe cada vez que cambia el plan.*
+*Actualizado el 2026-09-12. Este documento se reescribe cada vez que cambia el plan.*
 
 El proyecto tiene dos mitades. La primera está **cerrada**. La segunda está **en curso**, y es
 la que puede tocar cualquier cosa hoy.
@@ -96,7 +96,7 @@ información que la red no tiene forma de deducir.
 De paso quedó cerrada la pregunta de si bajar más estudios: **no**. Quintuplicar la muestra
 mueve la referencia menos del 3 % en once de quince órganos.
 
-### 📍 Paso 5 — Entrenar el modelo E · **AQUÍ ESTAMOS**
+### ~~Paso 5 — Entrenar y evaluar el modelo E~~ · ✅ CERRADO el 2026-09-12
 
 **Modelo E** = la arquitectura de A sin ningún cambio, con un tercer canal de entrada: el SUV
 de cada vóxel dividido por el SUV hepático de ese paciente, con tope en 8 veces. Mismo tamaño
@@ -123,6 +123,32 @@ caffeinate -i python scripts/07_entrenar.py --modelo E --semilla 3   --salida ru
   información individual. Si la predicción no cambia, el canal está inerte, igual que le pasó a
   la atención cruzada de C.
 
+**Veredicto, con las tres semillas entrenadas y evaluadas** (detalle en
+`docs/ANALISIS_MODELO_E.md`):
+
+- **El canal no sirve.** E no se distingue de A, B ni C. La diferencia de Dice (+0,024 a
+  +0,031) tiene todos los intervalos cruzando el cero, y con el criterio del protocolo E
+  gana en 6 a 8 estudios de 20, menos de la mitad. El FPV es indistinguible.
+- **El canal sí está vivo**, a diferencia de la atención de C: apagar la referencia cambia
+  23 de 26 predicciones. Su aporte propio es de 1,4 mL de FPV, que se pierde en el ruido.
+- **Y apareció otra cosa.** Elegir el checkpoint con la validación rápida de 12 estudios
+  mete más variabilidad en el FPV que la semilla de inicialización: la desviación entre
+  semillas baja 5,1× en A, 3,8× en C y 3,4× en E al usar el checkpoint final en vez del
+  "mejor". Medido sobre las doce corridas. Es el hallazgo más sólido de esta fase y no
+  estaba en el plan.
+
+### 📍 PUNTO DE DECISIÓN — **AQUÍ ESTAMOS**
+
+Dos caminos, y hay que elegir antes de tocar el test:
+
+- **Cerrar.** El proyecto ya tiene resultado: cuatro fusiones comparadas con tres semillas
+  cada una, dos hipótesis descartadas con ablaciones limpias, y el hallazgo del criterio de
+  checkpoint. Se abre el test y se escribe.
+- **Explorar primero.** Correr lo que quedó escrito y sin ejecutar en la rama
+  `exploracion/umbral-y-atlas`: el barrido de umbral (~1 h de GPU por corrida) y el filtro
+  por atlas (minutos, sin GPU). Ver `docs/EXPLORACION_PENDIENTE.md`. Puede no dar nada; si
+  da, cambia la conclusión del trabajo.
+
 ### Paso 6 — Evaluar y repartir el error por órgano
 
 Las mismas métricas de siempre sobre validación, más la tabla de falsos positivos por órgano,
@@ -135,7 +161,7 @@ encontradas), que es el estándar de los sistemas de detección asistida. Necesi
 confianza por hallazgo: la da el paso 4, o una re-inferencia guardando probabilidades (~2 h,
 sin entrenar).
 
-### Paso 8 — Abrir el conjunto de prueba · UNA SOLA VEZ
+### Paso 8 — Abrir el conjunto de prueba · UNA SOLA VEZ · sigue cerrado
 
 49 estudios que ningún modelo ha visto. Se abre con **todos** los brazos a la vez (A, B, C y
 E si existe), al final, cuando ya no queda ninguna decisión por tomar. ~2 h de inferencia.
