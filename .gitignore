@@ -38,3 +38,6 @@ notas_personales/
 data/processed_organos/*
 !data/processed_organos/.gitkeep
 docs/figuras/visor_datos.js
+
+# Manifiestos temporales por lote (rama extendido)
+data/manifests/_lotes/
