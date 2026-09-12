@@ -47,6 +47,8 @@ def main():
     ap.add_argument("--lote", type=int, default=20)
     ap.add_argument("--max-lotes", type=int, default=0, help="0 = sin límite")
     ap.add_argument("--conservar-nifti", action="store_true")
+    ap.add_argument("--sin-barajar", action="store_true",
+                    help="respetar el orden del manifiesto (queda ordenado por diagnóstico)")
     ap.add_argument("--conservar-dicom", action="store_true")
     a = ap.parse_args()
 
@@ -57,6 +59,14 @@ def main():
             if not (proc / f"{r.patient_id}__{r.study_uid}.npz").exists()]
     print(f"manifiesto: {len(sub)} estudios · ya procesados: {len(sub) - len(pend)} · "
           f"pendientes: {len(pend)}")
+    if not a.sin_barajar and pend:
+        # El manifiesto viene ordenado por diagnóstico: sin barajar, los primeros lotes
+        # serían todos positivos y los controles quedarían para el final. Si la descarga
+        # se corta a la mitad eso deja un conjunto sesgado. Con semilla fija el orden es
+        # el mismo en cada relanzamiento, así que sigue siendo reanudable y reproducible.
+        import random
+        random.Random(423).shuffle(pend)
+        print("orden barajado con semilla 423: cualquier corte parcial queda representativo")
     if not pend:
         print("no hay nada que traer.")
         return
