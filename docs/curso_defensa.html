@@ -607,15 +607,55 @@ footer{padding-block:36px 0; border-top:1px solid var(--line); color:var(--muted
   </div>
 
   <div class="lesson col">
-    <h3>2.6 · Por qué se convierte a NIfTI</h3>
-    <p>DICOM es excelente para un PACS y muy incómodo para procesar: un archivo por corte, la
-    geometría repartida entre etiquetas, y metadatos del paciente que no deberían viajar.
-    <strong>NIfTI</strong> guarda el volumen completo en un solo archivo con una matriz de
-    transformación que lleva de índices a milímetros. Es el formato de trabajo de toda la
-    neuroimagen y de casi toda la investigación en imagen 3D.</p>
+    <h3>2.6 · De DICOM a NIfTI: la cadena completa</h3>
+    <p>Los dos formatos resuelven problemas distintos. <strong>DICOM es un formato de
+    hospital</strong>: no es un archivo sino <strong>uno por corte</strong> —un estudio son
+    cientos—, cada uno con su matriz 2D de píxeles y su diccionario de etiquetas, organizados en la
+    jerarquía paciente → estudio → serie → instancia. <strong>NIfTI es un formato de
+    análisis</strong>: un archivo es <strong>un volumen 3D</strong> más una matriz afín de 4×4 que
+    traduce índice de vóxel a milímetros en el paciente. Sin identidad, sin protocolo.</p>
+    <p>Convertir es pasar de <em>cientos de láminas con su ficha cada una</em> a <em>un bloque de
+    números con una regla que dice dónde está cada uno</em>. Son seis pasos, y cada uno es un tema
+    del ramo:</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Paso</th><th>Qué hace</th><th>Concepto</th></tr></thead>
+        <tbody>
+          <tr><td><strong>1.</strong> Clasificar las series</td><td>lee <code>Modality</code> <span class="n">(0008,0060)</span> de un archivo de cada carpeta y separa CT, PT y SEG</td><td>jerarquía DICOM</td></tr>
+          <tr><td><strong>2.</strong> Ordenar y apilar</td><td>ordena los cortes por <code>ImagePositionPatient</code> <span class="n">(0020,0032)</span> proyectada sobre la normal del plano, y los apila</td><td>muestreo espacial: de muestras 2D a señal 3D</td></tr>
+          <tr><td><strong>3.</strong> Escala de intensidad</td><td><code>real = slope × guardado + intercept</code>; el CT queda en HU y el PET en Bq/mL</td><td>cuantización y operación puntual</td></tr>
+          <tr><td><strong>4.</strong> Normalizar a SUV</td><td>usa dosis, semivida, hora y peso (tabla 2.2) para quitar el efecto de cuánto se inyectó y de qué tan grande es el paciente</td><td>normalización de intensidad</td></tr>
+          <tr><td><strong>5.</strong> CT a la grilla del PET</td><td>remuestrea el CT (~0,98 mm) sobre la grilla del PET (2,04 × 2,04 × 3 mm) con interpolación lineal → <code>CTres</code></td><td>transformación geométrica y remuestreo</td></tr>
+          <tr><td><strong>6.</strong> Rasterizar el SEG</td><td>ubica cada frame del objeto DICOM SEG en la grilla del PET usando su posición y sus cosenos directores</td><td>coordenadas mundo ↔ imagen</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note ojo">
+      <div class="ntitle">Dos errores clásicos que conviene nombrar en clase</div>
+      <p><strong>Ordenar por nombre de archivo.</strong> Los cortes se ordenan por su posición
+      física, nunca por cómo se llama el archivo. Si te equivocás acá, el volumen queda con las
+      láminas barajadas y no hay forma de notarlo mirando un corte suelto.</p>
+      <p><strong>Apilar el SEG sin mirar su orientación.</strong> En autoPET los frames de la
+      segmentación vienen con las filas recorridas al revés que el PET —orientación
+      <code>(1,0,0, 0,−1,0)</code> contra <code>(1,0,0, 0,1,0)</code>—, así que apilarlos directo
+      <strong>deja la máscara espejada</strong>. Hay que ubicar físicamente las esquinas de cada
+      frame y voltear filas o columnas cuando corresponde.</p>
+    </div>
+    <div class="note proyecto">
+      <div class="ntitle">Por qué el paso 5 no es un registro</div>
+      <p>La transformación que se aplica al CT es <strong>la identidad</strong>: el equipo híbrido
+      adquirió las dos modalidades sin mover al paciente, así que ya están alineadas. Lo único que
+      cambia es la grilla de muestreo, no la posición. Es remuestreo, no registro — y esa
+      suposición es exactamente la que el módulo 4 pone a prueba midiendo cuánto la rompe la
+      respiración.</p>
+    </div>
+    <p>Al escribir el NIfTI se guardan los números y la geometría, y se descarta todo lo demás:
+    identidad del paciente, fabricante, protocolo, y las etiquetas que ya se consumieron al
+    calcular el SUV. Por eso 458 MB de DICOM se convierten en unos 275 de NIfTI, y por eso la
+    conversión es <strong>irreversible</strong>: del NIfTI no se vuelve al DICOM.</p>
     <p>El desafío distribuye los estudios ya convertidos: <code>SUV.nii.gz</code>,
-    <code>CTres.nii.gz</code> (el CT ya remuestreado a la grilla del PET) y
-    <code>SEG.nii.gz</code>. Tu paso 1 hace esa conversión y calcula el SUV.</p>
+    <code>CTres.nii.gz</code> y <code>SEG.nii.gz</code>. Tu paso 1 hace esa conversión por su
+    cuenta, en <code>src/petct/convert.py</code>.</p>
   </div>
 
   <div class="lesson col">
