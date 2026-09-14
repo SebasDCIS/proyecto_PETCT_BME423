@@ -59,7 +59,74 @@ neutraliza.
 de autoPET 2022, Dice 0,623 con FPV 2,84. Con 0,681 el Dice ya no es la brecha. **Lo que
 sigue lejos es el falso positivo**, 2,7 veces el de nnU-Net.
 
-## Lo que falta para cerrar la atribución
+## El control cerró la atribución: era el tiempo, no los datos
+
+*Añadido el 2026-09-14, con `runs/A_176_largo` evaluado.*
+
+Con las cuatro corridas queda un diseño factorial completo — dos tamaños de conjunto por dos
+presupuestos de entrenamiento:
+
+| | Dice⁺ | mediana | FPV mL | FNV mL |
+|---|---|---|---|---|
+| 176 estudios · 25 000 | 0,615 | 0,665 | 21,74 | 5,85 |
+| 176 estudios · 100 000 | 0,655 | 0,706 | 15,49 | 5,21 |
+| 825 estudios · 25 000 | 0,636 | 0,744 | 24,70 | 5,11 |
+| 825 estudios · 100 000 | 0,681 | 0,806 | 15,76 | 3,91 |
+
+Y separando los dos factores, pareado por estudio:
+
+| efecto | Dice | IC95% | p | gana en | FPV |
+|---|---|---|---|---|---|
+| **iteraciones, con 176 estudios** | **+0,041** | [−0,013, +0,093] | **0,019** | **17/20** | **−6,24** |
+| **iteraciones, con 825 estudios** | **+0,045** | [+0,007, +0,081] | **0,014** | **17/20** | **−8,94** |
+| datos, con 25 000 iteraciones | +0,021 | [−0,031, +0,078] | 0,87 | 9/20 | +2,96 |
+| datos, con 100 000 iteraciones | +0,025 | [−0,035, +0,093] | 0,45 | 12/20 | +0,26 |
+
+**El efecto del presupuesto de entrenamiento se replica a sí mismo en las dos condiciones**:
++0,041 y +0,045, los dos significativos, los dos ganando en 17 de 20 estudios, y los dos
+bajando el falso positivo entre 6 y 9 mL. Replicación interna, que es lo más parecido a una
+prueba que permite este montaje.
+
+**El efecto del tamaño del conjunto no aparece en ninguna de las dos.** Gana en 9 y en 12 de
+20 estudios —cara o cruz— y no mueve el falso positivo.
+
+### Conclusión del paso 1
+
+Quintuplicar el conjunto de entrenamiento no cambió el resultado. Cuadruplicar el presupuesto
+de entrenamiento sí, y de forma consistente. **El cuello de botella era cuánto entrenaba la
+red, no cuántos casos tenía.**
+
+Los 649 estudios adicionales no fueron un desperdicio: sin ellos no habría sido posible
+demostrar que no importaban, y siguen disponibles para el ensamble y para los 2 mm, donde las
+condiciones son distintas.
+
+### Lo que esto le hace al resto del proyecto
+
+La comparación de arquitecturas de `main` —A, B y C con 25 000 iteraciones— se hizo con un
+presupuesto que ahora está demostrado insuficiente. Si un presupuesto corto ocultó una
+diferencia de +0,066 dentro del propio modelo A, no hay razón para suponer que no haya
+ocultado también las diferencias entre arquitecturas. **B, con 24,0 M de parámetros contra los
+12,9 M de A, era el más castigado**: cuanto más grande el modelo, más entrenamiento necesita
+para converger, y se lo comparó con A en igualdad de iteraciones creyendo que eso era
+igualdad de condiciones.
+
+Eso convierte la conclusión "las tres fusiones empatan" en una conclusión **condicionada al
+presupuesto**, y obliga a reproducirla con 100 000 iteraciones. Pase lo que pase se gana:
+
+- Si siguen empatando, la conclusión pasa de *"empatan con este presupuesto"* a *"empatan aun
+  con presupuesto suficiente"*, que es mucho más fuerte.
+- Si se separan, el hallazgo es que **la comparación de arquitecturas en segmentación médica
+  es sensible al presupuesto de entrenamiento**, y buena parte de la literatura que compara
+  arquitecturas con presupuestos cortos podría estar midiendo ruido.
+
+Para el modelo C hay además una predicción falsable concreta: repetir la ablación
+`--sin-atencion` sobre la corrida larga. La atención arrancaba con gamma 1 —plenamente
+activa— y aun así apagarla no cambiaba un vóxel, lo que sugiere que la red la neutralizó por
+mecanismo y no por falta de tiempo. Si con 100 000 iteraciones sigue inerte, queda cerrado.
+
+---
+
+## Apéndice: lo que faltaba cuando se escribió este documento
 
 Queda un control: **A con los 176 estudios originales y 100 000 iteraciones** (`runs/A_176_largo`).
 
