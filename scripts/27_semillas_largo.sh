@@ -12,8 +12,9 @@
 #   etapa 1  A_s2, B_s2, C_s2      (segunda semilla de los tres brazos)
 #   etapa 2  A+ s423               (control de capacidad)
 #   etapa 3  A_s3, B_s3, C_s3      (tercera semilla)
+#   etapa 4  A+ s2, A+ s3          (el control con el mismo rigor que los brazos)
 #
-# Costo: ~8 días de Mac. Lanzar con:
+# Costo: ~10 días de Mac. Lanzar con:
 #   caffeinate -i bash scripts/27_semillas_largo.sh 2>&1 | tee -a runs/semillas_largo.log
 set -u
 cd "$(dirname "$0")/.."
@@ -70,5 +71,9 @@ echo "======== [$(hora)] etapa 3: tercera semilla"
 entrenar A 3 A_ext_largo_s3 && completo A A_ext_largo_s3 modelo_A_ext_largo_s3
 entrenar B 3 B_ext_largo_s3 && completo B B_ext_largo_s3 modelo_B_ext_largo_s3
 entrenar C 3 C_ext_largo_s3 && completo C C_ext_largo_s3 modelo_C_ext_largo_s3
+
+echo "======== [$(hora)] etapa 4: segunda y tercera semilla del control A+"
+entrenar A+ 2 Aplus_ext_largo_s2 && completo A+ Aplus_ext_largo_s2 modelo_Aplus_ext_largo_s2
+entrenar A+ 3 Aplus_ext_largo_s3 && completo A+ Aplus_ext_largo_s3 modelo_Aplus_ext_largo_s3
 
 echo "======== [$(hora)] TODO LISTO"
