@@ -71,6 +71,18 @@ GROUP_NAMES: List[str] = ["fuera", "otro"] + list(GROUPS.keys())   # 0 = fuera d
 GROUP_CODE: Dict[str, int] = {n: i for i, n in enumerate(GROUP_NAMES)}
 
 
+# Órganos con captación fisiológica de FDG: donde un foco caliente es normal y por eso
+# una marca de la red ahí es, casi siempre, un falso positivo. Es la lista que usa la
+# pérdida pesada por órgano (`petct.losses`): en estos grupos un vóxel de fondo marcado
+# como lesión cuesta más. Quedan fuera a propósito hueso, pulmón y "otro" (tejido sin
+# etiqueta): ahí sí hay lesiones reales y no hay captación fisiológica que explique una
+# marca falsa, así que castigarlos solo empujaría a la red a subsegmentar.
+ORGANOS_FISIOLOGICOS: List[str] = ["higado", "bazo", "rinones", "vejiga", "corazon", "estomago",
+                                   "intestino", "pancreas_suprarrenales", "musculo", "vasos",
+                                   "tiroides_esofago_traquea", "encefalo"]
+ORGANOS_FISIOLOGICOS_COD: List[int] = [GROUP_CODE[n] for n in ORGANOS_FISIOLOGICOS]
+
+
 # Órganos que sirven como referencia interna del propio paciente, en orden de preferencia.
 # Es la lógica de la escala de Deauville: en vez de comparar el SUV de un foco contra una
 # tabla poblacional, se lo compara contra el hígado (o el fondo vascular) DEL MISMO estudio.

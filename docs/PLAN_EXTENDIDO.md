@@ -105,6 +105,13 @@ registrado sin contaminar `main`:
   del modelo E aplicada como regla de salida en vez de como canal de entrada, y ahí sí funciona.
   Los tres modelos siguen empatando cuando se los compara a igual número de marcas falsas.
 
+Fases ejecutadas hasta ahora, con su documento: ampliación de datos y presupuesto
+(`PASO1_RESULTADO.md`), arquitecturas en régimen largo con tres semillas y control A+
+(`PASO2_ARQUITECTURAS.md`, `AUDITORIA.md`, `scripts/27`), y en cola detrás de eso la anatomía:
+codificador de CT preentrenado en órganos y pérdida pesada por órgano (`PASO3_ANATOMIA.md`,
+`scripts/29` y `30`). La validación cruzada y el ensamble del plan original quedan para después
+de saber si la anatomía aporta.
+
 ## La regla de fusión
 
 Esta rama vuelve a `main` **solo** si se cumplen las tres condiciones:

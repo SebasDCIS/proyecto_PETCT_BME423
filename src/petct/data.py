@@ -69,12 +69,31 @@ def split_files(manifest_csv: str | Path, processed_dir: str | Path,
     return out[split] if split else out
 
 
+# ---------------------------------------------------------------- mapas de órganos
+def organ_file(organs_dir: str | Path, npz_file: Path) -> Path:
+    """El mapa de órganos de un estudio vive en `data/processed_organos/<mismo nombre>.npz`."""
+    return Path(organs_dir) / npz_file.name
+
+
+def organ_files_missing(files: Sequence[Path], organs_dir: str | Path) -> List[Path]:
+    """Estudios sin mapa de órganos. Se revisa ANTES de entrenar: el mapa se necesita en
+    cada parche y descubrir que falta uno a las nueve horas sería absurdo."""
+    return [f for f in files if not organ_file(organs_dir, Path(f)).exists()]
+
+
+def load_organs(organs_dir: str | Path, npz_file: Path) -> np.ndarray:
+    """Mapa de grupos (uint8, códigos de `petct.organs.GROUP_NAMES`), misma grilla que el estudio."""
+    return np.load(organ_file(organs_dir, npz_file))["groups"].astype(np.uint8)
+
+
 # ---------------------------------------------------------------- caché LRU
 class _StudyCache:
-    """Guarda hasta `max_items` estudios en RAM; el menos usado sale primero."""
+    """Guarda hasta `max_items` estudios en RAM; el menos usado sale primero. Si se le da
+    `organs_dir`, cada estudio trae además su mapa de órganos (clave "groups")."""
 
-    def __init__(self, max_items: int):
+    def __init__(self, max_items: int, organs_dir: Optional[str | Path] = None):
         self.max_items = max(1, int(max_items))
+        self.organs_dir = organs_dir
         self._d: "OrderedDict[Path, dict]" = OrderedDict()
 
     def get(self, f: Path) -> dict:
@@ -86,6 +105,10 @@ class _StudyCache:
         vol = {"suv": vol["suv"].astype(np.float16), "ct": vol["ct"].astype(np.float16),
                "seg": vol["seg"], "body": vol["body"], "suv_top": vol["suv_top"],
                "spacing": vol["spacing"], "head_at_end": vol["head_at_end"]}
+        if self.organs_dir is not None:
+            g = load_organs(self.organs_dir, f)
+            assert g.shape == vol["seg"].shape, (f.name, g.shape, vol["seg"].shape)
+            vol["groups"] = g
         self._d[f] = vol
         if len(self._d) > self.max_items:
             self._d.popitem(last=False)
@@ -103,10 +126,20 @@ class PatchDataset(Dataset):
 
     def __init__(self, files: Sequence[Path], patch_size=(96, 96, 96), p_lesion: float = 0.7,
                  length: int = 10_000, cache_size: int = 256, augment: bool = True,
-                 seed: Optional[int] = None, refs: Optional[Dict[str, float]] = None):
+                 seed: Optional[int] = None, refs: Optional[Dict[str, float]] = None,
+                 organs_dir: Optional[str | Path] = None):
         if not files:
             raise ValueError("PatchDataset sin archivos")
         self.files = [Path(f) for f in files]
+        # Mapa de órganos por parche (pérdida pesada por órgano y preentrenamiento anatómico).
+        # Si se pide, __getitem__ devuelve (x, y, g) en vez de (x, y); si no, nada cambia.
+        self.organs_dir = Path(organs_dir) if organs_dir is not None else None
+        if self.organs_dir is not None:
+            faltan = organ_files_missing(self.files, self.organs_dir)
+            if faltan:
+                raise FileNotFoundError(
+                    f"{len(faltan)} de {len(self.files)} estudios no tienen mapa de órganos en {self.organs_dir} "
+                    f"(p. ej. {faltan[0].name}). Los genera scripts/11_organos_totalsegmentator.py")
         # Referencia interna por estudio (modelo E). Si es None, la entrada tiene 2 canales,
         # exactamente como en A, B y C. Se resuelve acá y no en __getitem__ para no buscar en
         # un diccionario 50 000 veces por corrida.
@@ -116,7 +149,7 @@ class PatchDataset(Dataset):
         self.p_lesion = float(p_lesion)
         self.length = int(length)
         self.augment = augment
-        self.cache = _StudyCache(cache_size)
+        self.cache = _StudyCache(cache_size, organs_dir=self.organs_dir)
         self._seed = seed
         self._rng = np.random.default_rng(seed)
 
@@ -134,7 +167,7 @@ class PatchDataset(Dataset):
             self._worker_rng = np.random.default_rng(base + 1000 * (info.id + 1) + int(info.seed) % 1000)
         return self._worker_rng
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx: int):
         rng = self._rng_for_worker()
         f = self.files[rng.integers(len(self.files))]
         vol = self.cache.get(f)
@@ -143,13 +176,18 @@ class PatchDataset(Dataset):
         x = stack_input(p["suv"], p["ct"], vol["suv_top"],
                         None if self.refs is None else self.refs[f])
         y = p["seg"].astype(np.int64)[None]                                       # (1, D, H, W)
+        g = p["groups"].astype(np.int64)[None] if self.organs_dir is not None else None
         if self.augment:
             for ax in (2, 3):          # ejes H (y) y W (x); z (eje 1) no se voltea
                 if rng.random() < 0.5:
                     x = np.flip(x, axis=ax)
                     y = np.flip(y, axis=ax)
+                    g = None if g is None else np.flip(g, axis=ax)
             x, y = np.ascontiguousarray(x), np.ascontiguousarray(y)
-        return torch.from_numpy(x), torch.from_numpy(y)
+            g = None if g is None else np.ascontiguousarray(g)
+        if g is None:
+            return torch.from_numpy(x), torch.from_numpy(y)
+        return torch.from_numpy(x), torch.from_numpy(y), torch.from_numpy(g)
 
 
 # ---------------------------------------------------------------- volúmenes completos

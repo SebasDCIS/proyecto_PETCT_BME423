@@ -159,7 +159,10 @@ def sample_patch(vol: Dict[str, np.ndarray], size=(96, 96, 96), p_lesion: float 
     stop = start + size
 
     out = {}
-    for key in ("suv", "ct", "seg"):
+    # "groups" (mapa de órganos, uint8) solo viene cuando el entrenamiento lo pide; se recorta
+    # con exactamente el mismo cubo que las demás grillas
+    keys = ("suv", "ct", "seg") + (("groups",) if "groups" in vol else ())
+    for key in keys:
         arr = vol[key]
         patch = np.zeros(size, dtype=arr.dtype)
         src = tuple(slice(int(a), int(min(b, s))) for a, b, s in zip(start, stop, shape))
