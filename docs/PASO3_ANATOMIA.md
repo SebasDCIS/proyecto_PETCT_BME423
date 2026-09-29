@@ -112,4 +112,32 @@ la de siempre (verificado); las corridas anteriores no se ven afectadas.
 
 ## Resultados
 
-*(pendiente)*
+### Etapas 0 y 2: el material y el curso (2026-09-28)
+
+TotalSegmentator sobre los 649 estudios sin mapa: 3 h 50 en la GPU, 0 errores; los 851
+estudios de train + val tienen mapa. Preentrenamiento del codificador (`runs/ct_anatomia`):
+20 000 iteraciones, 3,5 h, **Dice anatómico medio 0,861** sobre 40 parches fijos de validación
+(17 grupos, sin "fuera"). El curso de anatomía funcionó: el codificador sabe leer órganos.
+
+### Etapa 1: B con errores caros (una semilla, 2026-09-28)
+
+| | B (3 semillas) | B_peso |
+|---|---|---|
+| Dice⁺ | 0,705 (0,694–0,714) | 0,711 |
+| FPV mL | 13,25 (12,1–14,5) | 12,47 |
+| FPV mediana | 4,29 | 3,75 |
+| FNV mL | 3,78 | 3,42 |
+| FP en órganos fisiológicos | 2,55 | **3,57** |
+| FN en órganos fisiológicos | 0,65 | 0,62 |
+| FP en otro + pulmón + bordes | 11,18 | 9,03 |
+
+Pareado: Dice +0,005 (gana 10/20, p 0,99); FPV −0,8 mL (baja en 15/26, p 0,24).
+
+**Veredicto según el criterio fijado: no cumple.** El FP en los órganos fisiológicos no bajó a
+la mitad; subió, por dos estudios ya conocidos como difíciles: `94962fe878` (músculo: 41 mL
+contra 4–20 en las semillas de B) y `73fda3a382` (riñón: 15 contra 5–9). En los otros 24
+estudios los órganos fisiológicos quedaron igual o algo mejor. Lo que sí bajó (19 %) fue el
+FP fuera de esos órganos, donde la pérdida no actúa: −2,1 mL en tejido sin etiqueta, pulmón y
+bordes. Con una semilla, y con B moviéndose 12,1–14,5 entre semillas, esa baja no se puede
+distinguir del ruido. No perjudicó (Dice y FN iguales o mejores), no hizo lo que se le pidió,
+y no se repite con más semillas: se cierra como negativo.
