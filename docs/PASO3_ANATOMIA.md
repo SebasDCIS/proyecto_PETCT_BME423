@@ -141,3 +141,26 @@ FP fuera de esos órganos, donde la pérdida no actúa: −2,1 mL en tejido sin 
 bordes. Con una semilla, y con B moviéndose 12,1–14,5 entre semillas, esa baja no se puede
 distinguir del ruido. No perjudicó (Dice y FN iguales o mejores), no hizo lo que se le pidió,
 y no se repite con más semillas: se cierra como negativo.
+
+### Etapa 3: B con el codificador preentrenado (una semilla, 2026-09-29)
+
+| | B (3 semillas) | B_pre |
+|---|---|---|
+| Dice⁺ | 0,705 (0,694–0,714) | **0,724** |
+| Dice⁺ mediana | 0,780 | 0,774 |
+| FPV mL | 13,25 (12,1–14,5) | 12,55 |
+| FPV mediana | 4,29 | **2,78** |
+| FNV mL | 3,78 | 3,42 |
+| FP en órganos fisiológicos | 2,55 | 2,21 |
+| FP en otro + pulmón + bordes | 11,18 | 10,74 |
+
+Pareado: Dice +0,018 (gana 12/20, p 0,41); FPV −0,7 mL (baja en 14/26, p 0,33). Por órgano
+baja hígado (0,35 → 0,13) e intestino (0,52 → 0,29); "otro", pulmón y bordes casi no se mueven.
+
+**Veredicto según el criterio fijado: no cumple.** El criterio pedía FPV −3 mL; bajó 0,7, dentro
+del rango entre semillas de B. Lo que sí apareció, y no era el criterio, es el Dice⁺ más alto
+de las dieciséis corridas largas (0,724; el mejor anterior era C con 0,715), con la mediana de
+FPV más baja (2,78 mL). Una semilla. Este proyecto ya vio dos veces (B semilla 1, A+ semilla 2)
+que una corrida sola engaña, así que el 0,724 no se interpreta: se anota. Si se quiere saber
+si es real, corresponde una hipótesis nueva declarada antes de correr (Dice⁺ ≥ 0,716, la media
+de B más una desviación, en dos semillas más), no ampliar el criterio de esta a posteriori.
