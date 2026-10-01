@@ -164,3 +164,21 @@ FPV más baja (2,78 mL). Una semilla. Este proyecto ya vio dos veces (B semilla 
 que una corrida sola engaña, así que el 0,724 no se interpreta: se anota. Si se quiere saber
 si es real, corresponde una hipótesis nueva declarada antes de correr (Dice⁺ ≥ 0,716, la media
 de B más una desviación, en dos semillas más), no ampliar el criterio de esta a posteriori.
+
+### Hipótesis nueva, declarada antes de correr (2026-10-01)
+
+El Dice⁺ 0,724 de B_pre es una observación de una semilla y no era el criterio de la etapa 3.
+Para saber si es real se declara una hipótesis nueva, con su criterio, antes de lanzar nada:
+
+**H:** arrancar B con el codificador de CT preentrenado en anatomía sube el Dice⁺ de forma
+repetible. **Se acepta si** las semillas 2 y 3 de B_pre (`runs/B_ext_largo_pre_s2`, `_s3`;
+mismo `enc_ct.pt`, misma receta que B_ext_largo_s2/_s3) dan **ambas** Dice⁺ ≥ 0,716 (la media
+de B más una desviación: 0,705 + 0,011) **y** FPV ≤ 14,5 mL (la peor semilla de B). Con eso la
+media de tres semillas de B_pre quedaría ≥ 0,719, por encima de todas las semillas de B y de C.
+**Se rechaza si** cualquiera de las dos queda por debajo de 0,716: entonces el 0,724 fue una
+semilla afortunada y la anatomía se cierra como negativo completo. No hay zona gris ni
+tercera semilla extra.
+
+Lo que se varía es solo la semilla de B (inicialización y orden de parches); el codificador
+preentrenado es el mismo archivo en las tres, porque la hipótesis es sobre *arrancar con él*,
+no sobre el preentrenamiento en sí. Costo: dos corridas, ~48 h de Mac (`scripts/31`).
