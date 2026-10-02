@@ -165,6 +165,29 @@ que una corrida sola engaña, así que el 0,724 no se interpreta: se anota. Si s
 si es real, corresponde una hipótesis nueva declarada antes de correr (Dice⁺ ≥ 0,716, la media
 de B más una desviación, en dos semillas más), no ampliar el criterio de esta a posteriori.
 
+### Etapa 4: B con las dos cosas (una semilla, 2026-10-01) y cierre del 2×2
+
+| | B (3 semillas) | B_peso | B_pre | B_pre_peso |
+|---|---|---|---|---|
+| Dice⁺ | 0,705 (0,694–0,714) | 0,711 | **0,724** | 0,708 |
+| Dice⁺ mediana | 0,780 | 0,804 | 0,774 | 0,750 |
+| FPV mL | 13,25 (12,1–14,5) | 12,47 | 12,55 | **11,92** |
+| FPV mediana | 4,29 | 3,75 | 2,78 | **2,51** |
+| FNV mL | 3,78 | 3,42 | 3,42 | 3,95 |
+| FP en órganos fisiológicos | 2,55 | 3,57 | 2,21 | 3,05 |
+| FP en otro + pulmón + bordes | 11,18 | 9,03 | 10,74 | 9,25 |
+
+Pareado pre_peso − B: Dice +0,003 (gana 11/20, p 0,87); FPV −1,3 mL (baja en 16/26, p 0,05).
+
+**Veredicto del 2×2 según los criterios fijados: ninguna celda cumple.** La combinación es la
+que más baja el FPV (−1,3 mL, con el pareado al borde de la significancia y la mediana más
+baja de todas, 2,5 mL), pero sigue lejos de los −3 mL exigidos, y en Dice es B. Los efectos de
+las dos intervenciones no se suman: la pérdida pesada arrastra otra vez el músculo (1,66 mL,
+el mismo estudio `94962fe878`) y borra la ganancia de Dice del preentrenado. Patrón del
+cuadro completo: el preentrenamiento mueve el Dice; la pérdida pesada mueve un poco el FPV
+difuso y empeora los órganos fisiológicos; ninguna toca pulmón de forma apreciable
+(3,2 → 2,6–2,9). El 80 % del error sigue donde estaba.
+
 ### Hipótesis nueva, declarada antes de correr (2026-10-01)
 
 El Dice⁺ 0,724 de B_pre es una observación de una semilla y no era el criterio de la etapa 3.
