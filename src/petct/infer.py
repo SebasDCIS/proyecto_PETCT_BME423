@@ -42,6 +42,30 @@ def predict_volume(model: torch.nn.Module, x: torch.Tensor, device: torch.device
     return mask
 
 
+@torch.no_grad()
+def predict_probs(model: torch.nn.Module, x: torch.Tensor, device: torch.device,
+                  roi=(96, 96, 96), overlap: float = 0.5, sw_batch_size: int = 2,
+                  amp: bool = False, tta: bool = False) -> np.ndarray:
+    """Probabilidad de lesión por vóxel (D, H, W) en float32, para ensamblar varios modelos.
+
+    Con `tta` (aumento en inferencia) promedia la predicción de la imagen y de sus tres
+    espejos en los ejes laterales (los mismos volteos que vio en entrenamiento; z no se
+    voltea): cuatro pasadas en vez de una, y cada vóxel se decide por el promedio."""
+    model.eval()
+    xb = x[None].to(device)
+    flips = [()] + ([(3,), (4,), (3, 4)] if tta else [])          # ejes H y W del tensor (N, C, D, H, W)
+    acc = None
+    for fl in flips:
+        xi = torch.flip(xb, fl) if fl else xb
+        with torch.autocast(device_type=device.type, dtype=torch.float16, enabled=amp and device.type == "cuda"):
+            logits = sliding_window_inference(xi, roi_size=tuple(roi), sw_batch_size=sw_batch_size,
+                                              predictor=model, overlap=overlap, mode="gaussian")
+        prob = torch.softmax(logits.float(), dim=1)[:, 1]
+        prob = torch.flip(prob, [a - 1 for a in fl]) if fl else prob   # (N, D, H, W): los ejes bajan en 1
+        acc = prob if acc is None else acc + prob
+    return (acc / len(flips))[0].to("cpu").numpy().astype(np.float32)
+
+
 def evaluate_files(model: torch.nn.Module, files: Sequence[Path], device: torch.device,
                    roi=(96, 96, 96), overlap: float = 0.5, amp: bool = False,
                    variante: str = "modelo", save_masks_dir: Optional[Path] = None,

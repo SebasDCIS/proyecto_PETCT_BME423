@@ -28,7 +28,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--modelo", default="A")
     ap.add_argument("--checkpoint", required=True)
-    ap.add_argument("--particion", default="val", choices=["train", "val", "test"])
+    ap.add_argument("--particion", default="val", choices=["train", "val", "test", "oof"],
+                    help="oof = el pliegue que la corrida no vio (manifiestos de scripts/32)")
     ap.add_argument("--config", default="configs/default.yaml")
     ap.add_argument("--manifest", default="data/manifests/subconjunto.csv")
     ap.add_argument("--procesado", default="data/processed")
