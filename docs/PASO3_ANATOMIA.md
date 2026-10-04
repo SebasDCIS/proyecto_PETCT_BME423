@@ -205,3 +205,33 @@ tercera semilla extra.
 Lo que se varía es solo la semilla de B (inicialización y orden de parches); el codificador
 preentrenado es el mismo archivo en las tres, porque la hipótesis es sobre *arrancar con él*,
 no sobre el preentrenamiento en sí. Costo: dos corridas, ~48 h de Mac (`scripts/31`).
+
+### Veredicto de la hipótesis (2026-10-04): rechazada
+
+B_pre semilla 2: **Dice⁺ 0,700** (criterio ≥ 0,716: no cumple), FPV 12,99 mL (≤ 14,5: cumple).
+Como la regla exigía que AMBAS semillas cumplieran, la hipótesis queda rechazada con la
+semilla 2, sin importar lo que dé la 3. El 0,724 de la semilla 423 fue una semilla
+afortunada: la tercera vez en este proyecto que una corrida sola sobreestima un efecto.
+
+Comparado contra B con la MISMA semilla (lo único que cambia es el preentrenamiento):
+semilla 423 +0,010 (gana 8/20, p 0,99); semilla 2 −0,010 (gana 10/20, p 0,70). El efecto del
+preentrenamiento sobre el Dice es cero dentro del ruido. Un solo estudio (`2d70838805`, una
+lesión de 3 mL: 0,66 en una semilla, 0,21 en la otra) mueve el promedio de Dice⁺ en 0,023: el
+Dice⁺ medio sobre 20 estudios está dominado por lesiones chicas.
+
+**Métrica por lesión** (nueva en esta rama; lesiones = componentes 26-conexas de la anotación,
+fuera de la zona borrada, 256 en los 26 estudios; detectada = la toca alguna predicción):
+
+| corrida | detectadas | < 1 mL | 1–3 mL | 3–10 mL | > 10 mL | marcas falsas / estudio |
+|---|---|---|---|---|---|---|
+| B s423 | 163/256 (0,64) | 0,31 | 0,73 | 0,91 | 1,00 | 4,8 |
+| B s2 | 160/256 (0,63) | 0,28 | 0,71 | 0,95 | 1,00 | 4,9 |
+| B s3 | 158/256 (0,62) | 0,27 | 0,72 | 0,91 | 1,00 | 5,8 |
+| B_pre s423 | 167/256 (0,65) | 0,32 | 0,76 | 0,93 | 1,00 | 5,2 |
+| B_pre s2 | 161/256 (0,63) | 0,28 | 0,73 | 0,93 | 1,00 | 5,4 |
+
+Por lesión tampoco hay diferencia: los cinco detectan entre 158 y 167 de 256 lesiones, todas las
+mayores de 10 mL y menos de un tercio de las menores de 1 mL. La anatomía se cierra como
+negativo completo. La semilla 3 se deja terminar solo para tener la media de tres semillas en el
+informe; el brazo que entra al ensamble es **B** (`BRAZO=B`).
+
