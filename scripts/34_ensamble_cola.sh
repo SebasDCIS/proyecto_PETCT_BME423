@@ -10,6 +10,8 @@
 #
 #   BRAZO=pre caffeinate -i bash scripts/34_ensamble_cola.sh 2>&1 | tee -a runs/ensamble_cola.log
 set -u
+# Nota: el bash del Mac es 3.2, donde "${arr[@]}" con un arreglo vacío falla bajo set -u;
+# por eso EXTRA se expande como ${EXTRA[@]+"${EXTRA[@]}"} (vacío si no hay nada).
 cd "$(dirname "$0")/.."
 BRAZO=${BRAZO:?define BRAZO=pre o BRAZO=B}
 MAN=data/manifests/subconjunto_extendido.csv
@@ -32,7 +34,7 @@ for k in 0 1 2 3 4; do
   if [ -f "runs/$d/resumen.json" ]; then echo "[$(hora)] $d ya entrenado"; else
     echo "[$(hora)] ENTRENAR $d (pliegue $k fuera)"
     python scripts/07_entrenar.py --modelo B --semilla 423 --manifest "data/manifests/_pliegues/pliegue_$k.csv" \
-      --iteraciones "$IT" --salida "runs/$d" "${EXTRA[@]}"
+      --iteraciones "$IT" --salida "runs/$d" ${EXTRA[@]+"${EXTRA[@]}"}
   fi
   CKS+=("runs/$d/ultimo.pt")
   # el quinto no visto: la única estimación sobre estudios de entrenamiento que no vio
