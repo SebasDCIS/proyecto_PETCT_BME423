@@ -232,6 +232,21 @@ fuera de la zona borrada, 256 en los 26 estudios; detectada = la toca alguna pre
 
 Por lesión tampoco hay diferencia: los cinco detectan entre 158 y 167 de 256 lesiones, todas las
 mayores de 10 mL y menos de un tercio de las menores de 1 mL. La anatomía se cierra como
-negativo completo. La semilla 3 se deja terminar solo para tener la media de tres semillas en el
-informe; el brazo que entra al ensamble es **B** (`BRAZO=B`).
+negativo completo. El brazo que entra al ensamble es **B** (`BRAZO=B`).
+
+### Cierre con tres semillas (2026-10-05)
+
+La semilla 3 terminó: Dice⁺ 0,698, FPV 12,59 mL; por lesión 163/256 (0,64), 4,9 marcas falsas
+por estudio. Tampoco cumple. Tabla final:
+
+| | Dice⁺ (media ± sd) | por semilla | FPV mL | FPV mediana | FNV mL |
+|---|---|---|---|---|---|
+| B | 0,705 ± 0,011 | 0,714 · 0,709 · 0,694 | 13,25 | 4,29 | 3,78 |
+| B_pre | 0,707 ± 0,014 | 0,724 · 0,700 · 0,698 | 12,71 | 4,23 | 3,62 |
+
+Pareado sobre el promedio de tres semillas: Dice +0,002, IC95 [−0,029, +0,035], gana 10/20,
+p 0,78; FPV −0,54 mL, baja en 14/26, p 0,38. Por semilla emparejada: +0,010, −0,010, +0,005.
+**Arrancar con el codificador de CT preentrenado en anatomía no cambia nada medible.** Lo que
+queda como dato menor: las tres semillas de B_pre tienen un FPV más parejo (12,6–13,0 contra
+12,1–14,5 de B), sin efecto en el promedio.
 
