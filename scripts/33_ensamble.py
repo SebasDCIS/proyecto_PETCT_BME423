@@ -49,7 +49,7 @@ def main():
     ap.add_argument("--tta", action="store_true", help="promediar también los tres espejos laterales")
     ap.add_argument("--umbral", type=float, default=0.5)
     ap.add_argument("--guardar-mascaras", action="store_true")
-    ap.add_argument("--guardar-probabilidades", action="store_true", help="guarda el promedio (float16) para barrer umbrales después")
+    ap.add_argument("--guardar-probabilidades", action="store_true", help="guarda el promedio (float32) para barrer umbrales después")
     ap.add_argument("--incluir-zona-borrada", action="store_true")
     ap.add_argument("--dispositivo", default=None)
     ap.add_argument("--small", action="store_true")
@@ -100,7 +100,7 @@ def main():
         if masks_dir is not None:
             np.savez_compressed(masks_dir / f"{f.stem}.npz", pred=pred.astype(np.uint8))
         if probs_dir is not None:
-            np.savez_compressed(probs_dir / f"{f.stem}.npz", prob=prob.astype(np.float16))
+            np.savez_compressed(probs_dir / f"{f.stem}.npz", prob=prob.astype(np.float32))   # float32: el 36 reproduce exacto
         print(f"[{i + 1}/{len(files)}] {met['estudio']} dice={met['dice']:.3f} fpv={met['fpv_ml']:.1f} fnv={met['fnv_ml']:.1f}"
               f"  ({(time.time() - t0) / 60:.1f} min)", flush=True)
     df = pd.DataFrame(rows)
