@@ -1,6 +1,6 @@
 # Preregistro del test
 
-*2026-10-11. Escrito y commiteado antes de abrir el conjunto de prueba. `scripts/35_test_final.sh`
+*2026-10-11, ampliado el mismo día con la sección "Umbral y regla del hígado". Escrito y commiteado antes de abrir el conjunto de prueba. `scripts/35_test_final.sh`
 se niega a correr si este archivo o el script de análisis tienen cambios sin commitear, y deja en
 `results/test/APERTURA.txt` la fecha de apertura y el commit de este documento.*
 
@@ -44,7 +44,30 @@ En validación esta comparación dio ΔDice⁺ +0,048 [+0,023, +0,080] y ΔFPV �
 El test tiene 39 positivos (casi el doble que validación), así que si el efecto es real debería
 verse; si no se ve, el de validación fue optimista.
 
-## Secundarias declaradas (se reportan todas, ninguna rescata a H1)
+## Umbral y regla del hígado: se deciden con los 825 fuera de pliegue (agregado antes de abrir)
+
+Dos mejoras baratas con respaldo previo se deciden **antes** del test y **sin** la validación de
+26, con una regla fijada aquí antes de ver ningún número (`scripts/38` y `39`):
+
+- **Fuente.** Cada estudio de entrenamiento predicho con TTA por el único miembro del ensamble
+  que no lo vio (825 estudios, ~420 positivos). Es un sustituto del ensamble: en entrenamiento no
+  hay cinco miembros ciegos para promediar. Declarado como limitación.
+- **Umbral.** Grilla 0,3 · 0,4 · 0,5 · 0,6 · 0,7 · 0,8. Se elige el de mayor Dice⁺ entre los que
+  detectan como máximo 2 puntos porcentuales menos de lesiones que 0,5 (empate → el más alto).
+- **Regla del hígado** (`petct.postproc`, la misma de `experimentos/23`): borrar cada isla cuyo
+  SUV máximo no llegue a 2 × la mediana del hígado del propio paciente (calculada sin la
+  anotación). Se adopta, sobre el umbral elegido, solo si baja las marcas falsas por estudio al
+  menos un 25 %, pierde como máximo el 3 % de las lesiones detectadas y no baja el Dice⁺ más de
+  0,005. Si no, el sistema final no la usa.
+- El resultado queda en `results/oof_umbral/decision.json`, que se commitea antes de abrir el
+  test: `scripts/35` se niega a correr sin él. La validación de 26 se mira después solo como
+  comprobación, sin poder cambiar la decisión.
+
+**H2. El sistema final** (ensamble + TTA con ese umbral y, si se adopta, esa regla) **mejora a B
+en el test**, con la misma regla de confirmación que H1. H1 se mantiene tal como se declaró. Si
+la decisión resulta ser umbral 0,5 sin regla, H2 es idéntica a H1 y se reporta una vez.
+
+## Secundarias declaradas (se reportan todas, ninguna rescata a H1 ni a H2)
 
 - **S1.** El mismo ensamble a umbral 0,7, contra B. El umbral 0,7 se miró en validación (Dice⁺
   0,784, FPV 6,5 mL); el test dice si esa mejora era real o un ajuste a 26 estudios.
@@ -64,7 +87,8 @@ del pliegue 0), se describe, pero queda en todos los promedios.
 
 ## Cómo se corre y cuánto tarda
 
-    caffeinate -i bash scripts/35_test_final.sh 2>&1 | tee -a runs/test_final.log
+    caffeinate -i bash scripts/38_oof_umbral_higado.sh 2>&1 | tee -a runs/oof_umbral.log   # antes: la decisión (~5 h)
+    caffeinate -i bash scripts/35_test_final.sh 2>&1 | tee -a runs/test_final.log    # después: el test (~5 h)
 
 Etapas: mapas de órganos del test (~20 min) · acto 1, 24 evaluaciones (~1,5 h) · extendido, 17
 evaluaciones (~1,2 h) · cinco miembros (~20 min) · ensamble sin y con TTA (~1,5 h) · análisis

@@ -16,7 +16,7 @@ MAN=data/manifests/subconjunto_extendido.csv
 hora() { date "+%Y-%m-%d %H:%M"; }
 
 # ---------------------------------------------------------------- el candado
-for f in docs/TEST_PREREGISTRO.md scripts/37_analisis_final.py scripts/35_test_final.sh; do
+for f in docs/TEST_PREREGISTRO.md scripts/37_analisis_final.py scripts/35_test_final.sh results/oof_umbral/decision.json; do
   git ls-files --error-unmatch "$f" >/dev/null 2>&1 || { echo "$f no está en git: commitea el preregistro antes de abrir el test"; exit 1; }
   git diff --quiet HEAD -- "$f" || { echo "$f tiene cambios sin commitear: el test se abre solo con lo declarado"; exit 1; }
 done
@@ -77,6 +77,16 @@ PROB=runs/ensambles/ensamble_B_ens_tta/probabilidades_test
 [ -f results/ensamble_B_ens_tta_crudo_test.csv ] || python scripts/36_reevaluar_guardado.py --probabilidades $PROB --umbral 0.5 --etiqueta ensamble_B_ens_tta_crudo --particion test --incluir-zona-borrada
 [ -f results/ensamble_B_ens_tta_u07_test.csv ] || python scripts/36_reevaluar_guardado.py --probabilidades $PROB --umbral 0.7 --etiqueta ensamble_B_ens_tta_u07 --particion test
 [ -f results/ensamble_B_ens_tta_u07_crudo_test.csv ] || python scripts/36_reevaluar_guardado.py --probabilidades $PROB --umbral 0.7 --etiqueta ensamble_B_ens_tta_u07_crudo --particion test --incluir-zona-borrada
+
+echo "======== [$(hora)] etapa 5b: el sistema final (umbral y regla del hígado decididos en los 825 fuera de pliegue)"
+U=$(python -c "import json; print(json.load(open('results/oof_umbral/decision.json'))['umbral'])")
+H=$(python -c "import json; d=json.load(open('results/oof_umbral/decision.json')); print(d['k_higado'] if d['regla_higado'] else '')")
+echo "[$(hora)] umbral $U; regla del hígado: ${H:-no}"
+REGLA=""; [ -n "$H" ] && REGLA="--regla-higado $H"
+[ -f results/ensamble_final_test.csv ] || python scripts/36_reevaluar_guardado.py --probabilidades $PROB --umbral "$U" $REGLA \
+  --etiqueta ensamble_final --particion test --guardar-mascaras runs/ensambles/ensamble_final/mascaras_test
+[ -f results/ensamble_final_crudo_test.csv ] || python scripts/36_reevaluar_guardado.py --probabilidades $PROB --umbral "$U" $REGLA \
+  --etiqueta ensamble_final_crudo --particion test --incluir-zona-borrada
 
 echo "======== [$(hora)] etapa 6: el análisis declarado"
 python scripts/37_analisis_final.py --particion test

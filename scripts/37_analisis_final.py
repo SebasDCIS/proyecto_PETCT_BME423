@@ -126,6 +126,21 @@ def main():
            "| comparación | ΔDice⁺ | IC95 | gana | p | ΔFPV mL | IC95 | baja en | p |", "|---|---|---|---|---|---|---|---|---|",
            fila_par("ensamble+TTA − B", h),
            f"\n**Veredicto H1: {'CONFIRMADA' if acepta else 'NO CONFIRMADA'}.**\n"]
+    fin = tabla("ensamble_final", P)
+    dec_f = Path("results/oof_umbral/decision.json")
+    if fin is not None:
+        import json
+        dec = json.load(open(dec_f)) if dec_f.exists() else {}
+        h2 = pareado(fin, refB)
+        acepta2 = h2["dice"]["lo"] > 0 and h2["fpv"]["hi"] < 0
+        md += ["## Hipótesis H2: el sistema final\n",
+               f"Ensamble + TTA con el umbral ({dec.get('umbral', '?')}) y la regla del hígado "
+               f"({'sí, k = ' + str(dec.get('k_higado')) if dec.get('regla_higado') else 'no'}) decididos sobre los 825 "
+               "estudios fuera de pliegue, contra B. Misma regla de confirmación que H1.\n",
+               "| comparación | ΔDice⁺ | IC95 | gana | p | ΔFPV mL | IC95 | baja en | p |", "|---|---|---|---|---|---|---|---|---|",
+               fila_par("sistema final − B", h2), f"\n**Veredicto H2: {'CONFIRMADA' if acepta2 else 'NO CONFIRMADA'}.**\n"]
+        print(f"H2 ({P}): ΔDice {h2['dice']['delta']:+.3f} [{h2['dice']['lo']:+.3f},{h2['dice']['hi']:+.3f}]  "
+              f"ΔFPV {h2['fpv']['delta']:+.2f} [{h2['fpv']['lo']:+.2f},{h2['fpv']['hi']:+.2f}]  → {'CONFIRMADA' if acepta2 else 'NO CONFIRMADA'}")
     print(f"H1 ({P}): ΔDice {h['dice']['delta']:+.3f} [{h['dice']['lo']:+.3f},{h['dice']['hi']:+.3f}]  "
           f"ΔFPV {h['fpv']['delta']:+.2f} [{h['fpv']['lo']:+.2f},{h['fpv']['hi']:+.2f}]  → {'CONFIRMADA' if acepta else 'NO CONFIRMADA'}")
 
@@ -156,6 +171,7 @@ def main():
     agrega("Ensamble", [tabla("ensamble_B_ens", P)])
     agrega("**Ensamble + TTA (u 0,5, principal)**", [ens])
     agrega("Ensamble + TTA (u 0,7, secundario)", [tabla("ensamble_B_ens_tta_u07", P)])
+    agrega("**Sistema final (H2)**", [tabla("ensamble_final", P)])
     T = pd.DataFrame(filas).T
     T.to_csv(out / "tabla_general.csv")
     md += ["## Todos los brazos (métrica corregida)\n",
@@ -189,7 +205,7 @@ def main():
     # ---------------------------------------------------------- por lesión y por órgano
     cache = {}
     carpetas = [("B s423", "runs/B_ext_largo"), ("B s2", "runs/B_ext_largo_s2"), ("B s3", "runs/B_ext_largo_s3"),
-                ("Ensamble + TTA (u 0,5)", "runs/ensambles/ensamble_B_ens_tta")]
+                ("Ensamble + TTA (u 0,5)", "runs/ensambles/ensamble_B_ens_tta"), ("Sistema final (H2)", "runs/ensambles/ensamble_final")]
     md += ["\n## S3 · Por lesión (lesiones fuera de la zona borrada; detectada = la toca alguna predicción)\n",
            "| | detectadas | < 1 mL | 1–3 mL | 3–10 mL | > 10 mL | marcas falsas / estudio |", "|---|---|---|---|---|---|---|"]
     orgs = {}
@@ -216,7 +232,7 @@ def main():
     # ---------------------------------------------------------- métrica cruda del reto
     md += ["\n## S8 · Métrica cruda del reto autoPET (sin excluir la zona borrada)\n", "| | Dice⁺ | FPV mL | FNV mL |", "|---|---|---|---|"]
     for nom, et in (("B (3 sem.)", [f"modelo_B_ext_largo{s}_ultimo_crudo" for s in SEM]), ("Ensamble + TTA (u 0,5)", ["ensamble_B_ens_tta_crudo"]),
-                    ("Ensamble + TTA (u 0,7)", ["ensamble_B_ens_tta_u07_crudo"])):
+                    ("Ensamble + TTA (u 0,7)", ["ensamble_B_ens_tta_u07_crudo"]), ("Sistema final (H2)", ["ensamble_final_crudo"])):
         ts = [tabla(e, P) for e in et]
         if all(t is not None for t in ts):
             r = pd.DataFrame([resumen(t) for t in ts]).mean()

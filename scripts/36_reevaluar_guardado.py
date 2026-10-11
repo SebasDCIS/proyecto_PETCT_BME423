@@ -23,6 +23,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from petct.metrics import evaluate_study, summarize  # noqa: E402
+from petct.postproc import referencia_higado, regla_higado  # noqa: E402
 from petct.preprocess import load_study  # noqa: E402
 
 
@@ -45,6 +46,9 @@ def main():
     ap.add_argument("--procesado", default="data/processed")
     ap.add_argument("--etiqueta", required=True)
     ap.add_argument("--incluir-zona-borrada", action="store_true")
+    ap.add_argument("--regla-higado", type=float, default=None,
+                    help="k: borrar islas con SUVmax < k × hígado propio (petct.postproc; necesita mapas de órganos)")
+    ap.add_argument("--guardar-mascaras", default=None, help="carpeta donde dejar las máscaras finales")
     a = ap.parse_args()
 
     carpeta = Path(a.mascaras or a.probabilidades)
@@ -57,7 +61,14 @@ def main():
         vol = load_study(f)
         z = np.load(carpeta / f.name)
         pred = z["pred"].astype(bool) if a.mascaras else (z["prob"].astype(np.float32) > a.umbral)
-        m = evaluate_study(pred, vol["seg"].astype(bool), vol["suv"] * vol["suv_top"],
+        suv = vol["suv"] * vol["suv_top"]
+        if a.regla_higado is not None:
+            groups = np.load(Path("data/processed_organos") / f.name)["groups"]
+            pred = regla_higado(pred, suv, referencia_higado(suv, groups, vol["body"]), a.regla_higado)
+        if a.guardar_mascaras:
+            Path(a.guardar_mascaras).mkdir(parents=True, exist_ok=True)
+            np.savez_compressed(Path(a.guardar_mascaras) / f.name, pred=pred.astype(np.uint8))
+        m = evaluate_study(pred, vol["seg"].astype(bool), suv,
                            float(np.prod(vol["spacing"])) / 1000.0, exclude_blank=not a.incluir_zona_borrada)
         m["estudio"] = f.stem.split("__")[0]; m["variante"] = a.etiqueta
         rows.append(m)
