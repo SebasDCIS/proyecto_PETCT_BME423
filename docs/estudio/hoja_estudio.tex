@@ -1,0 +1,323 @@
+\documentclass[9pt,a4paper]{extarticle}
+\usepackage[a4paper,top=1.4cm,bottom=1.5cm,left=1.4cm,right=1.4cm]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{spanish}
+\setmainfont{TeX Gyre Pagella}
+\setsansfont{TeX Gyre Heros}
+\usepackage{unicode-math}
+\setmathfont{DejaVu Math TeX Gyre}
+\usepackage{multicol}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{tcolorbox}
+\usepackage[hidelinks]{hyperref}
+\definecolor{tinta}{HTML}{1F3A5F}
+\definecolor{acento}{HTML}{B5462A}
+\definecolor{fondo}{HTML}{EEF2F6}
+\titleformat{\section}{\sffamily\bfseries\color{tinta}}{}{0em}{}[\vspace{-0.6ex}{\color{tinta}\rule{\linewidth}{0.5pt}}]
+\titlespacing*{\section}{0pt}{1.2ex}{0.6ex}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.28em}
+\setlength{\columnsep}{0.7cm}
+\newcommand{\T}[1]{{\sffamily\bfseries\color{tinta}#1.}\ }
+\newcommand{\aqui}[1]{{\color{acento}\itshape En el proyecto:} #1}
+\newcommand{\como}[1]{{\itshape Como si:} #1}
+\pagestyle{plain}
+
+\begin{document}
+
+{\sffamily\bfseries\LARGE\color{tinta} Hoja de estudio\par}
+{\sffamily\large Segmentación de lesiones FDG en PET/CT: todo lo que tengo que saber explicar\par}
+\vspace{0.3em}
+{\small BME423, mini-proyecto. Sebastián Inostroza. Cada término tiene la definición en simple, a veces una comparación, y qué valor o rol tiene en el proyecto.\par}
+
+\begin{tcolorbox}[colback=fondo,colframe=tinta,boxrule=0.5pt,arc=1pt,left=6pt,right=6pt,top=4pt,bottom=4pt,title={\sffamily\bfseries Lo que tengo que poder decir sin mirar}]
+\small
+\begin{multicols}{2}
+\begin{enumerate}[nosep,leftmargin=1.3em]
+\item El FDG marca consumo de glucosa, no cáncer. Por eso un umbral confunde órganos normales con tumor.
+\item Datos: autoPET, 251 estudios, 176 entrenamiento, 26 validación, 49 prueba, por paciente.
+\item Comparo tres formas de juntar PET y CT: A temprana, B dos codificadores con concatenación, C con atención cruzada. E agrega el SUV referido al hígado.
+\item Hipótesis: la atención cruzada baja el falso positivo sin subir el falso negativo.
+\item Resultado: las cuatro empatan (Dice$^{+}$ 0,61 a 0,64). Ningún intervalo de confianza excluye el cero.
+\item Contra el umbral clásico: FPV 1\,192 mL contra unos 21 mL, 57 veces menos. 74 \% del error clásico estaba en órganos fisiológicos.
+\item La atención de C está muerta: con $\gamma = 0$ la predicción no cambia ni un vóxel. La normalización de instancia borra su salida, que es casi constante.
+\item Detectan prácticamente todo sobre 10 mL y una de cada cinco lesiones bajo 1 mL. Por eso el melanoma sale peor.
+\item Elegir el checkpoint por el máximo de Dice mete más ruido en el FPV que la semilla (3,4 a 5,1 veces).
+\item Etapa extendida: 825 estudios, 100\,000 iteraciones, ensamble de 5 pliegues. Ensamble con TTA: Dice$^{+}$ 0,754, FPV 9,2 mL en validación.
+\item La prueba se abre una sola vez, con todo preregistrado en git antes.
+\item Limitaciones: zona anonimizada excluida, 3 mm, un solo centro, métricas propias, HD95 pendiente.
+\end{enumerate}
+\end{multicols}
+\end{tcolorbox}
+
+\begin{multicols}{2}
+
+\section{1. Medicina nuclear y la imagen}
+
+\T{PET} Tomografía por emisión de positrones. El paciente recibe un trazador radiactivo y el equipo mide desde dónde salen los fotones. Muestra función, no forma.
+
+\T{FDG} $^{18}$F-fluorodesoxiglucosa, una glucosa marcada. Entra a la célula como glucosa pero queda atrapada. \como{tinta que se queda donde más se come azúcar.} Vida media del $^{18}$F: 109,8 minutos.
+
+\T{Captación fisiológica} Consumo normal de FDG sin enfermedad: encéfalo, miocardio, riñones, vejiga e intestino. Es la fuente principal de falsos positivos.
+
+\T{Captación patológica no tumoral} Inflamación o infección. Capta como un tumor, pero autoPET la anota como fondo, porque la única etiqueta es lesión maligna FDG ávida.
+
+\T{CT} Tomografía computada. Mide cuánto atenúa cada tejido los rayos X. Da la anatomía.
+
+\T{HU (unidades Hounsfield)} Escala del CT: agua 0, aire $-1000$, hueso sobre 400. \aqui{ventana de $-200$ a 300 HU, llevada a 0 a 1.}
+
+\T{Bq/mL} Actividad: desintegraciones por segundo por mililitro. Es lo que guarda el PET antes de convertirlo.
+
+\T{SUV} Valor de captación estandarizado: actividad del vóxel dividida por la dosis inyectada por kilo de peso. SUV 1 es lo que tendría un vóxel si el trazador se repartiera parejo. \aqui{SUV normalizado por peso (SUVbw), con corrección de decaimiento.}
+
+\T{Corrección de decaimiento} Ajustar la dosis por el tiempo que pasó entre la inyección y la adquisición, porque el $^{18}$F pierde la mitad cada 109,8 minutos.
+
+\T{SUVmax} El vóxel más caliente de una lesión. Lo usa la clínica para seguimiento.
+
+\T{MTV} Volumen tumoral metabólico: los mililitros de lesión segmentada. Es el biomarcador que esta segmentación permitiría calcular de rutina.
+
+\T{Umbral SUV 2,5} Regla clásica: todo lo que supera 2,5 se considera sospechoso. \aqui{la referencia clásica.}
+
+\T{Referencia interna, criterio de Deauville} Comparar una lesión con un órgano del mismo paciente (hígado, pool vascular) en lugar de un número fijo. \aqui{base del modelo E.}
+
+\T{Atlas de captación normal} Valores de SUV de cada órgano en controles sanos. \aqui{35 controles; hígado con mediana 2,19, que coincide con la literatura.}
+
+\T{MIP} Proyección de intensidad máxima: la "radiografía" del PET, cada línea de vista muestra su valor más alto.
+
+\T{Desfase PET-CT} El PET se adquiere respirando y el CT en apnea, así que en el diafragma las dos imágenes no calzan. \aqui{medido en 200 estudios.}
+
+\section{2. Formatos y geometría}
+
+\T{DICOM} Formato estándar de imagen médica: un archivo por corte, con imagen y metadatos (peso, dosis, hora, posición).
+
+\T{Paciente, estudio, serie} Un paciente tiene estudios (cada visita al equipo) y cada estudio tiene series (PET, CT, segmentación).
+
+\T{NIfTI} Un solo archivo por volumen 3D con su geometría. Más cómodo para procesar que cientos de DICOM.
+
+\T{DICOM SEG} Objeto DICOM que guarda una segmentación. \aqui{tuve que corregir su orientación para que coincidiera con el PET.}
+
+\T{Vóxel} El píxel en 3D. Tiene tamaño en mm en las tres direcciones.
+
+\T{Isotrópico} Mismo tamaño en las tres direcciones. \aqui{3 mm por lado. El PET original es 2,04 × 2,04 × 3 mm.}
+
+\T{Remuestreo} Recalcular la imagen en otra grilla de vóxeles, interpolando. \aqui{todo a 3 mm; el CT a la grilla del PET.}
+
+\T{Sistema LPS} Ejes del paciente en DICOM: x a la izquierda, y hacia atrás, z hacia la cabeza.
+
+\T{Máscara binaria} Volumen de ceros y unos. 1 es lesión. Es lo que la red aprende a dibujar.
+
+\T{Anonimización (defacing)} Borrar la cara y el cráneo para que no se pueda reconstruir el rostro. \aqui{ahí el SUV es 0, pero la anotación conserva lesiones: 3,7 \% del volumen anotado. Excluyo esa zona al evaluar.}
+
+\T{Métrica corregida y cruda} Corregida: sin la zona borrada. Cruda: con ella. Reporto las dos.
+
+\section{3. Datos y diseño del experimento}
+
+\T{autoPET / FDG-PET-CT-Lesions} Colección pública de TCIA: 1\,014 estudios de 900 pacientes de Tübingen. Pulmón, linfoma, melanoma y controles negativos. Licencia CC BY 4.0.
+
+\T{TCIA} The Cancer Imaging Archive, el repositorio público de donde descargué los datos.
+
+\T{Control negativo} Estudio sin lesión anotada. Sirve para medir falsos positivos puros.
+
+\T{Subconjunto de trabajo} 251 estudios: 67 por diagnóstico y 50 controles, sorteados con semilla 423.
+
+\T{Entrenamiento, validación, prueba} Entrenamiento: la red aprende. Validación: comparo y decido. Prueba: la nota final, se mira una sola vez. \como{ensayos, simulacro y examen.}
+
+\T{Partición por paciente} Ningún paciente aparece en dos grupos. Si apareciera, la red "reconocería" al paciente.
+
+\T{Estratificación} Sortear respetando las proporciones de cada diagnóstico en cada grupo.
+
+\T{Fuga de datos (data leakage)} Que información de validación o prueba se cuele al entrenamiento. \aqui{auditada el 6 de septiembre: sin fugas.}
+
+\T{Semilla} Número que fija el azar. Misma semilla, mismo resultado. \aqui{423, 2 y 3. Tres semillas por brazo para separar el efecto de la arquitectura del azar.}
+
+\T{Brazo} Cada variante que se compara: A, B, C, E y la clásica.
+
+\T{Protocolo congelado} Toda la configuración fijada antes de comparar. La única variable que cambia es la arquitectura.
+
+\T{Hipótesis} Lo que espero y puedo refutar: la atención cruzada baja el FPV sin subir el FNV.
+
+\T{Criterio de éxito previo} Número que fijo antes de correr para declarar si algo funcionó. Evita acomodar la conclusión al resultado.
+
+\T{Preregistro} Dejar escritas las hipótesis, el sistema final y los criterios antes de abrir la prueba, en un commit. \aqui{con candado: el script se niega a correr si esos archivos cambiaron sin registrar.}
+
+\T{Conjunto de selección} Datos que usé para elegir. Lo que mido ahí sale algo optimista. \aqui{los 12 estudios de la validación rápida están dentro de los 26.}
+
+\section{4. Procesamiento clásico}
+
+\T{Umbralización} Encender los vóxeles que superan un valor.
+
+\T{Erosión y dilatación} Erosión achica las regiones encendidas; dilatación las agranda. Se hacen con un elemento estructurante (una pequeña esfera o cubo).
+
+\T{Apertura morfológica} Erosión y luego dilatación. Borra puntos sueltos y puentes finos sin cambiar mucho lo grande. \aqui{radio 1.}
+
+\T{Componente conexa} Grupo de vóxeles encendidos que se tocan. \aqui{26-conectividad: se tocan por cara, arista o vértice. Cada componente es una lesión.}
+
+\T{Tamaño mínimo} Descartar componentes menores a un volumen. \aqui{0,5 mL.}
+
+\T{Exclusión anatómica} Apagar lo que cae en órganos de captación normal.
+
+\T{TotalSegmentator} Red ya entrenada que segmenta más de cien estructuras en el CT. \aqui{para el reparto del falso positivo por órgano, la exclusión y la referencia hepática. Nunca como entrada de A, B o C.}
+
+\T{Máscara corporal} Todo lo que no es aire en el CT. \aqui{recorte a la caja del cuerpo.}
+
+\section{5. Redes neuronales}
+
+\T{Red convolucional} Red que aplica filtros pequeños que se deslizan por la imagen y aprenden qué patrones buscar.
+
+\T{U-Net 3D} Red en forma de U. El codificador baja la resolución y aprende qué hay; el decodificador la sube y dibuja dónde está; las conexiones de salto llevan el detalle fino de un lado al otro. \aqui{MONAI, canales 32, 64, 128, 256, 320.}
+
+\T{Codificador y decodificador} Bajada que resume y subida que reconstruye.
+
+\T{Conexión de salto (skip)} Atajo que copia los mapas del codificador al decodificador del mismo nivel para no perder bordes.
+
+\T{Cuello de botella} El nivel más profundo de la U, con la menor resolución. \aqui{parche de $96^3$, cuatro reducciones, cubo de $6^3 = 216$ posiciones.}
+
+\T{Canal} Cada volumen que entra apilado a la red. \aqui{A: SUV y CT. E: SUV, CT y SUV/hígado.}
+
+\T{Parámetros} Los números que la red aprende. \aqui{A 12,9 M; A+ 24,3 M; B 24,0 M; C 24,4 M.}
+
+\T{GFLOP} Miles de millones de operaciones por parche. Mide el costo. \aqui{A 37, B y C 59.}
+
+\T{Normalización de instancia} Llevar cada mapa a media 0 y desviación 1 dentro de cada imagen. Efecto lateral: borra cualquier señal que sea constante en el espacio. \aqui{por eso murió la atención de C.}
+
+\T{Softmax y logits} La red da dos números por vóxel (fondo y lesión); softmax los convierte en probabilidades que suman 1.
+
+\T{Fusión temprana} PET y CT entran juntos como canales desde la primera capa. \aqui{modelo A.} \como{leer las dos imágenes superpuestas en una sola lámina.}
+
+\T{Fusión intermedia} Cada modalidad tiene su propio codificador y se juntan más adentro. \aqui{B y C.}
+
+\T{Codificador dual} Dos caminos de bajada independientes, uno por modalidad.
+
+\T{Concatenación} Apilar los mapas de las dos ramas uno sobre otro y dejar que la capa siguiente los mezcle. \aqui{modelo B, 320 + 320 = 640 canales.}
+
+\T{Atención (consulta, clave, valor)} Cada posición hace una pregunta (consulta), cada posición ofrece una etiqueta (clave) y un contenido (valor). La respuesta mezcla los valores según cuánto calza la pregunta con cada etiqueta.
+
+\T{Atención cruzada} La consulta sale de una modalidad y las claves y valores de la otra. \aqui{C: el PET pregunta, el CT responde.} \como{el residente que ve una mancha caliente y mira el CT para saber qué órgano es.}
+
+\T{Factor de mezcla $\gamma$} Número aprendido que multiplica la salida de la atención antes de sumarla. Si es 0, la atención no aporta. \aqui{con inicio 0 quedó en 0,0125; con inicio 1, entre 0,985 y 1,005.}
+
+\T{Control de capacidad} Modelo con el mismo tamaño pero sin el mecanismo que se prueba. \aqui{B es el control de C; A+ es A con 1,375 veces los canales.}
+
+\T{Ablación} Quitar una pieza a un modelo ya entrenado y volver a medir. \aqui{C con $\gamma = 0$: diferencia 0,000. E sin referencia hepática: cambian 23 de 26 predicciones, efecto neto 1,4 mL.}
+
+\section{6. Entrenamiento}
+
+\T{Parche 3D} Cubo recortado del estudio que la red ve de una vez. \aqui{$96^3$ vóxeles, 288 mm de lado.}
+
+\T{Muestreo sesgado} Elegir más parches centrados en lesión de los que saldrían al azar. \aqui{70 \%.}
+
+\T{Lote (batch)} Parches que se procesan juntos antes de actualizar. \aqui{2.}
+
+\T{Iteración y época} Iteración: un lote y una actualización. Época: pasar una vez por todos los datos. \aqui{25\,000 iteraciones en la etapa 1; 100\,000 en la extendida.}
+
+\T{Función de pérdida} El número que la red intenta bajar. \aqui{Dice más entropía cruzada: Dice cuida el solapamiento global, la entropía cruzada cuida cada vóxel.}
+
+\T{Gradiente} Dirección en que hay que mover cada peso para bajar la pérdida.
+
+\T{Optimizador AdamW} Algoritmo que mueve los pesos usando los gradientes, con un freno suave a los pesos grandes. \aqui{tasa $3\cdot10^{-4}$.}
+
+\T{Tasa de aprendizaje y programa polinomial} Tamaño del paso, que se achica hasta 0 al final (potencia 0,9).
+
+\T{Recorte de gradiente} Limitar el tamaño del gradiente para que un lote raro no desarme lo aprendido. \aqui{norma 12.}
+
+\T{Aumento de datos} Cambios al azar en cada parche para que no memorice. \aqui{solo volteos laterales y anteroposteriores, nunca en el eje cabeza a pies.}
+
+\T{Sobreajuste} Aprenderse los ejemplos en vez de la regla. Se nota cuando entrenamiento mejora y validación no.
+
+\T{Checkpoint} Foto de la red guardada a mitad del entrenamiento. \aqui{\texttt{mejor.pt}: el de mejor Dice en la validación rápida. \texttt{ultimo.pt}: el final.}
+
+\T{Validación rápida} Medir unos pocos estudios cada 1\,000 iteraciones para elegir checkpoint. \aqui{12 estudios fijos; criterio ruidoso.}
+
+\T{mps, fp32} mps: el acelerador gráfico de los Mac con chip M. fp32: precisión simple. \aqui{Mac de 24 GB, entre 5 y 6,5 horas por corrida de 25\,000 iteraciones.}
+
+\T{PyTorch y MONAI} PyTorch: la librería de redes. MONAI: la capa médica sobre PyTorch (transformaciones 3D, U-Net, ventana deslizante).
+
+\section{7. Inferencia}
+
+\T{Ventana deslizante} Recorrer el estudio completo con cubos del tamaño del parche, solapados, y promediar. \aqui{solape 0,5 con ponderación gaussiana: el centro del cubo pesa más que el borde.}
+
+\T{Umbral de probabilidad} Desde qué probabilidad un vóxel se declara lesión. \aqui{0,5 por defecto; 0,6 en el sistema final, decidido con los datos fuera de pliegue.}
+
+\T{TTA} Aumento en inferencia: predecir también la imagen volteada, devolverla y promediar.
+
+\T{Ensamble} Promediar varias redes. \como{pedir la opinión de varios residentes y quedarse con el consenso.} \aqui{voto de 3 semillas de A: Dice$^{+}$ 0,662. Ensamble de 5 pliegues con TTA: 0,754.}
+
+\T{Regla del hígado} Borrar islas cuyo SUVmax no llega al doble de la referencia hepática. \aqui{probada y no adoptada: quitaba 22 \% de marcas falsas pero perdía 6,4 \% de lesiones.}
+
+\section{8. Métricas}
+
+\T{Verdadero y falso positivo, falso negativo} VP: marqué y era lesión. FP: marqué y no era. FN: no marqué y era.
+
+\T{Dice} $2|A \cap B| / (|A|+|B|)$: solapamiento entre predicción y verdad, de 0 a 1.
+
+\T{Dice$^{+}$} Dice promediado solo en estudios positivos, porque en un control el Dice no está definido.
+
+\T{FPV} Volumen de falso positivo: mL de islas predichas que no tocan ninguna lesión real.
+
+\T{FNV} Volumen de falso negativo: mL de lesiones reales que la predicción no toca.
+
+\T{Detección por lesión} Fracción de lesiones (componentes de la verdad) que la predicción toca. \aqui{256 lesiones en validación; prácticamente todas sobre 10 mL, 22 \% bajo 1 mL.}
+
+\T{Marcas falsas por estudio} Cuántas islas falsas tiene que borrar el médico. \aqui{4,8 a 5,8 en un modelo, 2,8 en el ensamble.}
+
+\T{Carga de corrección} mL a borrar más mL a agregar, contra dibujar todo desde cero. \aqui{A ahorra 57 \%.}
+
+\T{FP por órgano} El FPV repartido según dónde cae, con los mapas de TotalSegmentator. \aqui{clásica: 74 \% en órganos fisiológicos.}
+
+\T{Hausdorff 95} Distancia entre bordes de predicción y verdad, en el percentil 95. Mide qué tan lejos queda el peor borde razonable. \aqui{comprometido, pendiente.}
+
+\T{Bland-Altman} Gráfico de la diferencia entre dos mediciones contra su promedio. Sesgo: la diferencia media. Límites de concordancia: sesgo $\pm$ 1,96 desviaciones. \aqui{MTV: sesgo $-30{,}2$ mL, límites $-244{,}5$ a $+184{,}1$.}
+
+\section{9. Estadística}
+
+\T{Media $\pm$ desviación} Promedio y cuánto varía. \aqui{entre las tres semillas.}
+
+\T{Intervalo de confianza 95 \%} Rango donde razonablemente está el valor real. Si una diferencia tiene un IC que cruza el 0, no puedo decir que exista.
+
+\T{Bootstrap} Remuestrear con reposición los estudios miles de veces para ver cuánto varía un resultado.
+
+\T{Comparación pareada} Comparar dos brazos estudio por estudio, sobre los mismos pacientes. Quita la variación entre pacientes.
+
+\T{Wilcoxon} Prueba no paramétrica para diferencias pareadas. No supone distribución normal.
+
+\T{Valor p} Probabilidad de ver una diferencia así si en realidad no hubiera ninguna. \aqui{0,52, 0,87 y 0,93 contra A.}
+
+\T{Empate} No es que sean iguales: con estos datos no se puede distinguir una diferencia.
+
+\T{Potencia} Capacidad de detectar una diferencia que sí existe. Con 20 positivos en validación es baja; por eso la prueba (39 positivos) y la etapa extendida.
+
+\section{10. Etapa extendida (rama \texttt{extendido})}
+
+\T{Validación cruzada en 5 pliegues} Dividir los datos en 5 partes; entrenar 5 redes, cada una dejando fuera una parte distinta.
+
+\T{Fuera de pliegue (OOF)} Predicción de cada estudio hecha por la red que no lo vio. \aqui{825 estudios, Dice$^{+}$ 0,689. Permite decidir umbrales sin tocar la prueba.}
+
+\T{Preentrenamiento anatómico} Enseñarle primero al codificador del CT a segmentar órganos y después usarlo en la tarea. \aqui{B\_pre 0,707 contra B 0,705: no ayudó.}
+
+\T{Pérdida ponderada por órgano} Castigar más los falsos positivos en órganos fisiológicos. \aqui{probada; no cumplió su criterio.}
+
+\T{H1 y H2} H1: la hipótesis original sobre las arquitecturas. H2: el sistema final (ensamble con TTA a umbral 0,6) frente al mejor modelo individual.
+
+\section{11. Herramientas de trabajo}
+
+\T{Git, commit, rama, etiqueta} Git guarda la historia del código. Commit: una foto fechada. Rama: una línea de trabajo paralela. Etiqueta: un nombre fijo para una foto. \aqui{\texttt{main} cerrada con la etiqueta \texttt{resultados-validacion-4-brazos}; \texttt{extendido} continúa.}
+
+\T{GitHub} Servidor donde vive el repositorio público.
+
+\T{Bitácora} Diario fechado del proyecto: qué hice, por qué, qué decidí.
+
+\T{Pruebas unitarias} Pequeños programas que verifican que cada función hace lo que dice, por ejemplo con fantomas sintéticos.
+
+\T{Entorno virtual} Carpeta con su propia copia de Python y librerías, para que el proyecto no dependa del resto del computador.
+
+\T{YAML de configuración} Archivo donde están todos los números del experimento en un solo lugar.
+
+\T{LaTeX} Sistema para escribir documentos técnicos. El informe final va en \texttt{report/}.
+
+\end{multicols}
+
+\end{document}
