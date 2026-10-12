@@ -1008,3 +1008,13 @@ en ningún punto del entrenamiento.
 
 Tabla en `results/comparacion_criterio_checkpoint_val.csv`. Las nueve evaluaciones se guardaron
 con el sufijo `_ultimo` para que no se mezclen con la comparación principal.
+
+## 2026-10-12. Test abierto una vez: H1 y H2 confirmadas
+
+Se abrió el test con el preregistro del commit `90a35e1` (`results/test/APERTURA.txt`) y
+`scripts/35_test_final.sh` corrió entero en unas dos horas. H1 (ensamble + TTA contra B):
+ΔDice⁺ +0,028 [+0,011, +0,048], ΔFPV −7,0 mL [−12,4, −3,4]. H2 (sistema final, umbral 0,6):
++0,029 [+0,006, +0,054] y −9,4 mL [−16,4, −4,5]. Ambas confirmadas. Sistema final: Dice⁺ 0,727,
+FPV 9,5 mL. En el acto 1 el empate en Dice se sostiene; en FPV los dos codificadores evitan unos
+pocos fallos grandes de A. En la etapa extendida B y C le ganan a A (+0,038 y +0,034) y A+ no.
+Lectura completa en `docs/RESULTADOS_TEST.md`.

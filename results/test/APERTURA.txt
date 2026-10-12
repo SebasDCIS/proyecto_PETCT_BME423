@@ -1,0 +1,2 @@
+Test abierto: 2026-10-12 00:36 UTC
+Commit del preregistro: 90a35e172e9186480c99592abcfe28eac9d1c6da
