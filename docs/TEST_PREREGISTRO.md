@@ -67,6 +67,33 @@ Dos mejoras baratas con respaldo previo se deciden **antes** del test y **sin** 
 en el test**, con la misma regla de confirmación que H1. H1 se mantiene tal como se declaró. Si
 la decisión resulta ser umbral 0,5 sin regla, H2 es idéntica a H1 y se reporta una vez.
 
+### La decisión, tomada el 2026-10-11 (antes de abrir el test)
+
+`scripts/38` corrió los cinco miembros sobre sus pliegues con TTA (5 h 30) y `scripts/39` aplicó la
+regla. Sobre los 825 estudios (6 618 lesiones):
+
+| umbral | regla del hígado | Dice⁺ | FPV mL | lesiones detectadas | marcas falsas / estudio |
+|---|---|---|---|---|---|
+| 0,5 | no | 0,698 | 13,46 | 63,1 % | 5,41 |
+| **0,6** | **no** | **0,699** | **11,91** | **61,9 %** | **4,83** |
+| 0,7 | no | 0,698 | 10,81 | 60,7 % (fuera: pierde 2,4 pp) | 4,35 |
+| 0,6 | sí | 0,694 | 11,56 | 58,0 % | 3,76 |
+
+- **Umbral elegido: 0,6.** Es el de mayor Dice⁺ entre los que no pierden más de 2 puntos de
+  detección respecto de 0,5 (0,7 pierde 2,4). En Dice la diferencia con 0,5 es nula (+0,0005);
+  lo que cambia es el falso positivo (−1,5 mL, −11 % de marcas falsas) a cambio de 1,2 puntos
+  de lesiones detectadas.
+- **Regla del hígado: no se adopta.** Baja las marcas falsas solo 22 % (pedía ≥ 25 %) y pierde el
+  6,4 % de las lesiones detectadas (permitía ≤ 3 %). Lo que en el acto 1 parecía −40 % de marcas
+  con −2,3 % de lesiones no se repite con un modelo mejor y 32 veces más estudios.
+- **Por qué valió la pena hacerlo con los 825:** en los 26 de validación el Dice sube de 0,754 a
+  0,784 entre 0,5 y 0,7; en los 825 queda plano (0,698 → 0,698). La mejora de Dice que mostraba
+  el umbral alto en validación era en buena parte ruido de 26 estudios. La comprobación en
+  validación (`results/val_umbral/barrido.csv`), aplicando la misma regla, habría elegido lo mismo:
+  umbral 0,6 y sin regla del hígado.
+
+Por lo tanto **H2 = ensamble + TTA a umbral 0,6, sin regla del hígado**, contra B.
+
 ## Secundarias declaradas (se reportan todas, ninguna rescata a H1 ni a H2)
 
 - **S1.** El mismo ensamble a umbral 0,7, contra B. El umbral 0,7 se miró en validación (Dice⁺
