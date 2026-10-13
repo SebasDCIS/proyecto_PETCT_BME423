@@ -54,8 +54,11 @@ cruzada; se atribuye al codificador doble.** E sube el FNV 2,4 mL [+0,32, +4,84]
 Este es el hallazgo nuevo del test. Con 825 estudios de entrenamiento, la fusión intermedia le gana
 a la fusión temprana en Dice y en FPV, y no es por tamaño: A+, con los mismos parámetros que B, empata
 con A. C sigue empatando con B. En validación (26 estudios) estas diferencias no alcanzaban; con 38
-positivos sí. La respuesta a la pregunta que dejó abierta el acto 1 es que el empate de entonces era
-falta de datos, al menos para el codificador doble.
+positivos sí. La respuesta a la pregunta que dejó abierta el acto 1: el empate de entonces era sobre
+todo falta de entrenamiento. El paso 1 de la rama extendida mostró que cuadruplicar las iteraciones
+mejora el Dice y que quintuplicar los estudios, por sí solo, no (`docs/PASO1_RESULTADO.md`). Los
+modelos de dos codificadores, con casi el doble de parámetros, eran los más castigados por las
+25 000 iteraciones del acto 1.
 
 ## Resumen en tres líneas
 

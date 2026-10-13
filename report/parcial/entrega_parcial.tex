@@ -35,7 +35,7 @@ Repositorio: rama \texttt{main}, etiqueta \texttt{resultados-validacion-4-brazos
 
 \section{Estado del avance}
 
-Esta entrega reporta lo que hice entre el 3 y el 12 de septiembre de 2026: el pipeline completo, la referencia clásica, los tres modelos comprometidos en la definición de tema (A, B y C) y un cuarto brazo (E), cada uno entrenado con tres semillas y evaluado en validación. El conjunto de prueba sigue cerrado.
+Esta entrega reporta lo que hice entre el 3 y el 12 de septiembre de 2026: el pipeline completo, la referencia clásica, los tres modelos comprometidos en la definición de tema (A, B y C) y un cuarto brazo (E), cada uno entrenado con tres semillas y evaluado en validación. Los resultados en el conjunto de prueba van en la entrega final.
 
 El resultado central es negativo para la hipótesis. Las cuatro formas de combinar PET y CT empatan: ninguna diferencia entre arquitecturas resiste una comparación pareada por estudio. Todas, en cambio, superan al umbral clásico por un factor de 57 en volumen de falso positivo. La atención cruzada del modelo C quedó inerte y pude medir por qué. Encontré también que el criterio para elegir el checkpoint mete más variación en el falso positivo que la semilla.
 
@@ -146,7 +146,7 @@ Declaro las diferencias entre lo comprometido y lo hecho, para que la entrega fi
 
 El empate se explica bien por falta de datos: con 176 estudios de entrenamiento ninguna arquitectura tiene de dónde aprender la diferencia entre captación fisiológica y lesión. Por eso la siguiente etapa, en la rama \texttt{extendido} del repositorio, entrena con todos los estudios disponibles fuera de la prueba (825), cuatro veces más iteraciones (100\,000) y un ensamble de cinco pliegues con evaluación fuera de pliegue. Los primeros números en validación son preliminares y no forman parte de los resultados de esta entrega: a 100\,000 iteraciones B llega a Dice$^+$ 0,705 frente a 0,694 de A, y el ensamble con volteos en inferencia a 0,754 con FPV de 9,2 mL.
 
-La prueba de 49 estudios se abre una sola vez, con todos los brazos de las dos etapas a la vez. Antes de abrirla dejé escritas y versionadas en git las hipótesis, el sistema final, los umbrales y los criterios de éxito, y el script de evaluación se niega a correr si esos archivos tienen cambios sin registrar. Para la final quedan también el Hausdorff 95, el error de SUVmax, la contrastación con el script oficial, el análisis cualitativo de casos y el informe en LaTeX con su presentación.
+La prueba de 49 estudios la abrí una sola vez, el 12 de octubre, con todos los brazos de las dos etapas a la vez. Antes de abrirla dejé escritas y versionadas en git las hipótesis, el sistema final, los umbrales y los criterios de éxito, y el script de evaluación se niega a correr si esos archivos tienen cambios sin registrar. Para la final quedan también el Hausdorff 95, el error de SUVmax, la contrastación con el script oficial, el análisis cualitativo de casos y el informe en LaTeX con su presentación.
 
 \section{Trabajo realizado}
 
