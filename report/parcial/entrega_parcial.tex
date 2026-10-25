@@ -57,7 +57,7 @@ Al revisar los datos encontré lesiones anotadas dentro de la caja que la anonim
 
 \subsection{Referencia clásica y modelos}
 
-La referencia clásica aplica umbral SUV $\geq 2{,}5$, apertura morfológica de radio 1, componentes de al menos 0,5 mL y exclusión anatómica de órganos fisiológicos. Los parámetros se fijaron en el diseño, sin mirar validación.
+La referencia clásica que reporto aplica umbral SUV $\geq 2{,}5$, apertura morfológica de radio 1 y descarte de componentes de menos de 0,5 mL. Los parámetros se fijaron en el diseño, sin mirar validación. La exclusión anatómica de órganos que prometía la definición no entra en estos números: con reglas escritas a mano borraba lesiones reales, y la versión con órganos de TotalSegmentator queda para la entrega final.
 
 \begin{itemize}
 \item \textbf{A}, fusión temprana: SUV y CT como dos canales de una U-Net 3D de MONAI [9] (canales 32, 64, 128, 256, 320; 12,9 M parámetros).
@@ -138,13 +138,14 @@ Declaro las diferencias entre lo comprometido y lo hecho, para que la entrega fi
 \item \textbf{Script oficial de autoPET.} Las métricas son una implementación propia con las mismas definiciones (Dice, FPV y FNV por componentes 26-conexas), con pruebas unitarias. En la final la contrasto contra el script oficial sobre los mismos estudios.
 \item \textbf{Error en MTV y SUVmax.} La concordancia de MTV está hecha; el error de SUVmax por paciente queda para la final.
 \item \textbf{Exclusión de la zona anonimizada}, explicada en la sección 3.1. Con ella el trabajo no dice nada sobre cabeza y cuello ni sobre la captación cerebral.
+\item \textbf{Exclusión de órganos en la referencia clásica.} No está en las cifras de esta entrega (sección 3.2); la agrego en la final, con los órganos de TotalSegmentator.
 \item \textbf{Brazo E}, agregado con la justificación de la sección 3.2. No reemplaza a ninguno de los comprometidos.
 \item \textbf{Duración.} Planifiqué nueve horas por corrida; en la práctica fueron entre 5 y 6,5, lo que permitió doce corridas en vez de nueve.
 \end{itemize}
 
 \section{Plan hacia la entrega final}
 
-El empate se explica bien por falta de datos: con 176 estudios de entrenamiento ninguna arquitectura tiene de dónde aprender la diferencia entre captación fisiológica y lesión. Por eso la siguiente etapa, en la rama \texttt{extendido} del repositorio, entrena con todos los estudios disponibles fuera de la prueba (825), cuatro veces más iteraciones (100\,000) y un ensamble de cinco pliegues con evaluación fuera de pliegue. Los primeros números en validación son preliminares y no forman parte de los resultados de esta entrega: a 100\,000 iteraciones B llega a Dice$^+$ 0,705 frente a 0,694 de A, y el ensamble con volteos en inferencia a 0,754 con FPV de 9,2 mL.
+El empate admite dos lecturas: que las arquitecturas sean equivalentes, o que el montaje no les haya dado con qué separarse. Con 176 estudios y 25\,000 iteraciones, los modelos de dos codificadores, que tienen casi el doble de parámetros que A, son los que menos alcanzan a converger. Por eso la siguiente etapa, en la rama \texttt{extendido} del repositorio, entrena con todos los estudios disponibles fuera de la prueba (825), cuatro veces más iteraciones (100\,000) y un ensamble de cinco pliegues con evaluación fuera de pliegue. Los primeros números en validación son preliminares y no forman parte de los resultados de esta entrega: a 100\,000 iteraciones B llega a Dice$^+$ 0,705 frente a 0,694 de A, y el ensamble con volteos en inferencia a 0,754 con FPV de 9,2 mL.
 
 La prueba de 49 estudios la abrí una sola vez, el 12 de octubre, con todos los brazos de las dos etapas a la vez. Antes de abrirla dejé escritas y versionadas en git las hipótesis, el sistema final, los umbrales y los criterios de éxito, y el script de evaluación se niega a correr si esos archivos tienen cambios sin registrar. Para la final quedan también el Hausdorff 95, el error de SUVmax, la contrastación con el script oficial, el análisis cualitativo de casos y el informe en LaTeX con su presentación.
 

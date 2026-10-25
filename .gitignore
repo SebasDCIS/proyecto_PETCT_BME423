@@ -41,3 +41,6 @@ docs/figuras/visor_datos.js
 
 # Manifiestos temporales por lote (rama extendido)
 data/manifests/_lotes/
+
+# caché intermedia de scripts/40
+results/*/_s40_*/
