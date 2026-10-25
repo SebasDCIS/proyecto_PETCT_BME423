@@ -13,6 +13,8 @@
 \usepackage{xcolor}
 \usepackage{titlesec}
 \usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
 \usepackage[hidelinks]{hyperref}
 \captionsetup{font=small,labelfont=bf,labelsep=period}
 \titleformat{\section}{\sffamily\bfseries\large}{\thesection.}{0.5em}{}
@@ -59,12 +61,51 @@ Al revisar los datos encontré lesiones anotadas dentro de la caja que la anonim
 
 La referencia clásica que reporto aplica umbral SUV $\geq 2{,}5$, apertura morfológica de radio 1 y descarte de componentes de menos de 0,5 mL. Los parámetros se fijaron en el diseño, sin mirar validación. La exclusión anatómica de órganos que prometía la definición no entra en estos números: con reglas escritas a mano borraba lesiones reales, y la versión con órganos de TotalSegmentator queda para la entrega final.
 
+La Figura~\ref{fig:brazos} resume los cuatro brazos.
+
 \begin{itemize}
 \item \textbf{A}, fusión temprana: SUV y CT como dos canales de una U-Net 3D de MONAI [9] (canales 32, 64, 128, 256, 320; 12,9 M parámetros).
 \item \textbf{B}, fusión intermedia: un codificador por modalidad y concatenación en el cuello de botella (24,0 M). Es el control de capacidad de C.
 \item \textbf{C}, B más un bloque de atención cruzada en el cuello de botella, con el PET como consulta y el CT como clave y valor, mezclado por un factor aprendido $\gamma$ (24,4 M). Con parches de $96^3$ el cuello tiene 216 posiciones.
 \item \textbf{E}, brazo agregado: A con un tercer canal, el SUV dividido por la captación hepática del propio paciente. Lo sumé el 10 de septiembre porque el atlas de captación normal que construí con 35 controles reproduce los valores publicados (hígado, mediana 2,19) y la clínica ya usa el hígado como referencia interna (criterio de Deauville). Si la red recibe esa referencia, debería separar mejor captación normal de lesión.
 \end{itemize}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=0.92,transform shape,
+  font=\sffamily\scriptsize,
+  pet/.style={draw=red!60!black,fill=red!6,rounded corners=2pt,minimum width=0.9cm,minimum height=0.55cm},
+  ct/.style={draw=blue!60!black,fill=blue!6,rounded corners=2pt,minimum width=0.9cm,minimum height=0.55cm},
+  enc/.style={draw=black!70,fill=black!4,rounded corners=2pt,minimum width=1.5cm,minimum height=0.55cm,align=center},
+  sal/.style={draw=green!40!black,fill=green!6,rounded corners=2pt,minimum width=1.1cm,minimum height=0.55cm},
+  fl/.style={-{Stealth[length=1.5mm]},draw=black!70}]
+\node[font=\sffamily\bfseries\small] at (0,1.15) {A · temprana};
+\node[pet] (pa) at (-0.6,0.4) {SUV}; \node[ct] (ca) at (0.6,0.4) {CT};
+\node[enc] (ea) at (0,-0.55) {una U-Net\\ dos canales};
+\node[sal] (oa) at (0,-1.5) {máscara};
+\draw[fl] (pa)--(ea); \draw[fl] (ca)--(ea); \draw[fl] (ea)--(oa);
+\node[font=\sffamily\bfseries\small] at (4,1.15) {B · dos codificadores};
+\node[pet] (pb) at (3.3,0.4) {SUV}; \node[ct] (cb) at (4.7,0.4) {CT};
+\node[enc,minimum width=1.1cm] (e1) at (3.3,-0.35) {cod.}; \node[enc,minimum width=1.1cm] (e2) at (4.7,-0.35) {cod.};
+\node[enc] (jb) at (4,-1.1) {concatenar};
+\node[sal] (ob) at (4,-1.95) {máscara};
+\draw[fl] (pb)--(e1); \draw[fl] (cb)--(e2); \draw[fl] (e1)--(jb); \draw[fl] (e2)--(jb); \draw[fl] (jb)--(ob);
+\node[font=\sffamily\bfseries\small] at (8,1.15) {C · atención cruzada};
+\node[pet] (pc) at (7.3,0.4) {SUV}; \node[ct] (cc) at (8.7,0.4) {CT};
+\node[enc,minimum width=1.1cm] (e3) at (7.3,-0.35) {cod.}; \node[enc,minimum width=1.1cm] (e4) at (8.7,-0.35) {cod.};
+\node[enc] (jc) at (8,-1.1) {SUV consulta,\\ CT clave y valor};
+\node[sal] (oc) at (8,-1.95) {máscara};
+\draw[fl] (pc)--(e3); \draw[fl] (cc)--(e4); \draw[fl] (e3)--(jc); \draw[fl] (e4)--(jc); \draw[fl] (jc)--(oc);
+\node[font=\sffamily\bfseries\small] at (12,1.15) {E · referencia hepática};
+\node[pet] (pe) at (10.65,0.4) {SUV}; \node[ct] (ce) at (11.85,0.4) {CT};
+\node[pet,minimum width=1.0cm,align=center,inner sep=1.5pt] (he) at (13.35,0.4) {SUV ÷\\ hígado};
+\node[enc] (ee) at (12,-0.55) {una U-Net\\ tres canales};
+\node[sal] (oe) at (12,-1.5) {máscara};
+\draw[fl] (pe)--(ee); \draw[fl] (ce)--(ee); \draw[fl] (he)--(ee); \draw[fl] (ee)--(oe);
+\end{tikzpicture}
+\caption{Los cuatro brazos. En B y C cada modalidad tiene su propio codificador y se unen en el cuello de botella ($6^3$ posiciones); B es el control de capacidad de C.}
+\label{fig:brazos}
+\end{figure}
 
 \subsection{Entrenamiento y protocolo}
 
@@ -134,11 +175,11 @@ C & 0,21 & 0,56 & 0,86 & 0,99 & 1,00 & 1,00 \\
 Declaro las diferencias entre lo comprometido y lo hecho, para que la entrega final sea consistente con esta.
 
 \begin{itemize}
-\item \textbf{Hausdorff 95.} Comprometido y aún no implementado. Lo agrego para la final, calculado en positivos y sobre la misma máscara corregida.
-\item \textbf{Script oficial de autoPET.} Las métricas son una implementación propia con las mismas definiciones (Dice, FPV y FNV por componentes 26-conexas), con pruebas unitarias. En la final la contrasto contra el script oficial sobre los mismos estudios.
-\item \textbf{Error en MTV y SUVmax.} La concordancia de MTV está hecha; el error de SUVmax por paciente queda para la final.
+\item \textbf{Hausdorff 95.} Comprometido y fuera de las cifras de esta entrega. Ya lo implementé, en estudios positivos y sobre la misma máscara corregida; los resultados van en la final.
+\item \textbf{Script oficial de autoPET.} Las métricas son una implementación propia con las mismas definiciones (Dice, FPV y FNV por componentes 26-conexas), con pruebas unitarias. Ya las contrasté con el script oficial sobre las mismas máscaras: el oficial cuenta componentes con conectividad 18 y el mío con 26. El Dice sale idéntico y el FPV y el FNV de las redes difieren en menos de 1 mL. El detalle va en la final.
+\item \textbf{Error en MTV y SUVmax.} La concordancia de MTV está en esta entrega; el error de SUVmax por paciente ya está calculado y va en la final.
 \item \textbf{Exclusión de la zona anonimizada}, explicada en la sección 3.1. Con ella el trabajo no dice nada sobre cabeza y cuello ni sobre la captación cerebral.
-\item \textbf{Exclusión de órganos en la referencia clásica.} No está en las cifras de esta entrega (sección 3.2); la agrego en la final, con los órganos de TotalSegmentator.
+\item \textbf{Exclusión de órganos en la referencia clásica.} No está en las cifras de esta entrega (sección 3.2). La calculé con los órganos de TotalSegmentator y la reporto en la final.
 \item \textbf{Brazo E}, agregado con la justificación de la sección 3.2. No reemplaza a ninguno de los comprometidos.
 \item \textbf{Duración.} Planifiqué nueve horas por corrida; en la práctica fueron entre 5 y 6,5, lo que permitió doce corridas en vez de nueve.
 \end{itemize}
@@ -147,7 +188,7 @@ Declaro las diferencias entre lo comprometido y lo hecho, para que la entrega fi
 
 El empate admite dos lecturas: que las arquitecturas sean equivalentes, o que el montaje no les haya dado con qué separarse. Con 176 estudios y 25\,000 iteraciones, los modelos de dos codificadores, que tienen casi el doble de parámetros que A, son los que menos alcanzan a converger. Por eso la siguiente etapa, en la rama \texttt{extendido} del repositorio, entrena con todos los estudios disponibles fuera de la prueba (825), cuatro veces más iteraciones (100\,000) y un ensamble de cinco pliegues con evaluación fuera de pliegue. Los primeros números en validación son preliminares y no forman parte de los resultados de esta entrega: a 100\,000 iteraciones B llega a Dice$^+$ 0,705 frente a 0,694 de A, y el ensamble con volteos en inferencia a 0,754 con FPV de 9,2 mL.
 
-La prueba de 49 estudios la abrí una sola vez, el 12 de octubre, con todos los brazos de las dos etapas a la vez. Antes de abrirla dejé escritas y versionadas en git las hipótesis, el sistema final, los umbrales y los criterios de éxito, y el script de evaluación se niega a correr si esos archivos tienen cambios sin registrar. Para la final quedan también el Hausdorff 95, el error de SUVmax, la contrastación con el script oficial, el análisis cualitativo de casos y el informe en LaTeX con su presentación.
+La prueba de 49 estudios la abrí una sola vez, el 12 de octubre, con todos los brazos de las dos etapas a la vez. Antes de abrirla dejé escritas y versionadas en git las hipótesis, el sistema final, los umbrales y los criterios de éxito, y el script de evaluación se niega a correr si esos archivos tienen cambios sin registrar. Para la final quedan el análisis cualitativo de casos, el informe en LaTeX con su presentación y el video.
 
 \section{Trabajo realizado}
 
