@@ -15,7 +15,7 @@ Reanudable: guarda un archivo por estudio y se puede cortar con --max-segundos.
 
 Uso (desde la raíz del repositorio):
     python scripts/43_fp_organo_todos_test.py --max-segundos 130   # repetir hasta que diga "listo"
-Escribe results/test_final/fp_por_organo_todos.csv.
+Escribe results/test_final/fp_por_organo_todos.csv y docs/figuras/fp_por_organo_test.png.
 """
 import argparse
 import pickle
@@ -23,6 +23,9 @@ import sys
 import time
 from pathlib import Path
 
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -90,7 +93,53 @@ def main():
     ancho.loc["TOTAL"] = ancho.sum()
     ancho.to_csv(RAIZ / "results/test_final/fp_por_organo_todos.csv")
     print(ancho.round(2).to_string())
+    figura(ancho.drop(index="TOTAL"))
     print("listo", flush=True)
+
+
+GRUPOS_FIG = [  # (etiqueta, grupos de TotalSegmentator que suma)
+    ("hígado", ["higado"]),
+    ("riñones y vejiga", ["rinones", "vejiga"]),
+    ("corazón y vasos", ["corazon", "vasos"]),
+    ("intestino y estómago", ["intestino", "estomago"]),
+    ("bazo", ["bazo"]),
+    ("hueso", ["hueso"]),
+    ("tejido sin órgano asignado", ["otro"]),
+    ("fuera del mapa de órganos", ["fuera"]),
+    ("resto", None),
+]
+ETIQUETAS = {"Clásica": "Clásica", "Acto 1 · A": "A", "Acto 1 · B": "B", "Acto 1 · C": "C", "Acto 1 · E": "E",
+             "Extendido · A": "A", "Extendido · A+": "A+", "Extendido · B": "B", "Extendido · C": "C",
+             "Sistema final (u 0,6)": "Final"}
+
+
+def figura(t):
+    usados = [g for _, gs in GRUPOS_FIG if gs for g in gs]
+    filas = {et: (t.loc[gs].sum() if gs else t.drop(index=usados).sum()) for et, gs in GRUPOS_FIG}
+    d = pd.DataFrame(filas).T
+    colores = ["#8C5A2B", "#C9A227", "#B23A48", "#6A994E", "#7B5EA7", "#9AA5B1", "#3E7CB1", "#5FB3B3", "#D9D9D9"]
+    fig, (a0, a1) = plt.subplots(1, 2, figsize=(10.5, 4.2), gridspec_kw={"width_ratios": [1, 6]})
+    redes = [c for c in d.columns if c != "Clásica"]
+    for ax, cols in ((a0, ["Clásica"]), (a1, redes)):
+        abajo = np.zeros(len(cols))
+        x = np.arange(len(cols))
+        for k, et in enumerate(d.index):
+            v = d.loc[et, cols].values
+            ax.bar(x, v, bottom=abajo, color=colores[k], width=0.7, label=et if ax is a1 else None)
+            abajo += v
+        for xi, tot in zip(x, abajo):
+            ax.text(xi, tot, f"{tot:.1f}".replace(".", ","), ha="center", va="bottom", fontsize=8)
+        ax.set_xticks(x, [ETIQUETAS[c] for c in cols])
+        ax.set_ylabel("falso positivo (mL por estudio)")
+        ax.grid(axis="y", alpha=.3); ax.set_axisbelow(True)
+        ax.spines[["top", "right"]].set_visible(False)
+    for xm, txt in ((1.5, "acto 1 · 176 estudios, 25 000 it."), (5.0, "extendido · 825 estudios, 100 000 it.")):
+        a1.text(xm, -0.16, txt, transform=a1.get_xaxis_transform(), ha="center", fontsize=8.5, color="#444")
+    a1.axvline(3.5, color="#999", lw=0.8, ls=":"); a1.axvline(7.5, color="#999", lw=0.8, ls=":")
+    a0.set_title("umbral clásico", fontsize=10); a1.set_title("redes (media de 3 semillas; final = ensamble)", fontsize=10)
+    a1.legend(fontsize=7.5, ncol=1, frameon=False, loc="upper right", bbox_to_anchor=(1.0, 1.0))
+    fig.tight_layout()
+    fig.savefig(RAIZ / "docs/figuras/fp_por_organo_test.png", dpi=170)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,42 @@
+\section{Metodología experimental}
+
+\subsection{Diseño en dos etapas}
+
+\textbf{Acto 1} (3 al 12 de septiembre, rama \texttt{main}). Los cuatro brazos de la definición y de la parcial (A, B, C y E), cada uno con tres semillas (423, 2 y 3), 176 estudios de entrenamiento, 25\,000 iteraciones y el checkpoint \texttt{mejor.pt}. Es lo que reportó la entrega parcial.
+
+\textbf{Etapa extendida} (12 de septiembre al 12 de octubre, rama \texttt{extendido}). El empate del acto 1 dejó abierta una pregunta: si las arquitecturas son equivalentes o si el montaje no les dio con qué separarse. La etapa extendida la abordó en cuatro pasos, cada uno con su criterio de éxito escrito antes de correr:
+\begin{enumerate}
+\item un diseño 2\,×\,2 con el brazo A: 176 o 825 estudios por 25\,000 o 100\,000 iteraciones;
+\item los brazos A, A+, B y C con 825 estudios y 100\,000 iteraciones, tres semillas cada uno;
+\item dos intentos de enseñar anatomía a B: preentrenar el codificador del CT para segmentar 17 grupos de órganos usando TotalSegmentator como profesor, y una pérdida que cobra tres veces más por marcar tumor dentro de un órgano de captación fisiológica;
+\item el ensamble de cinco pliegues con TTA, con predicción fuera de pliegue para los 825 estudios.
+\end{enumerate}
+En esta etapa usé siempre \texttt{ultimo.pt}, por lo que encontré en el acto 1 sobre el criterio de checkpoint. Validación y prueba siguieron exactamente iguales; los estudios nuevos entraron solo a entrenamiento.
+
+\subsection{Métricas}
+
+Por estudio calculo, con componentes 26-conexas y en la métrica corregida:
+\begin{itemize}
+\item \textbf{\dmas}: el Dice entre predicción y verdad, promediado solo en los estudios con lesión. En un control el Dice no está definido.
+\item \textbf{FPV}: mililitros de las componentes predichas que no tocan ninguna lesión anotada. Mide lo que el modelo inventa donde no hay nada.
+\item \textbf{FNV}: mililitros de las lesiones anotadas que no toca ninguna componente predicha.
+\item \textbf{Detección por lesión} según tamaño y \textbf{marcas falsas por estudio}, que traducen el FPV al trabajo de un médico que corrige la máscara.
+\item \textbf{FP por órgano}: el FPV repartido según el mapa de órganos de TotalSegmentator \citep{wasserthal2023}.
+\item Como análisis secundarios: Hausdorff 95 \citep{maierhein2024}, error de SUVmax por paciente y contraste con el script oficial.
+\end{itemize}
+
+\subsection{Estadística}
+
+Las comparaciones son pareadas por estudio: para cada estudio se calcula la diferencia entre dos brazos y se analiza esa lista, lo que quita la variación entre pacientes. Con varias semillas, primero promedio el brazo por estudio. El intervalo de confianza del 95\,\% de la diferencia media sale de un bootstrap de 10\,000 remuestreos de estudios con semilla 423 \citep{efron1993}. Reporto además la prueba de rangos con signo de Wilcoxon y en cuántos estudios gana cada brazo. Una diferencia cuyo intervalo cruza el cero la leo como no demostrada, no como igualdad.
+
+\subsection{Preregistro de la prueba}
+\label{sec:umbral}
+
+Antes de abrir la prueba fijé dos hipótesis, ambas contra B extendido con sus tres semillas:
+\begin{itemize}
+\item \textbf{H1.} El ensamble de cinco pliegues con TTA, a umbral 0,5, mejora a B.
+\item \textbf{H2.} El sistema final, ensamble con TTA al umbral y con la regla de posproceso decididos sin la prueba, mejora a B.
+\end{itemize}
+Cada una se confirma solo si el IC95 de $\Delta$\dmas{} queda entero sobre cero \emph{y} el IC95 de $\Delta$FPV queda entero bajo cero. Las demás comparaciones (acto 1, arquitecturas del extendido, preentrenamiento, umbral 0,7, métrica cruda) quedaron declaradas como secundarias, S1 a S8.
+
+El umbral y una regla del hígado (borrar islas cuyo SUVmax no llegue al doble del hígado del paciente) se decidieron con los 825 estudios predichos fuera de pliegue y con reglas escritas antes de ver los números. Para el umbral, el de mayor \dmas{} entre los que pierden como máximo 2 puntos porcentuales de lesiones detectadas respecto de 0,5. Para la regla del hígado, adoptarla solo si baja las marcas falsas al menos un 25\,\%, pierde como máximo el 3\,\% de las lesiones detectadas y no baja el \dmas{} más de 0,005.

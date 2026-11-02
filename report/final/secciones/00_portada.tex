@@ -1,0 +1,15 @@
+{\raggedright\sffamily\bfseries\LARGE Segmentación de lesiones hipermetabólicas en FDG-PET/CT de cuerpo entero: fusión temprana frente a fusión intermedia con atención cruzada\par}
+\vspace{0.8em}
+{\large Sebastián Inostroza\par}
+{\small Tecnólogo Médico. Doctorado en Ciencias e Ingeniería para la Salud, Universidad de Valparaíso.\\
+BME423 Procesamiento de imágenes médicas, segundo semestre 2026. Informe final del mini-proyecto, modalidad individual.\\
+Repositorio: \url{https://github.com/SebasDCIS/proyecto_PETCT_BME423}\par}
+\vspace{1.0em}
+
+\begin{center}
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Resumen.} Comparé formas de combinar el PET y el CT en una U-Net 3D para segmentar lesiones FDG en estudios de cuerpo entero de la colección autoPET. Los brazos fueron fusión temprana (A), dos codificadores con concatenación (B), B con atención cruzada en el cuello de botella (C), A con una referencia hepática del propio paciente (E) y un control de capacidad de A (A+), todos frente a un umbral clásico de SUV. El trabajo tuvo dos etapas. En la primera, con 176 estudios de entrenamiento y 25\,000 iteraciones, las fusiones empataron en validación. La atención de C quedó inerte, y medí el mecanismo: pesos casi uniformes que la normalización de instancia borra. En la segunda, con 825 estudios y 100\,000 iteraciones, mostré con un diseño 2\,×\,2 que el empate venía del presupuesto de entrenamiento y no de los datos. Construí además un ensamble de cinco pliegues con aumento en inferencia. La prueba de 49 estudios se abrió una sola vez, con hipótesis escritas y versionadas antes. El sistema final mejoró a B en \dmas{} (+0,029, IC95 +0,006 a +0,054) y en volumen de falso positivo ($-9{,}4$ mL, IC95 $-16{,}4$ a $-4{,}5$), y quedó en \dmas{} 0,727 y 9,5 mL de falso positivo por estudio, frente a 0,182 y 832,5 mL del umbral clásico. Con entrenamiento suficiente, separar los codificadores supera a la fusión temprana y no por tamaño, porque A+ empata con A. La atención cruzada no agrega nada sobre eso.
+\end{minipage}
+\end{center}
+\vspace{0.4em}

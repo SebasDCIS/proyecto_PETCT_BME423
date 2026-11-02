@@ -1,0 +1,12 @@
+\section{Conclusiones y trabajo futuro}
+
+\begin{enumerate}
+\item Las redes le ganan al umbral clásico por un margen enorme, y le ganan justo donde el umbral no sabe anatomía: en los órganos de captación fisiológica, donde dejan menos de 1 mL por estudio.
+\item Separar los codificadores del PET y del CT mejora la segmentación cuando la red entrena lo suficiente, en Dice y en falso positivo, y no por tener más parámetros. Con poco entrenamiento la comparación sale empatada o al revés.
+\item La atención cruzada aditiva en el cuello de una U-Net con normalización de instancia no aporta nada, y se conoce el mecanismo.
+\item Enseñar anatomía de forma explícita, con preentrenamiento o con una pérdida pesada por órgano, no cambió el resultado.
+\item El ensamble de cinco pliegues con TTA es la mejora más grande y más sólida. El sistema final, decidido sin mirar la prueba, quedó en \dmas{} 0,727 y 9,5 mL de FPV.
+\item Hay hallazgos de método que valen por sí mismos: el criterio de checkpoint puede fabricar diferencias, el presupuesto de entrenamiento puede invertir el orden de las arquitecturas y una semilla sola no basta para afirmar nada.
+\end{enumerate}
+
+\textbf{Trabajo futuro.} Lo más directo es probar la atención a mayor resolución o como modulación de la normalización, siempre con su ablación y su control de capacidad. También quedan el aumento de datos completo de nnU-Net y más iteraciones, que es la diferencia principal con lo publicado. En lo clínico, la extensión natural es medir el trabajo real de corrección de un médico sobre la máscara propuesta y validar en otro centro, por ejemplo con los datos multitrazador de autoPET III \citep{gatidis2026autopet3}.

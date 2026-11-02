@@ -1,0 +1,26 @@
+\section{Introducción}
+
+\subsection{El problema clínico}
+
+El PET con \textsuperscript{18}F-FDG mide consumo de glucosa. Los tumores malignos consumen mucha, y por eso el FDG-PET/CT es el examen de referencia para estadificar y seguir el cáncer de pulmón, el linfoma y el melanoma \citep{boellaard2015}. La captación se expresa como SUV, la actividad del vóxel normalizada por la dosis inyectada y el peso del paciente.
+
+El FDG no marca solo tumor. El encéfalo, el miocardio, los riñones, la vía urinaria y el intestino captan de forma fisiológica, y la inflamación también capta. Para un umbral de SUV, una vejiga llena y un ganglio tumoral se ven iguales. Esto importa porque el volumen tumoral metabólico (MTV), la suma del volumen de todas las lesiones, tiene valor pronóstico y se usa para seguir la respuesta. Delinear todas las lesiones a mano en un estudio de cuerpo entero toma mucho tiempo, y cada mililitro que un método automático marca de más infla el MTV.
+
+\subsection{Lo que se sabe}
+
+El reto autoPET publicó 1\,014 estudios FDG-PET/CT anotados por expertos y estableció las métricas de la tarea: el Dice en los estudios con lesión y los volúmenes de falso positivo (FPV) y falso negativo (FNV), contados por componentes conexas \citep{gatidis2022data,gatidis2024challenge}. Los equipos que mejor resolvieron el reto usaron variantes de nnU-Net \citep{isensee2021nnunet} con el PET y el CT entrando juntos como canales de una misma imagen, lo que aquí llamo fusión temprana \citep{isensee2023lookma,alloula2023}. El ganador de 2022 llegó a un Dice de 0,623 con 2,84 mL de FPV, y la nnU-Net de base, a 0,690 con 5,78 mL, en el conjunto de prueba del reto.
+
+En otros problemas PET/CT se ha propuesto fusionar más adentro de la red, con un codificador por modalidad y mecanismos de atención que dejan que el CT module al PET \citep{fu2021,huang2025,zhao2024}. Esos trabajos usan conjuntos chicos y de una sola enfermedad, y en general no comparan contra un control que tenga el mismo tamaño pero sin atención. No encontré una comparación directa entre fusión temprana y fusión intermedia en autoPET con el mismo presupuesto de datos y de entrenamiento.
+
+\subsection{Objetivo e hipótesis}
+
+El objetivo fue comparar estrategias de fusión PET/CT en una U-Net 3D con el mismo presupuesto, y medir su efecto sobre el falso positivo en órganos de captación fisiológica. La hipótesis, que no cambió desde la definición de tema, fue que condicionar las activaciones del PET a la evidencia anatómica del CT mediante atención cruzada reduce el FPV respecto de la fusión temprana sin aumentar el FNV.
+
+\subsection{Qué aporta este trabajo}
+
+\begin{itemize}
+\item Una comparación controlada de cinco brazos de fusión frente a un umbral clásico, con tres semillas por brazo, comparación pareada por estudio y una prueba final abierta una sola vez con hipótesis escritas de antemano.
+\item La medición del mecanismo por el que una atención cruzada aditiva en el cuello de una U-Net con normalización de instancia queda sin efecto.
+\item Un diseño 2\,×\,2 que separa el efecto de los datos del efecto del entrenamiento y muestra que el orden entre arquitecturas se invierte al entrenar lo suficiente.
+\item Hallazgos de método: el criterio de selección del checkpoint puede fabricar diferencias entre modelos, y una semilla sola dio tres veces resultados que no se repitieron.
+\end{itemize}

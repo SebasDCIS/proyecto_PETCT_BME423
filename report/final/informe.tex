@@ -1,0 +1,60 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[a4paper,top=2.2cm,bottom=2.2cm,left=2.3cm,right=2.3cm]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{spanish}
+\setmainfont{TeX Gyre Pagella}
+\setsansfont{TeX Gyre Heros}
+\usepackage{unicode-math}
+\setmathfont{DejaVu Math TeX Gyre}
+\usepackage{graphicx}
+\graphicspath{{figuras/}{../../docs/figuras/}}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{caption}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[numbers,square,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\captionsetup{font=small,labelfont=bf,labelsep=period}
+\titleformat{\section}{\sffamily\bfseries\large}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\sffamily\bfseries\normalsize}{\thesubsection.}{0.5em}{}
+\titlespacing*{\section}{0pt}{1.6ex plus .4ex}{0.6ex}
+\titlespacing*{\subsection}{0pt}{1.1ex plus .3ex}{0.4ex}
+\setlength{\parskip}{0.4em}
+\setlength{\parindent}{0pt}
+\setlist{nosep,leftmargin=1.2em}
+\linespread{1.04}
+\floatname{algorithm}{Algoritmo}
+\renewcommand{\algorithmicrequire}{\textbf{Entrada:}}
+\renewcommand{\algorithmicensure}{\textbf{Salida:}}
+\newcommand{\dmas}{Dice$^{+}$}
+\gappto\captionsspanish{\renewcommand{\tablename}{Tabla}\renewcommand{\listtablename}{Índice de tablas}}
+
+\begin{document}
+
+\input{secciones/00_portada}
+\input{secciones/01_introduccion}
+\input{secciones/02_datos}
+\input{secciones/03_solucion}
+\input{secciones/04_implementacion}
+\input{secciones/05_metodologia}
+\input{secciones/06_resultados}
+\input{secciones/07_analisis}
+\input{secciones/08_conclusiones}
+
+\sloppy
+\small
+\bibliographystyle{unsrtnat}
+\bibliography{referencias}
+\normalsize
+
+\input{secciones/09_declaracion}
+
+\end{document}
+

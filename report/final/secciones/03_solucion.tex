@@ -1,0 +1,153 @@
+\section{Solución propuesta}
+
+\subsection{Visión general}
+
+La Figura~\ref{fig:pipeline} resume el recorrido de un estudio. El DICOM se convierte a volúmenes con SUV y unidades Hounsfield, se lleva a una grilla común de 3 mm y se normaliza. Para entrenar, la red ve cubos de $96^3$ vóxeles recortados del estudio. Para predecir, recorre el cuerpo entero con esos cubos y une las predicciones. La salida es una máscara binaria de lesión que se compara con la del experto.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[font=\sffamily\scriptsize, node distance=0.45cm,
+  caja/.style={draw=black!65,fill=black!4,rounded corners=2pt,align=center,minimum height=1.05cm,text width=2.0cm},
+  dato/.style={draw=blue!55!black,fill=blue!5,rounded corners=2pt,align=center,minimum height=1.05cm,text width=2.0cm},
+  red/.style={draw=red!55!black,fill=red!5,rounded corners=2pt,align=center,minimum height=1.05cm,text width=2.0cm},
+  fl/.style={-{Stealth[length=1.6mm]},draw=black!70}]
+\node[dato] (d) {DICOM PET, CT y SEG};
+\node[caja,right=of d] (c) {SUV por peso, HU, SEG en la grilla del PET};
+\node[caja,right=of c] (p) {3 mm isotrópicos, ventana CT, SUV/30, recorte al cuerpo};
+\node[red,right=of p] (n) {U-Net 3D: brazo A, A+, B, C o E};
+\node[caja,right=of n] (s) {ventana deslizante, umbral};
+\node[dato,right=of s] (m) {máscara y métricas};
+\draw[fl] (d)--(c); \draw[fl] (c)--(p); \draw[fl] (p)--(n); \draw[fl] (n)--(s); \draw[fl] (s)--(m);
+\node[caja,below=0.55cm of n,text width=4.4cm,fill=red!3] (t) {entrenamiento: lotes de 2 parches de $96^3$, 70\,\% centrados en lesión};
+\draw[fl,dashed] (p.south) |- (t.west);
+\draw[fl,dashed] (t.north) -- (n.south);
+\node[caja,below=0.55cm of p,xshift=-3.0cm,text width=3.4cm] (o) {TotalSegmentator sobre el CT (solo para evaluar y para E)};
+\draw[fl,dashed] (c.south) -- ++(0,-0.25) -| (o.north);
+\end{tikzpicture}
+\caption{Recorrido de un estudio. Las líneas discontinuas son caminos que solo se usan para entrenar o para evaluar.}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{Conversión y preprocesamiento}
+
+El SUV se calcula desde las etiquetas DICOM: actividad del vóxel, dosis inyectada corregida por decaimiento entre la inyección y la adquisición, y peso del paciente \citep{boellaard2015}. El CT se remuestrea a la grilla del PET. La máscara del DICOM SEG se ubica corte a corte por su posición física, porque el orden de los cortes en el archivo no coincide con el del PET; ese error de orientación apareció el primer día y lo corregí con una prueba sobre un fantoma sintético.
+
+Después, todo se lleva a vóxeles isotrópicos de 3 mm. El CT se recorta a la ventana de tejido blando, de $-200$ a 300 HU, y se escala a $[0,1]$. El SUV se divide por 30 con tope en 1. Una máscara corporal, obtenida del CT, permite recortar el volumen a la caja del cuerpo: cada estudio queda en unos $284\times120\times135$ vóxeles. Todas las constantes son fijas, de modo que el preprocesamiento no aprende nada de validación ni de prueba.
+
+\subsection{Referencia clásica}
+
+La referencia clásica aplica un umbral de SUV $\geq 2{,}5$, una apertura morfológica de radio 1 y elimina las componentes de menos de 0,5 mL. Es la referencia que reporté en la parcial y la que aparece en todas las tablas. La definición de tema prometía además apagar los órganos de captación fisiológica; las reglas escritas a mano borraban lesiones reales, así que la variante con exclusión de órganos la calculé después con los mapas de TotalSegmentator \citep{wasserthal2023} y la reporto como análisis secundario (sección~\ref{sec:secundarios}).
+
+\subsection{Los brazos de fusión}
+
+Todos los brazos parten de la misma U-Net 3D de MONAI \citep{ronneberger2015,cicek2016,cardoso2022monai}, con cinco niveles de 32, 64, 128, 256 y 320 canales, unidades residuales y normalización de instancia \citep{ulyanov2016}. El codificador reduce el cubo de 96 a 6 vóxeles por lado en cuatro pasos, y el decodificador lo devuelve a 96 con conexiones de salto en cada nivel. La salida tiene dos canales, fondo y lesión, y una softmax da la probabilidad de lesión por vóxel. La Figura~\ref{fig:brazos} muestra cómo entra cada modalidad.
+
+\begin{itemize}
+\item \textbf{A, fusión temprana.} El SUV y el CT entran como dos canales de una sola red. Desde la primera convolución cada filtro mira las dos modalidades. Tiene 12,9 M parámetros y cuesta unos 37 GFLOP por parche.
+\item \textbf{B, fusión intermedia por concatenación.} Cada modalidad entra con un canal a su propio codificador. En el cuello de botella los dos mapas de 320 canales se apilan en 640 y una convolución $1\times1\times1$ los combina en 320. El decodificador es uno solo y recibe las conexiones de salto de los dos codificadores. Tiene 24,0 M parámetros y cuesta unos 59 GFLOP por parche.
+\item \textbf{C, B más atención cruzada} en el cuello de botella, descrita en la sección siguiente (24,4 M).
+\item \textbf{E, referencia hepática.} Es A con un tercer canal: el SUV dividido por la mediana del SUV hepático del propio paciente, con tope en 8 veces. El hígado se segmenta con TotalSegmentator sobre el CT y la mediana se calcula sin mirar la anotación, para que el canal exista igual en un estudio nuevo. Lo agregué el 10 de septiembre por dos razones. La clínica ya compara la captación con el hígado del paciente en la escala de Deauville para linfoma \citep{barrington2014}. Y la red ve parches de 29 cm: desde un parche en la pelvis el hígado no se ve, así que esa referencia es un dato que el parche no contiene.
+\item \textbf{A+, control de capacidad.} Es A con 1,375 veces más canales en cada nivel, para llegar a 24,3 M parámetros, como B. Lo agregué en la etapa extendida, después de una auditoría del código, para separar el efecto de tener más red del efecto de fusionar distinto.
+\end{itemize}
+
+B cumple dos papeles. Es la fusión intermedia sin atención y es el control de C: si C le gana a A pero empata con B, la ventaja es del doble codificador y no de la atención.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=0.86,transform shape,
+  font=\sffamily\scriptsize,
+  pet/.style={draw=red!60!black,fill=red!6,rounded corners=2pt,minimum width=0.9cm,minimum height=0.55cm},
+  ct/.style={draw=blue!60!black,fill=blue!6,rounded corners=2pt,minimum width=0.9cm,minimum height=0.55cm},
+  enc/.style={draw=black!70,fill=black!4,rounded corners=2pt,minimum width=1.5cm,minimum height=0.55cm,align=center},
+  sal/.style={draw=green!40!black,fill=green!6,rounded corners=2pt,minimum width=1.1cm,minimum height=0.55cm},
+  fl/.style={-{Stealth[length=1.5mm]},draw=black!70}]
+\node[font=\sffamily\bfseries\small] at (0,1.15) {A y A+ · temprana};
+\node[pet] (pa) at (-0.6,0.4) {SUV}; \node[ct] (ca) at (0.6,0.4) {CT};
+\node[enc] (ea) at (0,-0.55) {una U-Net\\ dos canales};
+\node[sal] (oa) at (0,-1.5) {máscara};
+\draw[fl] (pa)--(ea); \draw[fl] (ca)--(ea); \draw[fl] (ea)--(oa);
+\node[font=\sffamily\bfseries\small] at (4,1.15) {B · dos codificadores};
+\node[pet] (pb) at (3.3,0.4) {SUV}; \node[ct] (cb) at (4.7,0.4) {CT};
+\node[enc,minimum width=1.1cm] (e1) at (3.3,-0.35) {cod.}; \node[enc,minimum width=1.1cm] (e2) at (4.7,-0.35) {cod.};
+\node[enc] (jb) at (4,-1.1) {concatenar};
+\node[sal] (ob) at (4,-1.95) {máscara};
+\draw[fl] (pb)--(e1); \draw[fl] (cb)--(e2); \draw[fl] (e1)--(jb); \draw[fl] (e2)--(jb); \draw[fl] (jb)--(ob);
+\node[font=\sffamily\bfseries\small] at (8,1.15) {C · atención cruzada};
+\node[pet] (pc) at (7.3,0.4) {SUV}; \node[ct] (cc) at (8.7,0.4) {CT};
+\node[enc,minimum width=1.1cm] (e3) at (7.3,-0.35) {cod.}; \node[enc,minimum width=1.1cm] (e4) at (8.7,-0.35) {cod.};
+\node[enc] (jc) at (8,-1.1) {SUV consulta,\\ CT clave y valor};
+\node[sal] (oc) at (8,-1.95) {máscara};
+\draw[fl] (pc)--(e3); \draw[fl] (cc)--(e4); \draw[fl] (e3)--(jc); \draw[fl] (e4)--(jc); \draw[fl] (jc)--(oc);
+\node[font=\sffamily\bfseries\small] at (12,1.15) {E · referencia hepática};
+\node[pet] (pe) at (10.65,0.4) {SUV}; \node[ct] (ce) at (11.85,0.4) {CT};
+\node[pet,minimum width=1.0cm,align=center,inner sep=1.5pt] (he) at (13.35,0.4) {SUV ÷\\ hígado};
+\node[enc] (ee) at (12,-0.55) {una U-Net\\ tres canales};
+\node[sal] (oe) at (12,-1.5) {máscara};
+\draw[fl] (pe)--(ee); \draw[fl] (ce)--(ee); \draw[fl] (he)--(ee); \draw[fl] (ee)--(oe);
+\end{tikzpicture}
+\caption{Los brazos. En B y C cada modalidad tiene su propio codificador y se unen en el cuello de botella ($6^3$ posiciones). A+ tiene la forma de A con 1,375 veces más canales.}
+\label{fig:brazos}
+\end{figure}
+
+\subsection{La atención cruzada del brazo C}
+
+En el cuello de botella, cada codificador entrega un mapa de 320 canales sobre una grilla de $6\times6\times6$: 216 posiciones, cada una de las cuales resume unos 48 mm del parche. C deja que cada posición del PET busque, entre las 216 posiciones del CT, las que le sirven \citep{vaswani2017}. Con $X_P, X_C \in \mathbb{R}^{216\times320}$ los mapas aplanados del PET y del CT, $\mathrm{LN}$ una normalización de capa y $E$ una codificación de posición sinusoidal 3D fija,
+\begin{align}
+Q &= (\mathrm{LN}(X_P)+E)\,W_Q, \\
+K &= (\mathrm{LN}(X_C)+E)\,W_K, \qquad V = (\mathrm{LN}(X_C)+E)\,W_V, \\
+\mathrm{Att}(Q,K,V) &= \mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d}}\right) V, \\
+\tilde X_P &= X_P + \gamma\,\mathrm{MHA}(Q,K,V),
+\end{align}
+donde MHA son 8 cabezas de atención en paralelo y $\gamma$ es un escalar aprendido. Después, $\tilde X_P$ y $X_C$ se concatenan y siguen el mismo camino que en B.
+
+La atención va en el cuello porque compara todas las posiciones contra todas. En $6^3$ son $216^2$ comparaciones; en $96^3$ serían $884\,736^2$, imposible en 24 GB. Estas 216 posiciones son lo más parecido, dentro de este proyecto, a los tokens de un Vision Transformer \citep{dosovitskiy2021,hatamizadeh2022}, con la diferencia de que salen de las convoluciones del codificador y no de cortar la imagen en baldosas.
+
+La primera versión de C partió con $\gamma=0$, para que naciera igual a B y aprendiera a usar la atención si le servía. Como $\gamma$ terminó en 0,0125, la reentrené con $\gamma=1$, para que la atención participara con todo su peso desde el inicio.
+
+\subsection{Entrenamiento por parches}
+
+Un estudio de cuerpo entero tiene unos 4,6 millones de vóxeles por canal, y con todos los mapas intermedios de la U-Net no cabe en la memoria del equipo. La red aprende con parches de $96^3$ vóxeles, 288 mm de lado. Como la lesión ocupa menos del 1\,\% del cuerpo, el 70\,\% de los parches se centra en un vóxel de lesión y el resto en cualquier vóxel del cuerpo. El Algoritmo~\ref{alg:entrenar} resume una corrida.
+
+\begin{algorithm}[h]
+\caption{Una corrida de entrenamiento (igual para todos los brazos).}
+\label{alg:entrenar}
+\small
+\begin{algorithmic}[1]
+\Require estudios de entrenamiento $\mathcal{D}$, red $f_\theta$, iteraciones $T$ (25\,000 o 100\,000)
+\For{$t = 1$ \textbf{hasta} $T$}
+  \State tomar 2 estudios de $\mathcal{D}$ y recortar de cada uno un cubo de $96^3$ (70\,\% centrado en lesión)
+  \State voltear al azar izquierda-derecha y adelante-atrás, con la máscara incluida; nunca cabeza-pies
+  \State $\hat y \gets \mathrm{softmax}(f_\theta(x))$ \Comment{$x$: $[2, C, 96, 96, 96]$, con $C=2$ o 3 canales}
+  \State $\mathcal{L} \gets \mathcal{L}_{\mathrm{Dice}}(\hat y, y) + \mathcal{L}_{\mathrm{CE}}(\hat y, y)$
+  \State gradientes por retropropagación, recortados a norma 12
+  \State AdamW: $\theta \gets \theta - \eta_t \cdot \mathrm{paso}$, con $\eta_t = 3\cdot10^{-4}(1-t/T)^{0{,}9}$
+  \If{$t \bmod 500 = 0$} guardar \texttt{ultimo.pt} \EndIf
+  \If{$t \bmod 1000 = 0$} Dice en 12 estudios fijos de validación; si es el mejor, guardar \texttt{mejor.pt} \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+El lote es de 2 parches por memoria: dos cubos 3D de este tamaño caben con margen en 24 GB, y nnU-Net usa el mismo lote en 3D \citep{isensee2021nnunet}. La pérdida combina Dice, que mira el solapamiento global y no se deja dominar por el fondo, y entropía cruzada, que corrige cada vóxel. El optimizador es AdamW \citep{loshchilov2019} con decaimiento de pesos $10^{-5}$.
+
+\subsection{Inferencia y sistema final}
+
+Para predecir un estudio, la red lo recorre con cubos de $96^3$ que se solapan a la mitad y promedia las probabilidades de cada vóxel con más peso en el centro de cada cubo (ponderación gaussiana), porque en el borde la red ve menos contexto.
+
+El sistema final agrega dos cosas sobre B. Primero, un ensamble: los 825 estudios de entrenamiento se dividieron en cinco pliegues estratificados de unos 165, y entrené cinco modelos B, cada uno con cuatro pliegues. Segundo, aumento en inferencia (TTA): cada modelo predice también la imagen volteada de izquierda a derecha, de adelante hacia atrás y en los dos sentidos a la vez, y se devuelve cada volteo antes de promediar. El umbral de decisión se fijó en 0,6 con una regla escrita antes de abrir la prueba (sección~\ref{sec:umbral}). El Algoritmo~\ref{alg:final} lo resume.
+
+\begin{algorithm}[h]
+\caption{Predicción del sistema final para un estudio.}
+\label{alg:final}
+\small
+\begin{algorithmic}[1]
+\Require estudio preprocesado $x$, modelos $f_1,\dots,f_5$ (B, uno por pliegue), volteos $\mathcal{V} = \{\mathrm{id}, v_1, v_2, v_3\}$
+\State $P \gets 0$
+\For{$k = 1$ \textbf{hasta} 5}
+  \For{\textbf{cada} $v \in \mathcal{V}$}
+    \State $P \gets P + v^{-1}\big(\mathrm{VentanaDeslizante}(f_k, v(x))\big)$ \Comment{cubos de $96^3$, solape 50\,\%}
+  \EndFor
+\EndFor
+\State $P \gets P / 20$ \Comment{20 lecturas por estudio}
+\Ensure máscara $M = [P \geq 0{,}6]$
+\end{algorithmic}
+\end{algorithm}
