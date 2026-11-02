@@ -1018,3 +1018,23 @@ Se abrió el test con el preregistro del commit `90a35e1` (`results/test/APERTUR
 FPV 9,5 mL. En el acto 1 el empate en Dice se sostiene; en FPV los dos codificadores evitan unos
 pocos fallos grandes de A. En la etapa extendida B y C le ganan a A (+0,038 y +0,034) y A+ no.
 Lectura completa en `docs/RESULTADOS_TEST.md`.
+
+## 2026-11-02. Casos cualitativos de la prueba (`scripts/42`)
+
+Comprometidos en la parcial. Cuatro estudios de la prueba elegidos con una regla fija sobre las
+métricas del sistema final, escrita en el script antes de mirar las imágenes: el caso típico
+(Dice más cercano a la mediana, 0,81), el de mayor FPV, el de mayor FNV y el de mayor caída de
+FPV entre B solo y el ensamble. Columnas: experto, umbral clásico, B extendido (semilla 423) y
+sistema final, sobre el MIP coronal del SUV. Sin entrenar ni predecir: máscaras ya guardadas.
+Figura en `docs/figuras/casos_test.png`; cifras por caso en `results/test_final/casos_test.csv`.
+
+Lo que se ve, sin sobreinterpretar:
+
+- A (linfoma, caso típico): la clásica pinta columna, médula y vejiga (FPV 303 mL); B deja 13,5
+  y el sistema final 8,6 mL, con Dice 0,79 y 0,81.
+- B (linfoma, mayor FPV): el falso positivo de las redes cae sobre todo en el bazo. En linfoma
+  la captación esplénica puede ser enfermedad no anotada; con estos datos no se puede saber.
+- C (pulmón, mayor FNV): el sistema final pierde varias lesiones pequeñas que B sí tocaba (FNV
+  26,0 contra 8,8 mL). Es el costo del umbral 0,6 y del promedio, visto en un paciente.
+- D (control sin lesión): el ensamble baja el FPV de B de 171 a 66 mL; lo que queda está en la
+  médula ósea de la pelvis.
