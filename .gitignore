@@ -44,3 +44,9 @@ data/manifests/_lotes/
 
 # caché intermedia de scripts/40
 results/*/_s40_*/
+
+# Material de estudio personal (guías, videos, guiones): vive en notas_personales/, no en el repo
+docs/estudio/
+docs/guia/
+docs/ruta/
+docs/videos/
