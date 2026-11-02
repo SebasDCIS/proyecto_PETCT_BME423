@@ -43,7 +43,7 @@ docs/figuras/visor_datos.js
 data/manifests/_lotes/
 
 # caché intermedia de scripts/40
-results/*/_s40_*/
+results/*/_s4[0-9]_*/
 
 # Material de estudio personal (guías, videos, guiones): vive en notas_personales/, no en el repo
 docs/estudio/

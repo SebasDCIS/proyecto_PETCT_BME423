@@ -1038,3 +1038,21 @@ Lo que se ve, sin sobreinterpretar:
   26,0 contra 8,8 mL). Es el costo del umbral 0,6 y del promedio, visto en un paciente.
 - D (control sin lesión): el ensamble baja el FPV de B de 171 a 66 mL; lo que queda está en la
   médula ósea de la pelvis.
+
+## 2026-11-02. FP por órgano de todos los brazos en la prueba (`scripts/43`)
+
+La tabla de la prueba (`scripts/37`, S4) tenía solo B, el ensamble y el sistema final; la
+parcial avisó que E faltaba. Se completó con la clásica, A, B, C y E del acto 1 y A, A+ y C del
+extendido, con la misma convención (incluida la zona anonimizada; por eso A del acto 1 suma
+39,1 mL y no los 38,4 de la métrica corregida). Totales iguales a los de la tabla anterior
+donde se solapan (B 19,10; sistema final 9,50). Descriptivo, fuera del preregistro.
+Tabla en `results/test_final/fp_por_organo_todos.csv`.
+
+- La clásica pone su error en órganos de captación fisiológica: hígado 167, riñones 111,
+  vejiga 110, corazón 107 e intestino 90 mL por estudio. Las redes dejan menos de 1 mL en
+  hígado, riñones, vejiga y corazón; en el intestino, entre 0,3 y 9 mL (más en el acto 1).
+- Lo que les queda a las redes está en tejido sin órgano asignado ("otro"), hueso, bazo y
+  borde del cuerpo ("fuera"); el sistema final baja todos a menos de 3 mL.
+- E del acto 1 deja 28,6 mL contra 39,1 de A, sobre todo por menos FP fuera del cuerpo y en el
+  intestino; contra B (23,6) no se distingue. No cambia la lectura del acto 1: su ventaja de
+  validación venía del checkpoint.
