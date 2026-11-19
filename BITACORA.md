@@ -1076,3 +1076,20 @@ prueba; las que afectan la lectura de algún número quedaron declaradas en el i
 Verificado sin problemas: interpolación de la máscara (vecino más cercano), ejes de volteo
 iguales en entrenamiento y TTA, partición por paciente, pliegues estratificados, predicción fuera
 de pliegue correcta, métricas iguales al script oficial, referencias calculadas sin la anotación.
+
+## 2026-11-19. Reanálisis sin entrenar (`scripts/44`)
+
+Tres de las fallas de la revisión crítica se corrigen solo con las tablas guardadas. Resultados
+en `results/reanalisis/reanalisis.md`, resumidos en el informe:
+
+- **Acto 1 sin la fuga.** En los 12 estudios usados para elegir, `mejor.pt` supera a `ultimo.pt`
+  en todos los brazos (+0,013 a +0,044); en los 14 no usados pasa lo contrario en B, C y E. En los
+  14 limpios las fusiones siguen empatando (B−A +0,020 [0,000, +0,045]; C−A +0,013; E−A −0,017).
+  La ventaja aparente de E venía de los 12 estudios con que se eligió su checkpoint.
+- **Bootstrap jerárquico** (pacientes y semillas): H1 y H2 siguen confirmadas; B y C sobre A en el
+  extendido se sostienen en Dice⁺. Dejan de excluir el cero el FPV de C−A (acto 1), de B pre−B y
+  del ensamble frente a sus miembros.
+- **Holm** sobre 18 pruebas secundarias: siguen significativas S6 Dice⁺ B−A y C−A (p 0,037),
+  S6 FPV C−A (0,029), S1 FPV y S2. S6 FPV B−A deja de serlo (0,128); ninguna del acto 1 lo es.
+
+Pendiente opcional (solo predicción, en la Terminal del Mac): ensamble + TTA contra B + TTA.
