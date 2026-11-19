@@ -50,3 +50,10 @@ docs/estudio/
 docs/guia/
 docs/ruta/
 docs/videos/
+
+# Auxiliares de LaTeX
+report/**/*.aux
+report/**/*.log
+report/**/*.out
+report/**/*.bbl
+report/**/*.blg

@@ -1056,3 +1056,23 @@ Tabla en `results/test_final/fp_por_organo_todos.csv`.
 - E del acto 1 deja 28,6 mL contra 39,1 de A, sobre todo por menos FP fuera del cuerpo y en el
   intestino; contra B (23,6) no se distingue. No cambia la lectura del acto 1: su ventaja de
   validación venía del checkpoint.
+
+## 2026-11-19. Revisión crítica antes de cerrar
+
+Revisé el código y el diseño buscando fallas propias. Ninguna cambia las conclusiones de la
+prueba; las que afectan la lectura de algún número quedaron declaradas en el informe final
+(sección "Fallas que encontré al revisar el trabajo"):
+
+- La validación rápida que elegía `mejor.pt` en el acto 1 usaba los primeros 12 de los 26
+  estudios de validación (`val_files[:12]` en `train.py`), y la tabla del acto 1 reporta esos
+  26: las cifras de `mejor.pt` en validación quedan algo optimistas. `ultimo.pt` y la prueba no
+  están afectados.
+- En el 2 × 2, pasar de 176 a 825 estudios cambió también la proporción de controles (20 % a
+  50 %) y con ella la fracción de parches centrados en lesión (≈ 0,56 a 0,35).
+- Los IC no incluyen la variación entre semillas; las secundarias S1–S8 no tienen corrección por
+  multiplicidad; el ensamble usa 20× más cómputo de inferencia que B; E solo existe en el acto 1;
+  la ventana de CT −200/300 HU iguala pulmón y aire y satura el hueso.
+
+Verificado sin problemas: interpolación de la máscara (vecino más cercano), ejes de volteo
+iguales en entrenamiento y TTA, partición por paciente, pliegues estratificados, predicción fuera
+de pliegue correcta, métricas iguales al script oficial, referencias calculadas sin la anotación.

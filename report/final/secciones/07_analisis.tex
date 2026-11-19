@@ -18,6 +18,21 @@ El sistema final llega a \dmas{} 0,705 con la métrica cruda del reto y 9,5 mL d
 
 Tres veces una sola semilla mostró algo que no se repitió: la primera C con 16 mL de FPV, la primera B extendida con +0,033 sobre A y el preentrenamiento con 0,724. Las tres desaparecieron con más semillas. El criterio de checkpoint, a su vez, fabricó la ventaja de E en el acto 1. Por eso todas las comparaciones de este informe usan tres semillas, y las que no las tienen lo dicen. La validación de 26 estudios también engañó con el umbral: decidirlo con los 825 fuera de pliegue evitó llevar a la prueba un umbral de 0,7 que solo era ruido.
 
+\subsection{Fallas que encontré al revisar el trabajo}
+\label{sec:fallas}
+
+Antes de cerrar revisé el código y el diseño buscando errores propios. Ninguno de los siguientes cambia las conclusiones de la prueba, pero los declaro porque afectan cómo se leen algunos números.
+
+\begin{itemize}
+\item \textbf{Fuga en la validación del acto 1.} La validación rápida que elegía \texttt{mejor.pt} usaba los primeros 12 de los 26 estudios de validación, y la Tabla~\ref{tab:acto1} reporta esos mismos 26. Las cifras de \texttt{mejor.pt} quedan algo optimistas. La columna \texttt{ultimo.pt}, que no pasó por ninguna elección, muestra el mismo empate, y la prueba nunca se usó para elegir nada. Lo correcto habría sido validar durante el entrenamiento con un grupo separado del entrenamiento, no de la validación.
+\item \textbf{El factor ``más datos'' del diseño 2\,×\,2 cambió también la proporción de controles}: 20\,\% en los 176 estudios y 50\,\% en los 825. Como en un control los parches se recortan al azar, la fracción de parches centrados en lesión bajó de cerca de 0,56 a 0,35. El efecto de las iteraciones se sostiene, pero el de los datos quedó confundido con ese cambio. Habría que mantener la misma proporción en las dos condiciones.
+\item \textbf{Los intervalos no incluyen la variación entre semillas.} El bootstrap remuestrea pacientes sobre el promedio de tres semillas, así que los IC de las comparaciones entre arquitecturas son algo más estrechos de lo que deberían. Un bootstrap jerárquico, que remuestree semillas y pacientes, lo corregiría.
+\item \textbf{Las comparaciones secundarias no tienen corrección por multiplicidad.} H1 y H2 están protegidas por el preregistro; S1 a S8 son ocho comparaciones exploratorias, y algunas, como B contra A en el extendido, quedan cerca del límite.
+\item \textbf{El ensamble usa 20 veces más cómputo al predecir que B.} Parte de su ventaja viene de ese costo. Una comparación justa sería contra un B con TTA o con el mismo presupuesto de inferencia.
+\item \textbf{E solo se entrenó en el acto 1.} Es el único brazo que no se probó con entrenamiento suficiente, así que no sé si con 100\,000 iteraciones habría aportado, como pasó con B.
+\item \textbf{La ventana del CT, de $-200$ a 300 HU, deja el pulmón igual que el aire y satura el hueso.} La red pierde anatomía justo en pulmón y hueso, donde queda parte del falso positivo. Una ventana más amplia o dos canales de CT con ventanas distintas lo evitarían.
+\end{itemize}
+
 \subsection{Limitaciones}
 
 \begin{itemize}
