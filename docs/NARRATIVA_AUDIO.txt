@@ -1,0 +1,141 @@
+Segmentación de lesiones en PET CT: la historia completa del proyecto.
+
+Narrativa para escuchar. Versión del dos de octubre de dos mil veintiséis.
+
+Primera parte. El problema.
+
+Un paciente con linfoma, con melanoma o con cáncer de pulmón llega a control. Le inyectan un azúcar marcado con un átomo radiactivo, esperan una hora, y lo pasan por una máquina que produce dos imágenes del cuerpo entero al mismo tiempo. El médico nuclear se sienta frente a la pantalla y tiene que responder preguntas que suenan simples y no lo son. Cuántas lesiones hay. Dónde están. Cuánto tumor activo tiene este paciente en total. Y si es más o menos que hace tres meses.
+
+Para responder la pregunta del total hay que dibujar cada lesión, vóxel por vóxel, sobre la imagen. Un vóxel es la versión tridimensional de un píxel: si un píxel es un cuadradito de una foto, un vóxel es un cubito de un volumen. En este proyecto cada vóxel mide tres milímetros por lado. Dibujar todas las lesiones de un estudio de cuerpo entero toma entre treinta y noventa minutos de un especialista. En la práctica casi nadie lo hace. Se mide la lesión más grande, se anota múltiples focos, y se sigue. La medida que de verdad correlaciona con el pronóstico, el volumen total de tumor activo, se pierde por costo de tiempo. Ese es el problema que ataca el proyecto.
+
+Las dos imágenes son distintas y complementarias. El PET, la tomografía por emisión de positrones, mide actividad metabólica: qué tan rápido consume azúcar cada tejido. Las células que consumen mucho azúcar acumulan el marcador y brillan. Los tumores consumen mucho azúcar, por eso brillan. El brillo se mide con el SUV, el valor de captación estandarizado: la concentración del radiofármaco en un punto, dividida por la dosis inyectada y corregida por el peso del paciente. Es un número sin unidades. El músculo en reposo está cerca de uno, el hígado alrededor de dos, un tumor activo pasa de diez.
+
+Pero el PET tiene una trampa. Hay tejidos sanos que también consumen mucho azúcar y brillan igual: el cerebro, el corazón, el hígado, el intestino, y sobre todo los riñones y la vejiga, porque el marcador se elimina por la orina. Un PET solo tiene decenas de puntos brillantes que no son tumor.
+
+El CT, la tomografía computarizada, mide otra cosa: densidad, cuánto absorbe rayos equis cada tejido. Su escala son las unidades Hounsfield, donde el agua vale cero y el aire menos mil. El CT no sabe nada de metabolismo. Ve la forma, no la actividad. Pero sabe dónde está cada cosa: distingue riñón de tumor, pulmón de mediastino, hueso de partes blandas.
+
+Y ahí está la idea que sostiene todo. El PET dice "acá pasa algo". El CT dice "acá es el riñón". Juntas, y solo juntas, permiten decidir si un punto brillante es un tumor o es orina. A eso se le llama fusión: combinar las dos fuentes para tomar una decisión que ninguna podría tomar sola.
+
+A lo largo de todo el proyecto usamos una misma analogía: la red neuronal es un residente que aprende a marcar tumores mirando miles de casos con la respuesta del experto al lado. Las distintas arquitecturas que comparamos son distintas formas de enseñarle a usar sus dos ojos, el ojo del PET y el ojo del CT.
+
+Segunda parte. Los datos.
+
+Trabajamos con autoPET, la colección pública FDG PET CT Lesions del archivo de imágenes del cáncer, TCIA, en su versión anonimizada con licencia abierta. Son mil catorce estudios de novecientos pacientes del Hospital Universitario de Tubinga: quinientos uno con lesión, repartidos entre cáncer de pulmón, linfoma y melanoma, y quinientos trece controles sin enfermedad maligna activa. Es el conjunto de un reto internacional anual, lo que hace que nuestros números sean comparables con la literatura.
+
+Cada estudio trae tres series: el CT, el PET con las etiquetas necesarias para calcular el SUV, y la segmentación, es decir, la máscara dibujada a mano por un radiólogo con diez años de experiencia en imagen híbrida, revisada en consenso con quien hizo el informe clínico en los casos dudosos.
+
+Hay algo que conviene entender desde el principio sobre esa anotación. Tiene una sola etiqueta: uno significa lesión tumoral ávida de FDG, cero significa todo lo demás. No existe una clase inflamación, ni benigno, ni captación fisiológica. Un foco inflamatorio con un SUV de veinte es, para la etiqueta, exactamente lo mismo que el aire. Eso obliga a la red a aprender la distinción más difícil del PET solo con la imagen, sin el informe clínico que sí tuvo el anotador. Por eso una parte de lo que llamamos falso positivo es irreducible desde la imagen. Y por eso el proyecto adoptó una regla: no hacer ninguna pregunta que la anotación no pueda contestar sola.
+
+Un detalle más. Por privacidad, la cabeza de cada paciente fue borrada digitalmente. En esa caja el PET vale exactamente cero y el CT es aire. Pero el experto anotó sobre la imagen original, así que ahí quedan lesiones anotadas sin señal debajo: cerca del cinco por ciento del volumen anotado de la colección. Excluimos esa zona de la evaluación, con la misma regla para todos los métodos, y reportamos además la métrica cruda del reto.
+
+El proyecto tuvo dos conjuntos de entrenamiento. En la primera fase, ciento setenta y seis estudios, uno por paciente. En la segunda, ochocientos veinticinco. Pero la validación, veintiséis estudios, y la prueba, cuarenta y nueve estudios, nunca cambiaron. La partición es siempre por paciente, para que ningún corte de una misma persona quede en dos lados, y está estratificada por diagnóstico. Y hay una regla de oro: la prueba se abre una sola vez, al final, con todo decidido. Mientras se toman decisiones se mira solo validación. A la fecha de esta narración, la prueba sigue cerrada.
+
+Tercera parte. De DICOM a vóxeles.
+
+Antes de que la red vea nada, cada estudio pasa por seis pasos fijos. Primero la descarga: las series en formato DICOM, el formato universal de imagen médica, donde cada corte es un archivo con sus píxeles y una ficha de cientos de etiquetas. Segundo, el cálculo del SUV, leyendo de esas etiquetas el peso del paciente, la dosis inyectada, la semivida del isótopo y las horas de inyección y de adquisición, porque el flúor dieciocho pierde la mitad de su actividad cada ciento diez minutos. Tercero, la conversión a NIfTI, un solo archivo por volumen tridimensional con su geometría, donde el CT se remuestrea sobre la grilla del PET y la segmentación se ubica por la posición física de cada corte, para que las tres queden alineadas vóxel a vóxel. Cuarto, el remuestreo de todo a tres milímetros isotrópicos, es decir, vóxeles cúbicos, porque las convoluciones tridimensionales asumen que un vóxel mide lo mismo en las tres direcciones. Quinto, las escalas: el CT se recorta a la ventana de tejido blando, de menos doscientas a más trescientas unidades Hounsfield, y se lleva al rango entre cero y uno; el SUV se divide por treinta, con tope, para que la vejiga no domine la escala. Y sexto, la máscara del cuerpo: se elimina el aire y la camilla y se recorta el volumen a lo que importa.
+
+Ninguna de esas constantes se calcula sobre los datos. Son fijas. Eso garantiza que nada de validación o prueba se filtre hacia el entrenamiento. El resultado es un archivo de doce megabytes por estudio.
+
+Cuarta parte. Cómo se mide.
+
+Tres números, cada uno con su pregunta. El Dice mide cuánto se superponen el dibujo de la red y el del experto: dos veces la intersección dividida por la suma de los dos volúmenes, entre cero y uno. Responde: dibuja bien lo que hay. Se calcula solo en los estudios que tienen lesión, veinte de los veintiséis de validación. El volumen de falso positivo, en mililitros, es cuánto tejido sano la red marcó como lesión, contado por islas que no tocan ninguna lesión anotada. Responde: cuánto inventa. Y el volumen de falso negativo es cuánto tumor real dejó pasar. Responde: cuánto se le escapa. Se separan a propósito, porque un sistema que no marca nada tiene cero falsos positivos y es inútil.
+
+Y están las reglas de rigor, que son lo que más vale de este trabajo. Particiones por paciente. La prueba abierta una sola vez. Criterios de éxito fijados por escrito antes de correr cada experimento, que no se ajustan después de ver el resultado. Tres semillas por brazo antes de afirmar nada, porque una semilla es el número que fija el azar, y dos corridas idénticas con distinta semilla difieren entre una y dos centésimas de Dice. Ablación obligatoria para cualquier módulo nuevo: apagarlo y volver a medir. Y comparación pareada estudio a estudio, con intervalos de confianza, no solo promedios.
+
+Quinta parte. El método clásico.
+
+El punto de partida es lo que usa buena parte del software comercial: marcar como lesión todo vóxel con SUV mayor o igual a dos coma cinco, limpiar con morfología y descartar islas muy chicas. Usa solo el PET. Lo medimos en los veintiséis estudios de validación. Dice de cero coma dieciocho. Y mil ciento noventa y dos mililitros de falso positivo por estudio. Más de un litro de tejido sano marcado como tumor. Cuando repartimos ese error por órgano, el setenta y cuatro por ciento cae en órganos que captan normalmente: trescientos cuarenta y nueve mililitros en el hígado, ciento cuarenta y dos en el corazón, ciento treinta y dos en la vejiga. El método no está roto. Está ciego, porque nunca mira el CT.
+
+Sexta parte. La red.
+
+Una red neuronal es un programa con millones de números ajustables, los parámetros, que no se programan a mano: se ajustan por ejemplo. Se le muestran miles de casos con la respuesta correcta y en cada intento se corrigen un poquito los números en la dirección que reduce el error.
+
+Usamos una U-Net tridimensional. Tiene dos mitades. El embudo, o codificador: la imagen se va achicando y a la vez se va describiendo con más detalle abstracto. Al principio la red distingue bordes y manchas; al fondo del embudo la imagen es diminuta pero cada valor representa algo como "región de alta captación rodeada de tejido blando en el tórax". Se pierde el dónde, se gana el qué. Ese fondo se llama cuello de botella: para un cubo de noventa y seis vóxeles por lado, son seis por seis por seis posiciones con trescientos veinte canales, donde cada posición resume diez centímetros de tejido. Después viene la trompeta, o decodificador: el proceso inverso, agrandando hasta volver al tamaño original para decir exactamente qué vóxeles son lesión. Y los puentes, las conexiones de salto, llevan el detalle fino del embudo directamente a la trompeta para que el contorno no salga borroso. La salida es una máscara: uno donde hay lesión, cero donde no.
+
+Como un estudio entero no cabe en memoria, la red entrena con cubos de noventa y seis vóxeles, unos veintinueve centímetros, recortados al azar. Con probabilidad cero coma siete el cubo se centra en una lesión, porque las lesiones son menos del uno por ciento del cuerpo y sin ese sesgo la red aprendería a decir "nada" en todas partes. Lo que se minimiza es la pérdida Dice más entropía cruzada. El optimizador es AdamW con tasa de aprendizaje tres por diez a la menos cuatro que decae hasta cero. Cada iteración es un lote de dos cubos y un paso del optimizador. Se cuentan iteraciones, no épocas. En la primera fase fueron veinticinco mil por modelo; en la segunda, cien mil. Para predecir un estudio completo se usa una ventana deslizante: se recorre el volumen con cubos solapados a la mitad y se promedian los solapes.
+
+Todo corre en un MacBook Pro con chip Apple, usando su acelerador gráfico, sin nube ni clúster. Una corrida de cien mil iteraciones son veinticuatro horas. El proyecto lleva más de treinta corridas largas, en colas de días que se pueden pausar y retomar sin perder más de siete minutos.
+
+Séptima parte. Los brazos.
+
+La pregunta científica no es si usar las dos imágenes, sino en qué momento juntarlas. Comparamos varias respuestas, y todas comparten preprocesamiento, parches, pérdida, optimizador, presupuesto y evaluación. Lo único que cambia es la arquitectura.
+
+El modelo A es la fusión temprana: PET y CT entran como dos canales de la misma imagen, como el rojo y el verde de una foto, y se mezclan desde la primera convolución. Es la solución estándar del reto. Con el residente: uno que mira las dos imágenes superpuestas desde el primer día. Tiene doce coma nueve millones de parámetros.
+
+El modelo B es la fusión intermedia por concatenación: dos codificadores idénticos en forma pero con pesos propios, uno para el PET y otro para el CT; en el cuello de botella se apilan los mapas de los dos y una convolución los mezcla. Dos peritos que estudian el caso por separado y juntan sus informes al final. Veinticuatro millones de parámetros.
+
+El modelo C es B más atención cruzada: antes de concatenar, cada posición del PET le pregunta al CT. La atención es el mecanismo de los modelos de lenguaje: cada posición fabrica una consulta, cada posición de la otra imagen ofrece una etiqueta y un contenido, se comparan y se arma un resumen ponderado. Los dos peritos, además, se hacen preguntas dirigidas. Veinticuatro coma cuatro millones de parámetros; la diferencia con B es solo el bloque de atención.
+
+El modelo E es A más un tercer canal: el SUV de cada vóxel dividido por el SUV del hígado del propio paciente, la lógica de la escala de Deauville.
+
+Y el modelo A plus es el control de capacidad: A con canales más anchos para tener los mismos parámetros que B sin cambiar la fusión. Sirve para separar dos explicaciones posibles de un resultado: gana porque fusiona distinto, o gana porque es más grande.
+
+La hipótesis inicial era la intuitiva: C mejor que B, B mejor que A. Más mecanismo, mejor resultado.
+
+Octava parte. El acto uno.
+
+La primera fase, la del curso, se cerró el ocho de septiembre con cuatro brazos y tres semillas cada uno, ciento setenta y seis estudios de entrenamiento y veinticinco mil iteraciones. Los resultados: A, Dice cero coma sesenta y dos; B, cero coma sesenta y uno; C, cero coma sesenta y uno; E, cero coma sesenta y cuatro. Falsos positivos entre veintiuno y veintitrés mililitros. Contra los mil ciento noventa y dos del umbral.
+
+Cuatro conclusiones. Primera: las fusiones empatan. La diferencia entre A, B y C es menor que la variación entre semillas del mismo modelo. Cambiar la semilla mueve más el resultado que cambiar la arquitectura. La hipótesis inicial no se sostuvo, y eso coincide con la conclusión oficial del reto autoPET tres: la dificultad de los casos pesa más que la elección de algoritmo.
+
+Segunda, y es el hallazgo más interesante del acto uno: la atención cruzada de C estaba inerte. Al apagarla en inferencia, la predicción no cambió ni un vóxel en ninguno de los veintiséis estudios, en las tres semillas. Y pudimos medir por qué. La atención convergía a pesos casi uniformes, su salida era casi constante en el espacio, y la normalización por instancia que viene después, que resta la media y divide por la desviación, cancela exactamente las constantes. El módulo estaba conectado, pero su aporte se borraba una capa después. C era B con unos pocos parámetros extra.
+
+Tercera: el modelo E no difiere de A con tres semillas. Su aparente ventaja inicial venía del criterio de selección del checkpoint, no del canal.
+
+Cuarta: ese criterio de checkpoint, elegir el mejor punto de la curva con doce estudios de validación rápida, es ruidoso en régimen corto; llegó a cambiar el falso positivo cuatro veces.
+
+Lo que el acto uno sí resolvió, con números: la ceguera anatómica del método clásico, de mil ciento noventa y dos mililitros a veintiuno; el costo de corrección manual, un cincuenta y siete por ciento menos de volumen que tocar que dibujando desde cero; y una frontera de competencia explícita: la red detecta el cien por ciento de las lesiones mayores de diez mililitros, entre el ochenta y el ochenta y seis por ciento de las que miden entre tres y diez, y solo el veintiuno por ciento de las menores de un mililitro.
+
+Novena parte. La rama extendida, paso uno.
+
+El once de septiembre abrimos una segunda rama del proyecto, con la mira puesta en la siguiente edición del reto autoPET. La regla: vuelve a la rama principal solo si supera el ruido entre semillas, con la partición intacta y la prueba cerrada.
+
+Primero descargamos y preprocesamos los seiscientos cuarenta y nueve estudios que faltaban, hasta llegar a ochocientos veinticinco de entrenamiento. Y después hicimos un experimento de dos por dos con el modelo A: pocos o muchos datos, por pocas o muchas iteraciones. El criterio de éxito, fijado antes: Dice mayor que cero coma sesenta y seis.
+
+La respuesta fue clara y no era la que esperábamos. Más datos con las mismas iteraciones no cambió nada. Cuatro veces más iteraciones con los mismos datos, sí: el Dice subió de cero coma sesenta y cuatro a cero coma sesenta y ocho, con el intervalo de confianza fuera del cero por primera vez en el proyecto, ganando en diecisiete de veinte estudios, y con las tres métricas a favor a la vez. La explicación es aritmética: con veinticinco mil iteraciones y ochocientos veinticinco estudios, la red veía cada estudio unas sesenta veces; con ciento setenta y seis, casi trescientas. Le dimos cinco veces más casos y el mismo tiempo para estudiarlos. Era el presupuesto de entrenamiento, no los datos. Para referencia, la receta estándar del campo, nnU-Net, entrena doscientas cincuenta mil iteraciones. Y con cien mil iteraciones el problema del checkpoint desapareció solo, porque la curva de validación se aplana.
+
+Décima parte. Paso dos: tres semillas y el control de capacidad.
+
+Entre el diecisiete y el veintisiete de septiembre corrieron doce entrenamientos de cien mil iteraciones: A, B, C y el control A plus, con tres semillas cada uno. Diez días de máquina.
+
+Los resultados. A, Dice cero coma sesenta y nueve. A plus, cero coma sesenta y nueve. B, cero coma setenta y uno. C, cero coma setenta y uno, y el más estable de todos, con las tres semillas casi en el mismo número. Falsos positivos: quince mililitros en A, dieciséis en A plus, trece en B y en C.
+
+Lo que quedó en pie. Primero, la inversión de arquitecturas: con veinticinco mil iteraciones ganaba A; con cien mil, los brazos duales quedan arriba. Una comparación con presupuesto insuficiente no comprime hacia el empate: da vuelta el orden. Es una advertencia general para cualquier trabajo que compare arquitecturas de distinto tamaño con un presupuesto fijo y corto. Pero cuidado: la primera semilla de B sobreestimó su efecto tres veces. Con tres semillas la ventaja de B sobre A es de una centésima, con el intervalo cruzando cero. Tendencia consistente, no significativa con veinte estudios positivos.
+
+Segundo, el control de capacidad hizo su trabajo: A plus tiene los parámetros de B y da exactamente el Dice de A, con más falso positivo. Más red sola no ayuda. Lo único que B y C tienen de distinto respecto de A plus es separar el PET y el CT en dos codificadores, y esa es la única diferencia que se mueve en la dirección correcta en las tres métricas: un poco más de Dice, dos coma seis mililitros menos de falso positivo, menos falso negativo. Un efecto chico, consistente, no significativo. Así se reporta.
+
+Tercero, la atención sigue inerte en las tres semillas de C. Y cuarto, ya sabemos dónde vive el falso positivo que queda: solo dos coma cinco de los catorce mililitros están en órganos que captan normalmente. El codificador dual limpia el hígado y el músculo. El ochenta por ciento del error restante está en tejido sin etiqueta, pulmón y bordes del cuerpo: focos calientes de verdad que no son tumor, como inflamación, grasa parda o un ganglio reactivo, y que la anotación no distingue.
+
+Contra el reto, en la métrica cruda, nuestro Dice está por encima del ganador de dos mil veintidós, pero el falso positivo es entre dos y tres veces el de una nnU-Net y cinco veces el del ganador. Esa brecha la ponen el ensamble, el manejo de los controles y el postproceso, no la arquitectura.
+
+Undécima parte. Paso tres: enseñarle anatomía.
+
+La idea: hasta ahora el residente aprendió anatomía y oncología a la vez, solo con casos oncológicos. Nunca tuvo un curso de anatomía aparte. Probamos dos intervenciones sobre el modelo B, con TotalSegmentator como profesor: una red pública ya entrenada que identifica más de cien estructuras a partir del CT, que agrupamos en diecisiete grupos de órganos. Nunca entra a nuestra red en inferencia; solo se usa para enseñar y para analizar errores por órgano.
+
+La primera intervención es un curso de anatomía previo: el codificador de CT de B se entrena antes a decir qué órgano hay en cada vóxel, mirando solo el CT, sin PET ni máscara de lesión. Funcionó como curso: Dice anatómico de cero coma ochenta y seis en tres horas y media. Después B arranca con ese codificador ya educado y aprende tumores desde ahí. La segunda intervención son errores que cuestan más: durante el entrenamiento de lesiones, marcar como tumor el hígado sano o la vejiga cuesta tres veces más que cualquier otro error.
+
+Los criterios se fijaron antes de correr. El preentrenado funcionaba si bajaba el falso positivo al menos tres mililitros sin perder Dice. Los errores caros funcionaban si bajaban a la mitad el falso positivo en los órganos calientes sin perder las lesiones que viven ahí.
+
+El veredicto: ninguna de las cuatro celdas cumplió. Los errores caros subieron el falso positivo en órganos calientes, por dos pacientes difíciles. El preentrenado limpió el hígado y el intestino, pero bajó el total menos de un mililitro, dentro del ruido. Y ninguna de las dos tocó el pulmón. La anatomía resuelve "dónde estoy", no "qué es esto".
+
+Pero apareció algo sin buscarlo. El modelo B preentrenado dio el Dice más alto de las diecinueve corridas largas: cero coma setenta y dos. Una semilla. Este proyecto ya vio dos veces que una corrida sola engaña, así que ese número quedó anotado, no interpretado. El primero de octubre declaramos una hipótesis nueva, por escrito y antes de correr: se acepta solo si las semillas dos y tres de ese modelo dan ambas un Dice de al menos cero coma setenta y dos, redondeando, sin empeorar el falso positivo. Esas dos corridas están entrenando mientras escucho esto. El veredicto sale el cuatro de octubre.
+
+Duodécima parte. El paso cuatro y lo que sigue.
+
+Los pasos uno a tres fueron preguntas controladas. El paso cuatro es construir, con lo aprendido, el mejor sistema entregable, el que irá a la prueba cerrada y el que podría competir en el reto. Y ataca el error que ninguna idea propia tocó: el falso positivo difuso.
+
+Es un ensamble de cinco pliegues. Los ochocientos veinticinco estudios de entrenamiento se reparten en cinco grupos; se entrenan cinco redes, cada una con cuatro grupos; y en inferencia las cinco leen el mismo estudio y se marca lesión donde el promedio de sus probabilidades supera la mitad. Con el residente: hoy lee uno solo, y lo que marca en un foco dudoso depende de cómo le tocó aprender. Cinco residentes votando: las lesiones verdaderas las ven los cinco y sobreviven; las marcas dudosas son idiosincrasias de cada uno y se diluyen. Es lo que hacen todos los finalistas del reto. El criterio, fijado antes: falso positivo menor de nueve mililitros, desde trece, sin perder Dice. Cinco corridas, unos cinco días y medio de máquina.
+
+Después, en orden: un postproceso con la regla del doble del hígado propio, que en exploración eliminó el cuarenta por ciento de las marcas falsas perdiendo el dos por ciento de las lesiones. Luego, con todo decidido, abrir la prueba una sola vez con todos los brazos. Y para la siguiente edición del reto: resolución de dos milímetros, más aumento de datos y más iteraciones si hay máquina.
+
+Lo que no se va a hacer es seguir inventando intervenciones. Ya probamos más datos, más iteraciones, dos fusiones, un control de capacidad y la anatomía de dos formas. El error que queda vive en focos calientes que no son tumor, y eso la imagen sola no lo resuelve; lo resuelve el médico con la historia clínica, el control en tres meses o la biopsia.
+
+Última parte. Qué vale de todo esto.
+
+En Dice nunca le vamos a ganar a un ensamble de diez redes entrenadas en un clúster. Ese no es el terreno. Lo que un reto no produce, por su propia forma, son respuestas a preguntas controladas: un ranking compara tuberías completas y nunca aísla un factor. Nosotros hicimos lo contrario, y de ahí salen cinco cosas que no existen en autoPET.
+
+Que el presupuesto de entrenamiento invierte el orden de las arquitecturas. Que un control de capacidad muestra que el tamaño solo no explica nada. Que un módulo de atención puede parecer vivo, con su ganancia cerca de uno, y estar muerto, por un mecanismo medido y replicado en tres semillas. Una contabilidad del error por órgano que dice que la captación fisiológica ya no es el problema. Y dos hallazgos sobre el dataset mismo: la zona borrada con lesiones anotadas, y la regla del hígado propio como postproceso.
+
+Y hay una sexta cosa, que es de método: criterios fijados antes de correr, prueba cerrada hasta el final, tres semillas antes de afirmar nada, y la propia historia de este proyecto como ejemplo de por qué. La primera semilla de B nos hizo creer en un efecto tres veces mayor que el real. La segunda semilla de A plus nos hizo creer, por un día, que era el tamaño. Las dos veces, la regla nos salvó de afirmar algo falso.
+
+Un resultado negativo bien medido, con su mecanismo explicado, y un sistema que reduce cincuenta y siete veces el falso positivo del método clásico. Eso es lo que hay, y se puede defender tal cual.

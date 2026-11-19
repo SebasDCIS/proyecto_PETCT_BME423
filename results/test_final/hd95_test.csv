@@ -1,0 +1,1179 @@
+estudio,brazo,corrida,hd95_mm,pred_vacia
+PETCT_0117d7f11f,Clásica,Clásica,276.61155061655836,False
+PETCT_0117d7f11f,Clásica + exclusión de órganos,Clásica + exclusión de órganos,330.06749133853634,False
+PETCT_0117d7f11f,Acto 1 · A,A,39.0,False
+PETCT_0117d7f11f,Acto 1 · A,A_s2,30.0,False
+PETCT_0117d7f11f,Acto 1 · A,A_s3,243.0740627874558,False
+PETCT_0117d7f11f,Acto 1 · B,B,45.89117562233506,False
+PETCT_0117d7f11f,Acto 1 · B,B_s2,21.0,False
+PETCT_0117d7f11f,Acto 1 · B,B_s3,42.78542907502579,False
+PETCT_0117d7f11f,Acto 1 · C,C,252.33816202164132,False
+PETCT_0117d7f11f,Acto 1 · C,C_s2,49.29503017546495,False
+PETCT_0117d7f11f,Acto 1 · C,C_s3,25.80697580112788,False
+PETCT_0117d7f11f,Acto 1 · E,E,55.47972602672079,False
+PETCT_0117d7f11f,Acto 1 · E,E_s2,40.03621942121899,False
+PETCT_0117d7f11f,Acto 1 · E,E_s3,147.0,False
+PETCT_0117d7f11f,Extendido · A,A_ext_largo,11.224972160321824,False
+PETCT_0117d7f11f,Extendido · A,A_ext_largo_s2,19.209372712298546,False
+PETCT_0117d7f11f,Extendido · A,A_ext_largo_s3,27.16615541441225,False
+PETCT_0117d7f11f,Extendido · A+,Aplus_ext_largo,12.36931687685298,False
+PETCT_0117d7f11f,Extendido · A+,Aplus_ext_largo_s2,20.12461179749811,False
+PETCT_0117d7f11f,Extendido · A+,Aplus_ext_largo_s3,17.74823934929885,False
+PETCT_0117d7f11f,Extendido · B,B_ext_largo,26.763631725155083,False
+PETCT_0117d7f11f,Extendido · B,B_ext_largo_s2,17.4928556845359,False
+PETCT_0117d7f11f,Extendido · B,B_ext_largo_s3,18.0,False
+PETCT_0117d7f11f,Extendido · C,C_ext_largo,16.431676725154983,False
+PETCT_0117d7f11f,Extendido · C,C_ext_largo_s2,20.12461179749811,False
+PETCT_0117d7f11f,Extendido · C,C_ext_largo_s3,18.708081219924217,False
+PETCT_0117d7f11f,Extendido · B preentrenada,B_ext_largo_pre,17.4928556845359,False
+PETCT_0117d7f11f,Extendido · B preentrenada,B_ext_largo_pre_s2,15.297058540778355,False
+PETCT_0117d7f11f,Extendido · B preentrenada,B_ext_largo_pre_s3,17.4928556845359,False
+PETCT_0117d7f11f,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,17.233687939614086,False
+PETCT_0117d7f11f,"Sistema final (u 0,6)",ensambles/ensamble_final,18.0,False
+PETCT_04606080a0,Clásica,Clásica,407.5077907919622,False
+PETCT_04606080a0,Clásica + exclusión de órganos,Clásica + exclusión de órganos,421.14485463167705,False
+PETCT_04606080a0,Acto 1 · A,A,12.036931687685264,False
+PETCT_04606080a0,Acto 1 · A,A_s2,9.486832980505138,False
+PETCT_04606080a0,Acto 1 · A,A_s3,12.36931687685298,False
+PETCT_04606080a0,Acto 1 · B,B,8.48528137423857,False
+PETCT_04606080a0,Acto 1 · B,B_s2,10.816653826391969,False
+PETCT_04606080a0,Acto 1 · B,B_s3,52.1344415909483,False
+PETCT_04606080a0,Acto 1 · C,C,8.48528137423857,False
+PETCT_04606080a0,Acto 1 · C,C_s2,49.86221421076893,False
+PETCT_04606080a0,Acto 1 · C,C_s3,367.43687471578886,False
+PETCT_04606080a0,Acto 1 · E,E,8.922792206135739,False
+PETCT_04606080a0,Acto 1 · E,E_s2,186.91032138825148,False
+PETCT_04606080a0,Acto 1 · E,E_s3,362.1088233877916,False
+PETCT_04606080a0,Extendido · A,A_ext_largo,11.224972160321824,False
+PETCT_04606080a0,Extendido · A,A_ext_largo_s2,9.9498743710662,False
+PETCT_04606080a0,Extendido · A,A_ext_largo_s3,13.110667934059663,False
+PETCT_04606080a0,Extendido · A+,Aplus_ext_largo,11.224972160321824,False
+PETCT_04606080a0,Extendido · A+,Aplus_ext_largo_s2,9.9498743710662,False
+PETCT_04606080a0,Extendido · A+,Aplus_ext_largo_s3,9.9498743710662,False
+PETCT_04606080a0,Extendido · B,B_ext_largo,12.36931687685298,False
+PETCT_04606080a0,Extendido · B,B_ext_largo_s2,12.0,False
+PETCT_04606080a0,Extendido · B,B_ext_largo_s3,11.224972160321824,False
+PETCT_04606080a0,Extendido · C,C_ext_largo,13.076696830622021,False
+PETCT_04606080a0,Extendido · C,C_ext_largo_s2,10.816653826391969,False
+PETCT_04606080a0,Extendido · C,C_ext_largo_s3,11.224972160321824,False
+PETCT_04606080a0,Extendido · B preentrenada,B_ext_largo_pre,15.297058540778355,False
+PETCT_04606080a0,Extendido · B preentrenada,B_ext_largo_pre_s2,12.36931687685298,False
+PETCT_04606080a0,Extendido · B preentrenada,B_ext_largo_pre_s3,13.74772708486752,False
+PETCT_04606080a0,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,11.224972160321824,False
+PETCT_04606080a0,"Sistema final (u 0,6)",ensambles/ensamble_final,11.224972160321824,False
+PETCT_0b57b247b6,Clásica,Clásica,466.09226554406587,False
+PETCT_0b57b247b6,Clásica + exclusión de órganos,Clásica + exclusión de órganos,388.06829295885535,False
+PETCT_0b57b247b6,Acto 1 · A,A,212.6151411027907,False
+PETCT_0b57b247b6,Acto 1 · A,A_s2,306.3248237588319,False
+PETCT_0b57b247b6,Acto 1 · A,A_s3,398.7292307951283,False
+PETCT_0b57b247b6,Acto 1 · B,B,84.69356528095862,False
+PETCT_0b57b247b6,Acto 1 · B,B_s2,303.5964382639528,False
+PETCT_0b57b247b6,Acto 1 · B,B_s3,65.05174976880653,False
+PETCT_0b57b247b6,Acto 1 · C,C,48.02341465641105,False
+PETCT_0b57b247b6,Acto 1 · C,C_s2,216.70300970297362,False
+PETCT_0b57b247b6,Acto 1 · C,C_s3,70.21528451208363,False
+PETCT_0b57b247b6,Acto 1 · E,E,27.820855486487112,False
+PETCT_0b57b247b6,Acto 1 · E,E_s2,347.9831468312997,False
+PETCT_0b57b247b6,Acto 1 · E,E_s3,21.213203435596427,False
+PETCT_0b57b247b6,Extendido · A,A_ext_largo,95.29428104561154,False
+PETCT_0b57b247b6,Extendido · A,A_ext_largo_s2,14.696938456699069,False
+PETCT_0b57b247b6,Extendido · A,A_ext_largo_s3,390.3171735642384,False
+PETCT_0b57b247b6,Extendido · A+,Aplus_ext_largo,18.0,False
+PETCT_0b57b247b6,Extendido · A+,Aplus_ext_largo_s2,19.453726769107536,False
+PETCT_0b57b247b6,Extendido · A+,Aplus_ext_largo_s3,27.0,False
+PETCT_0b57b247b6,Extendido · B,B_ext_largo,13.74772708486752,False
+PETCT_0b57b247b6,Extendido · B,B_ext_largo_s2,18.0,False
+PETCT_0b57b247b6,Extendido · B,B_ext_largo_s3,15.297058540778355,False
+PETCT_0b57b247b6,Extendido · C,C_ext_largo,17.4928556845359,False
+PETCT_0b57b247b6,Extendido · C,C_ext_largo_s2,21.0,False
+PETCT_0b57b247b6,Extendido · C,C_ext_largo_s3,21.0,False
+PETCT_0b57b247b6,Extendido · B preentrenada,B_ext_largo_pre,15.0,False
+PETCT_0b57b247b6,Extendido · B preentrenada,B_ext_largo_pre_s2,19.209372712298546,False
+PETCT_0b57b247b6,Extendido · B preentrenada,B_ext_largo_pre_s3,17.911883772254505,False
+PETCT_0b57b247b6,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,12.36931687685298,False
+PETCT_0b57b247b6,"Sistema final (u 0,6)",ensambles/ensamble_final,10.604479335902617,False
+PETCT_1253499c80,Clásica,Clásica,397.8440020546921,False
+PETCT_1253499c80,Clásica + exclusión de órganos,Clásica + exclusión de órganos,600.4498304876195,False
+PETCT_1253499c80,Acto 1 · A,A,978.0427904726635,False
+PETCT_1253499c80,Acto 1 · A,A_s2,987.6472036506558,False
+PETCT_1253499c80,Acto 1 · A,A_s3,979.4722046727194,False
+PETCT_1253499c80,Acto 1 · B,B,983.7264832532867,False
+PETCT_1253499c80,Acto 1 · B,B_s2,983.5274779914397,False
+PETCT_1253499c80,Acto 1 · B,B_s3,993.4313261288228,False
+PETCT_1253499c80,Acto 1 · C,C,982.8832840164719,False
+PETCT_1253499c80,Acto 1 · C,C_s2,983.5046008946523,False
+PETCT_1253499c80,Acto 1 · C,C_s3,985.1837329827155,False
+PETCT_1253499c80,Acto 1 · E,E,977.6695740452507,False
+PETCT_1253499c80,Acto 1 · E,E_s2,911.5527454212797,False
+PETCT_1253499c80,Acto 1 · E,E_s3,979.0156531065373,False
+PETCT_1253499c80,Extendido · A,A_ext_largo,978.6428101555615,False
+PETCT_1253499c80,Extendido · A,A_ext_largo_s2,984.816429350631,False
+PETCT_1253499c80,Extendido · A,A_ext_largo_s3,978.9565873929242,False
+PETCT_1253499c80,Extendido · A+,Aplus_ext_largo,966.1921392745508,False
+PETCT_1253499c80,Extendido · A+,Aplus_ext_largo_s2,980.9587147275873,False
+PETCT_1253499c80,Extendido · A+,Aplus_ext_largo_s3,975.2838046003192,False
+PETCT_1253499c80,Extendido · B,B_ext_largo,980.4544354426396,False
+PETCT_1253499c80,Extendido · B,B_ext_largo_s2,957.6785542039952,False
+PETCT_1253499c80,Extendido · B,B_ext_largo_s3,955.7787662396113,False
+PETCT_1253499c80,Extendido · C,C_ext_largo,953.9492901756457,False
+PETCT_1253499c80,Extendido · C,C_ext_largo_s2,978.9630227859737,False
+PETCT_1253499c80,Extendido · C,C_ext_largo_s3,970.5398755284656,False
+PETCT_1253499c80,Extendido · B preentrenada,B_ext_largo_pre,970.5850791295786,False
+PETCT_1253499c80,Extendido · B preentrenada,B_ext_largo_pre_s2,980.4140449140325,False
+PETCT_1253499c80,Extendido · B preentrenada,B_ext_largo_pre_s3,956.9047742473397,False
+PETCT_1253499c80,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,932.3665029837898,False
+PETCT_1253499c80,"Sistema final (u 0,6)",ensambles/ensamble_final,911.2151174898202,False
+PETCT_13d0984c93,Clásica,Clásica,393.1946083048444,False
+PETCT_13d0984c93,Clásica + exclusión de órganos,Clásica + exclusión de órganos,290.6441122747887,False
+PETCT_13d0984c93,Acto 1 · A,A,3.0,False
+PETCT_13d0984c93,Acto 1 · A,A_s2,4.242640687119285,False
+PETCT_13d0984c93,Acto 1 · A,A_s3,4.242640687119285,False
+PETCT_13d0984c93,Acto 1 · B,B,3.0,False
+PETCT_13d0984c93,Acto 1 · B,B_s2,4.242640687119285,False
+PETCT_13d0984c93,Acto 1 · B,B_s3,3.0,False
+PETCT_13d0984c93,Acto 1 · C,C,3.0,False
+PETCT_13d0984c93,Acto 1 · C,C_s2,4.242640687119285,False
+PETCT_13d0984c93,Acto 1 · C,C_s3,3.0,False
+PETCT_13d0984c93,Acto 1 · E,E,3.0,False
+PETCT_13d0984c93,Acto 1 · E,E_s2,4.242640687119285,False
+PETCT_13d0984c93,Acto 1 · E,E_s3,3.0,False
+PETCT_13d0984c93,Extendido · A,A_ext_largo,3.0,False
+PETCT_13d0984c93,Extendido · A,A_ext_largo_s2,3.0,False
+PETCT_13d0984c93,Extendido · A,A_ext_largo_s3,3.0,False
+PETCT_13d0984c93,Extendido · A+,Aplus_ext_largo,3.0,False
+PETCT_13d0984c93,Extendido · A+,Aplus_ext_largo_s2,3.0,False
+PETCT_13d0984c93,Extendido · A+,Aplus_ext_largo_s3,3.0,False
+PETCT_13d0984c93,Extendido · B,B_ext_largo,3.0,False
+PETCT_13d0984c93,Extendido · B,B_ext_largo_s2,4.242640687119285,False
+PETCT_13d0984c93,Extendido · B,B_ext_largo_s3,3.0,False
+PETCT_13d0984c93,Extendido · C,C_ext_largo,3.0,False
+PETCT_13d0984c93,Extendido · C,C_ext_largo_s2,4.242640687119285,False
+PETCT_13d0984c93,Extendido · C,C_ext_largo_s3,3.0,False
+PETCT_13d0984c93,Extendido · B preentrenada,B_ext_largo_pre,3.0,False
+PETCT_13d0984c93,Extendido · B preentrenada,B_ext_largo_pre_s2,4.242640687119285,False
+PETCT_13d0984c93,Extendido · B preentrenada,B_ext_largo_pre_s3,3.0,False
+PETCT_13d0984c93,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,3.0,False
+PETCT_13d0984c93,"Sistema final (u 0,6)",ensambles/ensamble_final,3.0,False
+PETCT_1a1712f7d0,Clásica,Clásica,237.9039716148915,False
+PETCT_1a1712f7d0,Clásica + exclusión de órganos,Clásica + exclusión de órganos,429.0419559903204,False
+PETCT_1a1712f7d0,Acto 1 · A,A,151.37816758840725,False
+PETCT_1a1712f7d0,Acto 1 · A,A_s2,156.9361304995114,False
+PETCT_1a1712f7d0,Acto 1 · A,A_s3,152.07662395426894,False
+PETCT_1a1712f7d0,Acto 1 · B,B,151.10592311355634,False
+PETCT_1a1712f7d0,Acto 1 · B,B_s2,149.96999699939985,False
+PETCT_1a1712f7d0,Acto 1 · B,B_s3,157.40711546813887,False
+PETCT_1a1712f7d0,Acto 1 · C,C,145.38396694398088,False
+PETCT_1a1712f7d0,Acto 1 · C,C_s2,435.00672405797883,False
+PETCT_1a1712f7d0,Acto 1 · C,C_s3,154.463587942272,False
+PETCT_1a1712f7d0,Acto 1 · E,E,432.73375108041836,False
+PETCT_1a1712f7d0,Acto 1 · E,E_s2,433.07054724248127,False
+PETCT_1a1712f7d0,Acto 1 · E,E_s3,149.9009648724296,False
+PETCT_1a1712f7d0,Extendido · A,A_ext_largo,316.0688987124952,False
+PETCT_1a1712f7d0,Extendido · A,A_ext_largo_s2,197.57226478754046,False
+PETCT_1a1712f7d0,Extendido · A,A_ext_largo_s3,191.21558044950683,False
+PETCT_1a1712f7d0,Extendido · A+,Aplus_ext_largo,197.59048166433,False
+PETCT_1a1712f7d0,Extendido · A+,Aplus_ext_largo_s2,157.23549217654391,False
+PETCT_1a1712f7d0,Extendido · A+,Aplus_ext_largo_s3,196.60871655221374,False
+PETCT_1a1712f7d0,Extendido · B,B_ext_largo,153.26447729333762,False
+PETCT_1a1712f7d0,Extendido · B,B_ext_largo_s2,198.2588838940514,False
+PETCT_1a1712f7d0,Extendido · B,B_ext_largo_s3,153.11760186209813,False
+PETCT_1a1712f7d0,Extendido · C,C_ext_largo,200.04174348170136,False
+PETCT_1a1712f7d0,Extendido · C,C_ext_largo_s2,429.57444048336197,False
+PETCT_1a1712f7d0,Extendido · C,C_ext_largo_s3,159.6545270222296,False
+PETCT_1a1712f7d0,Extendido · B preentrenada,B_ext_largo_pre,194.581856783475,False
+PETCT_1a1712f7d0,Extendido · B preentrenada,B_ext_largo_pre_s2,160.3527361787132,False
+PETCT_1a1712f7d0,Extendido · B preentrenada,B_ext_largo_pre_s3,156.9346834231854,False
+PETCT_1a1712f7d0,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,151.10592311355634,False
+PETCT_1a1712f7d0,"Sistema final (u 0,6)",ensambles/ensamble_final,150.86749152816188,False
+PETCT_20a607649d,Clásica,Clásica,363.49552954610044,False
+PETCT_20a607649d,Clásica + exclusión de órganos,Clásica + exclusión de órganos,183.98581798345623,False
+PETCT_20a607649d,Acto 1 · A,A,129.41792766073794,False
+PETCT_20a607649d,Acto 1 · A,A_s2,136.07240514674453,False
+PETCT_20a607649d,Acto 1 · A,A_s3,125.40572177686833,False
+PETCT_20a607649d,Acto 1 · B,B,144.29344816338454,False
+PETCT_20a607649d,Acto 1 · B,B_s2,134.46560898608982,False
+PETCT_20a607649d,Acto 1 · B,B_s3,130.44826475214128,False
+PETCT_20a607649d,Acto 1 · C,C,139.22062869425895,False
+PETCT_20a607649d,Acto 1 · C,C_s2,7.3484692283495345,False
+PETCT_20a607649d,Acto 1 · C,C_s3,142.42261000363845,False
+PETCT_20a607649d,Acto 1 · E,E,136.41419736629834,False
+PETCT_20a607649d,Acto 1 · E,E_s2,143.42698418798975,False
+PETCT_20a607649d,Acto 1 · E,E_s3,134.46560898608982,False
+PETCT_20a607649d,Extendido · A,A_ext_largo,109.75242085481182,False
+PETCT_20a607649d,Extendido · A,A_ext_largo_s2,129.04533705509394,False
+PETCT_20a607649d,Extendido · A,A_ext_largo_s3,55.39449147815311,False
+PETCT_20a607649d,Extendido · A+,Aplus_ext_largo,123.86222063119965,False
+PETCT_20a607649d,Extendido · A+,Aplus_ext_largo_s2,105.04284840006957,False
+PETCT_20a607649d,Extendido · A+,Aplus_ext_largo_s3,113.5570288666926,False
+PETCT_20a607649d,Extendido · B,B_ext_largo,120.39871129777062,False
+PETCT_20a607649d,Extendido · B,B_ext_largo_s2,6.0,False
+PETCT_20a607649d,Extendido · B,B_ext_largo_s3,91.86321055787216,False
+PETCT_20a607649d,Extendido · C,C_ext_largo,6.708203932499369,False
+PETCT_20a607649d,Extendido · C,C_ext_largo_s2,3.0,False
+PETCT_20a607649d,Extendido · C,C_ext_largo_s3,6.708203932499369,False
+PETCT_20a607649d,Extendido · B preentrenada,B_ext_largo_pre,105.72606112023658,False
+PETCT_20a607649d,Extendido · B preentrenada,B_ext_largo_pre_s2,3.0,False
+PETCT_20a607649d,Extendido · B preentrenada,B_ext_largo_pre_s3,6.708203932499369,False
+PETCT_20a607649d,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,4.242640687119285,False
+PETCT_20a607649d,"Sistema final (u 0,6)",ensambles/ensamble_final,5.196152422706632,False
+PETCT_350e91119a,Clásica,Clásica,123.58397954427588,False
+PETCT_350e91119a,Clásica + exclusión de órganos,Clásica + exclusión de órganos,209.65686251587377,False
+PETCT_350e91119a,Acto 1 · A,A,104.78334749549481,False
+PETCT_350e91119a,Acto 1 · A,A_s2,103.48912986396203,False
+PETCT_350e91119a,Acto 1 · A,A_s3,104.238660312022,False
+PETCT_350e91119a,Acto 1 · B,B,104.78549517943789,False
+PETCT_350e91119a,Acto 1 · B,B_s2,98.48043962556716,False
+PETCT_350e91119a,Acto 1 · B,B_s3,327.3170394882034,False
+PETCT_350e91119a,Acto 1 · C,C,104.35731843867028,False
+PETCT_350e91119a,Acto 1 · C,C_s2,102.7647777199857,False
+PETCT_350e91119a,Acto 1 · C,C_s3,105.07068850375863,False
+PETCT_350e91119a,Acto 1 · E,E,106.19322012256714,False
+PETCT_350e91119a,Acto 1 · E,E_s2,103.95334761620875,False
+PETCT_350e91119a,Acto 1 · E,E_s3,104.1587627616044,False
+PETCT_350e91119a,Extendido · A,A_ext_largo,106.46405121198922,False
+PETCT_350e91119a,Extendido · A,A_ext_largo_s2,104.98071034824692,False
+PETCT_350e91119a,Extendido · A,A_ext_largo_s3,109.67861039222427,False
+PETCT_350e91119a,Extendido · A+,Aplus_ext_largo,333.7235364142988,False
+PETCT_350e91119a,Extendido · A+,Aplus_ext_largo_s2,106.0405562406531,False
+PETCT_350e91119a,Extendido · A+,Aplus_ext_largo_s3,107.21170540309627,False
+PETCT_350e91119a,Extendido · B,B_ext_largo,101.59109031815859,False
+PETCT_350e91119a,Extendido · B,B_ext_largo_s2,90.69729874698585,False
+PETCT_350e91119a,Extendido · B,B_ext_largo_s3,99.85081202388625,False
+PETCT_350e91119a,Extendido · C,C_ext_largo,120.66085931484771,False
+PETCT_350e91119a,Extendido · C,C_ext_largo_s2,104.31634499240968,False
+PETCT_350e91119a,Extendido · C,C_ext_largo_s3,100.27586759775855,False
+PETCT_350e91119a,Extendido · B preentrenada,B_ext_largo_pre,92.59264558693924,False
+PETCT_350e91119a,Extendido · B preentrenada,B_ext_largo_pre_s2,105.06853649160536,False
+PETCT_350e91119a,Extendido · B preentrenada,B_ext_largo_pre_s3,87.47455626040626,False
+PETCT_350e91119a,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,85.8387320586125,False
+PETCT_350e91119a,"Sistema final (u 0,6)",ensambles/ensamble_final,20.33587104178188,False
+PETCT_37472e737f,Clásica,Clásica,422.80899915691634,False
+PETCT_37472e737f,Clásica + exclusión de órganos,Clásica + exclusión de órganos,503.36209416206543,False
+PETCT_37472e737f,Acto 1 · A,A,158.08109262567297,False
+PETCT_37472e737f,Acto 1 · A,A_s2,6.0,False
+PETCT_37472e737f,Acto 1 · A,A_s3,6.708203932499369,False
+PETCT_37472e737f,Acto 1 · B,B,176.50226416205572,False
+PETCT_37472e737f,Acto 1 · B,B_s2,6.0,False
+PETCT_37472e737f,Acto 1 · B,B_s3,177.06854227320858,False
+PETCT_37472e737f,Acto 1 · C,C,19.672315572906,False
+PETCT_37472e737f,Acto 1 · C,C_s2,6.708203932499369,False
+PETCT_37472e737f,Acto 1 · C,C_s3,6.0,False
+PETCT_37472e737f,Acto 1 · E,E,9.0,False
+PETCT_37472e737f,Acto 1 · E,E_s2,6.0,False
+PETCT_37472e737f,Acto 1 · E,E_s3,8.48528137423857,False
+PETCT_37472e737f,Extendido · A,A_ext_largo,6.0,False
+PETCT_37472e737f,Extendido · A,A_ext_largo_s2,6.708203932499369,False
+PETCT_37472e737f,Extendido · A,A_ext_largo_s3,6.708203932499369,False
+PETCT_37472e737f,Extendido · A+,Aplus_ext_largo,6.0,False
+PETCT_37472e737f,Extendido · A+,Aplus_ext_largo_s2,6.0,False
+PETCT_37472e737f,Extendido · A+,Aplus_ext_largo_s3,190.1678156758786,False
+PETCT_37472e737f,Extendido · B,B_ext_largo,176.7481070128099,False
+PETCT_37472e737f,Extendido · B,B_ext_largo_s2,6.0,False
+PETCT_37472e737f,Extendido · B,B_ext_largo_s3,6.708203932499369,False
+PETCT_37472e737f,Extendido · C,C_ext_largo,187.1095935541521,False
+PETCT_37472e737f,Extendido · C,C_ext_largo_s2,187.66193007640095,False
+PETCT_37472e737f,Extendido · C,C_ext_largo_s3,171.45859328080246,False
+PETCT_37472e737f,Extendido · B preentrenada,B_ext_largo_pre,6.0,False
+PETCT_37472e737f,Extendido · B preentrenada,B_ext_largo_pre_s2,6.0,False
+PETCT_37472e737f,Extendido · B preentrenada,B_ext_largo_pre_s3,6.0,False
+PETCT_37472e737f,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,6.0,False
+PETCT_37472e737f,"Sistema final (u 0,6)",ensambles/ensamble_final,6.0,False
+PETCT_39159c05c2,Clásica,Clásica,89.19641248391103,False
+PETCT_39159c05c2,Clásica + exclusión de órganos,Clásica + exclusión de órganos,119.47384651043926,False
+PETCT_39159c05c2,Acto 1 · A,A,89.09545442950498,False
+PETCT_39159c05c2,Acto 1 · A,A_s2,24.919871588754223,False
+PETCT_39159c05c2,Acto 1 · A,A_s3,24.919871588754223,False
+PETCT_39159c05c2,Acto 1 · B,B,75.2994023880668,False
+PETCT_39159c05c2,Acto 1 · B,B_s2,21.213203435596427,False
+PETCT_39159c05c2,Acto 1 · B,B_s3,80.21284009798546,False
+PETCT_39159c05c2,Acto 1 · C,C,130.45343955942855,False
+PETCT_39159c05c2,Acto 1 · C,C_s2,19.209372712298546,False
+PETCT_39159c05c2,Acto 1 · C,C_s3,16.15549442140351,False
+PETCT_39159c05c2,Acto 1 · E,E,122.15563842901399,False
+PETCT_39159c05c2,Acto 1 · E,E_s2,77.06555451658774,False
+PETCT_39159c05c2,Acto 1 · E,E_s3,121.84579612764588,False
+PETCT_39159c05c2,Extendido · A,A_ext_largo,69.44205128004197,False
+PETCT_39159c05c2,Extendido · A,A_ext_largo_s2,47.81213235152768,False
+PETCT_39159c05c2,Extendido · A,A_ext_largo_s3,160.15617378046966,False
+PETCT_39159c05c2,Extendido · A+,Aplus_ext_largo,160.20955005549683,False
+PETCT_39159c05c2,Extendido · A+,Aplus_ext_largo_s2,65.86349520030045,False
+PETCT_39159c05c2,Extendido · A+,Aplus_ext_largo_s3,159.9002812027225,False
+PETCT_39159c05c2,Extendido · B,B_ext_largo,21.819627466335717,False
+PETCT_39159c05c2,Extendido · B,B_ext_largo_s2,28.460498941515414,False
+PETCT_39159c05c2,Extendido · B,B_ext_largo_s3,32.449961479175904,False
+PETCT_39159c05c2,Extendido · C,C_ext_largo,33.67491648096547,False
+PETCT_39159c05c2,Extendido · C,C_ext_largo_s2,17.233687939614086,False
+PETCT_39159c05c2,Extendido · C,C_ext_largo_s3,21.213203435596427,False
+PETCT_39159c05c2,Extendido · B preentrenada,B_ext_largo_pre,27.820855486487112,False
+PETCT_39159c05c2,Extendido · B preentrenada,B_ext_largo_pre_s2,15.0,False
+PETCT_39159c05c2,Extendido · B preentrenada,B_ext_largo_pre_s3,25.98076211353316,False
+PETCT_39159c05c2,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,56.436685118429054,False
+PETCT_39159c05c2,"Sistema final (u 0,6)",ensambles/ensamble_final,70.34983746593225,False
+PETCT_41fadf6520,Clásica,Clásica,468.2095684271571,False
+PETCT_41fadf6520,Clásica + exclusión de órganos,Clásica + exclusión de órganos,515.1551221090443,False
+PETCT_41fadf6520,Acto 1 · A,A,160.49158844827573,False
+PETCT_41fadf6520,Acto 1 · A,A_s2,160.1280737409902,False
+PETCT_41fadf6520,Acto 1 · A,A_s3,161.8054387219416,False
+PETCT_41fadf6520,Acto 1 · B,B,160.95494990128302,False
+PETCT_41fadf6520,Acto 1 · B,B_s2,161.29290069057942,False
+PETCT_41fadf6520,Acto 1 · B,B_s3,161.30963926534895,False
+PETCT_41fadf6520,Acto 1 · C,C,159.94107714903447,False
+PETCT_41fadf6520,Acto 1 · C,C_s2,161.09747671568456,False
+PETCT_41fadf6520,Acto 1 · C,C_s3,160.70593912576084,False
+PETCT_41fadf6520,Acto 1 · E,E,160.3976288444741,False
+PETCT_41fadf6520,Acto 1 · E,E_s2,160.35554224639026,False
+PETCT_41fadf6520,Acto 1 · E,E_s3,160.49299050114308,False
+PETCT_41fadf6520,Extendido · A,A_ext_largo,160.46494944379597,False
+PETCT_41fadf6520,Extendido · A,A_ext_largo_s2,160.52663095432672,False
+PETCT_41fadf6520,Extendido · A,A_ext_largo_s3,159.6002789994669,False
+PETCT_41fadf6520,Extendido · A+,Aplus_ext_largo,160.60370469793915,False
+PETCT_41fadf6520,Extendido · A+,Aplus_ext_largo_s2,160.4060448389692,False
+PETCT_41fadf6520,Extendido · A+,Aplus_ext_largo_s3,158.94337858543696,False
+PETCT_41fadf6520,Extendido · B,B_ext_largo,160.46074255004427,False
+PETCT_41fadf6520,Extendido · B,B_ext_largo_s2,160.58689181052807,False
+PETCT_41fadf6520,Extendido · B,B_ext_largo_s3,159.68061826393688,False
+PETCT_41fadf6520,Extendido · C,C_ext_largo,160.1280737409902,False
+PETCT_41fadf6520,Extendido · C,C_ext_largo_s2,159.3703229856969,False
+PETCT_41fadf6520,Extendido · C,C_ext_largo_s3,161.40445743851748,False
+PETCT_41fadf6520,Extendido · B preentrenada,B_ext_largo_pre,160.5728796032852,False
+PETCT_41fadf6520,Extendido · B preentrenada,B_ext_largo_pre_s2,160.4481208885896,False
+PETCT_41fadf6520,Extendido · B preentrenada,B_ext_largo_pre_s3,160.45934025212702,False
+PETCT_41fadf6520,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,159.95091907492687,False
+PETCT_41fadf6520,"Sistema final (u 0,6)",ensambles/ensamble_final,159.49874051799387,False
+PETCT_42e9f16c09,Clásica,Clásica,170.04337643282975,False
+PETCT_42e9f16c09,Clásica + exclusión de órganos,Clásica + exclusión de órganos,108.09787049611631,False
+PETCT_42e9f16c09,Acto 1 · A,A,157.66420012165096,False
+PETCT_42e9f16c09,Acto 1 · A,A_s2,15.0,False
+PETCT_42e9f16c09,Acto 1 · A,A_s3,29.902255023579077,False
+PETCT_42e9f16c09,Acto 1 · B,B,460.01406451848663,False
+PETCT_42e9f16c09,Acto 1 · B,B_s2,459.93189128299076,False
+PETCT_42e9f16c09,Acto 1 · B,B_s3,53.749418601506754,False
+PETCT_42e9f16c09,Acto 1 · C,C,157.69416074463973,False
+PETCT_42e9f16c09,Acto 1 · C,C_s2,149.9399879951976,False
+PETCT_42e9f16c09,Acto 1 · C,C_s3,122.74363527287271,False
+PETCT_42e9f16c09,Acto 1 · E,E,120.86127238441622,False
+PETCT_42e9f16c09,Acto 1 · E,E_s2,75.4037782057871,False
+PETCT_42e9f16c09,Acto 1 · E,E_s3,157.57139766661342,False
+PETCT_42e9f16c09,Extendido · A,A_ext_largo,16.892473643605218,False
+PETCT_42e9f16c09,Extendido · A,A_ext_largo_s2,51.180408320611335,False
+PETCT_42e9f16c09,Extendido · A,A_ext_largo_s3,147.61097520171052,False
+PETCT_42e9f16c09,Extendido · A+,Aplus_ext_largo,79.7935749193371,False
+PETCT_42e9f16c09,Extendido · A+,Aplus_ext_largo_s2,147.12239802287073,False
+PETCT_42e9f16c09,Extendido · A+,Aplus_ext_largo_s3,47.11997146107312,False
+PETCT_42e9f16c09,Extendido · B,B_ext_largo,119.8887801613621,False
+PETCT_42e9f16c09,Extendido · B,B_ext_largo_s2,151.6052247110069,False
+PETCT_42e9f16c09,Extendido · B,B_ext_largo_s3,324.62089807766574,False
+PETCT_42e9f16c09,Extendido · C,C_ext_largo,39.586787077961525,False
+PETCT_42e9f16c09,Extendido · C,C_ext_largo_s2,322.0671508715828,False
+PETCT_42e9f16c09,Extendido · C,C_ext_largo_s3,147.12239802287073,False
+PETCT_42e9f16c09,Extendido · B preentrenada,B_ext_largo_pre,147.1376898220197,False
+PETCT_42e9f16c09,Extendido · B preentrenada,B_ext_largo_pre_s2,323.82285087383787,False
+PETCT_42e9f16c09,Extendido · B preentrenada,B_ext_largo_pre_s3,154.70953613947552,False
+PETCT_42e9f16c09,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,154.70953613947552,False
+PETCT_42e9f16c09,"Sistema final (u 0,6)",ensambles/ensamble_final,154.70953613947552,False
+PETCT_4a255db7bd,Clásica,Clásica,216.07602805800855,False
+PETCT_4a255db7bd,Clásica + exclusión de órganos,Clásica + exclusión de órganos,330.23173681522496,False
+PETCT_4a255db7bd,Acto 1 · A,A,378.03092132906676,False
+PETCT_4a255db7bd,Acto 1 · A,A_s2,103.79273858807723,False
+PETCT_4a255db7bd,Acto 1 · A,A_s3,87.66983517721475,False
+PETCT_4a255db7bd,Acto 1 · B,B,378.83835253841477,False
+PETCT_4a255db7bd,Acto 1 · B,B_s2,380.47991869029136,False
+PETCT_4a255db7bd,Acto 1 · B,B_s3,377.2015223613972,False
+PETCT_4a255db7bd,Acto 1 · C,C,378.8039004157774,False
+PETCT_4a255db7bd,Acto 1 · C,C_s2,378.93454815829284,False
+PETCT_4a255db7bd,Acto 1 · C,C_s3,116.2994643320524,False
+PETCT_4a255db7bd,Acto 1 · E,E,105.80686041776644,False
+PETCT_4a255db7bd,Acto 1 · E,E_s2,100.45887112384007,False
+PETCT_4a255db7bd,Acto 1 · E,E_s3,107.12140173666558,False
+PETCT_4a255db7bd,Extendido · A,A_ext_largo,17.023187786704526,False
+PETCT_4a255db7bd,Extendido · A,A_ext_largo_s2,33.539415910318645,False
+PETCT_4a255db7bd,Extendido · A,A_ext_largo_s3,15.297058540778355,False
+PETCT_4a255db7bd,Extendido · A+,Aplus_ext_largo,84.53401682163222,False
+PETCT_4a255db7bd,Extendido · A+,Aplus_ext_largo_s2,27.232213543620503,False
+PETCT_4a255db7bd,Extendido · A+,Aplus_ext_largo_s3,30.799267547911676,False
+PETCT_4a255db7bd,Extendido · B,B_ext_largo,84.53401682163222,False
+PETCT_4a255db7bd,Extendido · B,B_ext_largo_s2,375.7432473842709,False
+PETCT_4a255db7bd,Extendido · B,B_ext_largo_s3,103.42823379351381,False
+PETCT_4a255db7bd,Extendido · C,C_ext_largo,84.53401682163222,False
+PETCT_4a255db7bd,Extendido · C,C_ext_largo_s2,378.0583146607068,False
+PETCT_4a255db7bd,Extendido · C,C_ext_largo_s3,377.180048428977,False
+PETCT_4a255db7bd,Extendido · B preentrenada,B_ext_largo_pre,105.92802724686099,False
+PETCT_4a255db7bd,Extendido · B preentrenada,B_ext_largo_pre_s2,376.01227224557624,False
+PETCT_4a255db7bd,Extendido · B preentrenada,B_ext_largo_pre_s3,85.85452812752511,False
+PETCT_4a255db7bd,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,85.85452812752511,False
+PETCT_4a255db7bd,"Sistema final (u 0,6)",ensambles/ensamble_final,85.85452812752511,False
+PETCT_510fb36781,Clásica,Clásica,396.0,False
+PETCT_510fb36781,Clásica + exclusión de órganos,Clásica + exclusión de órganos,338.68658071679204,False
+PETCT_510fb36781,Acto 1 · A,A,141.50971698084905,False
+PETCT_510fb36781,Acto 1 · A,A_s2,3.0,False
+PETCT_510fb36781,Acto 1 · A,A_s3,3.0,False
+PETCT_510fb36781,Acto 1 · B,B,158.78617407924494,False
+PETCT_510fb36781,Acto 1 · B,B_s2,3.0,False
+PETCT_510fb36781,Acto 1 · B,B_s3,3.0,False
+PETCT_510fb36781,Acto 1 · C,C,6.708203932499369,False
+PETCT_510fb36781,Acto 1 · C,C_s2,4.242640687119285,False
+PETCT_510fb36781,Acto 1 · C,C_s3,164.0467911251663,False
+PETCT_510fb36781,Acto 1 · E,E,72.74613391789285,False
+PETCT_510fb36781,Acto 1 · E,E_s2,11.224972160321824,False
+PETCT_510fb36781,Acto 1 · E,E_s3,6.0,False
+PETCT_510fb36781,Extendido · A,A_ext_largo,3.0,False
+PETCT_510fb36781,Extendido · A,A_ext_largo_s2,3.0,False
+PETCT_510fb36781,Extendido · A,A_ext_largo_s3,3.0,False
+PETCT_510fb36781,Extendido · A+,Aplus_ext_largo,3.0,False
+PETCT_510fb36781,Extendido · A+,Aplus_ext_largo_s2,3.0,False
+PETCT_510fb36781,Extendido · A+,Aplus_ext_largo_s3,3.0,False
+PETCT_510fb36781,Extendido · B,B_ext_largo,3.0,False
+PETCT_510fb36781,Extendido · B,B_ext_largo_s2,3.0,False
+PETCT_510fb36781,Extendido · B,B_ext_largo_s3,3.0,False
+PETCT_510fb36781,Extendido · C,C_ext_largo,3.0,False
+PETCT_510fb36781,Extendido · C,C_ext_largo_s2,3.0,False
+PETCT_510fb36781,Extendido · C,C_ext_largo_s3,3.0,False
+PETCT_510fb36781,Extendido · B preentrenada,B_ext_largo_pre,3.0,False
+PETCT_510fb36781,Extendido · B preentrenada,B_ext_largo_pre_s2,3.0,False
+PETCT_510fb36781,Extendido · B preentrenada,B_ext_largo_pre_s3,3.0,False
+PETCT_510fb36781,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,3.0,False
+PETCT_510fb36781,"Sistema final (u 0,6)",ensambles/ensamble_final,3.0,False
+PETCT_62011ff15b,Clásica,Clásica,252.49059372695473,False
+PETCT_62011ff15b,Clásica + exclusión de órganos,Clásica + exclusión de órganos,196.94148844461307,False
+PETCT_62011ff15b,Acto 1 · A,A,58.557663887829406,False
+PETCT_62011ff15b,Acto 1 · A,A_s2,60.149812967290266,False
+PETCT_62011ff15b,Acto 1 · A,A_s3,79.42921376924235,False
+PETCT_62011ff15b,Acto 1 · B,B,54.0,False
+PETCT_62011ff15b,Acto 1 · B,B_s2,34.08663134261882,False
+PETCT_62011ff15b,Acto 1 · B,B_s3,32.17141588429082,False
+PETCT_62011ff15b,Acto 1 · C,C,45.4972526643093,False
+PETCT_62011ff15b,Acto 1 · C,C_s2,36.38541778123064,False
+PETCT_62011ff15b,Acto 1 · C,C_s3,34.07345007480164,False
+PETCT_62011ff15b,Acto 1 · E,E,56.444663166680336,False
+PETCT_62011ff15b,Acto 1 · E,E_s2,63.35613624582863,False
+PETCT_62011ff15b,Acto 1 · E,E_s3,65.58620111104125,False
+PETCT_62011ff15b,Extendido · A,A_ext_largo,15.297058540778355,False
+PETCT_62011ff15b,Extendido · A,A_ext_largo_s2,15.0,False
+PETCT_62011ff15b,Extendido · A,A_ext_largo_s3,19.209372712298546,False
+PETCT_62011ff15b,Extendido · A+,Aplus_ext_largo,12.727922061357855,False
+PETCT_62011ff15b,Extendido · A+,Aplus_ext_largo_s2,18.24828759089466,False
+PETCT_62011ff15b,Extendido · A+,Aplus_ext_largo_s3,10.816653826391969,False
+PETCT_62011ff15b,Extendido · B,B_ext_largo,15.0,False
+PETCT_62011ff15b,Extendido · B,B_ext_largo_s2,12.36931687685298,False
+PETCT_62011ff15b,Extendido · B,B_ext_largo_s3,10.816653826391969,False
+PETCT_62011ff15b,Extendido · C,C_ext_largo,7.3484692283495345,False
+PETCT_62011ff15b,Extendido · C,C_ext_largo_s2,12.727922061357855,False
+PETCT_62011ff15b,Extendido · C,C_ext_largo_s3,17.74823934929885,False
+PETCT_62011ff15b,Extendido · B preentrenada,B_ext_largo_pre,12.36931687685298,False
+PETCT_62011ff15b,Extendido · B preentrenada,B_ext_largo_pre_s2,12.727922061357855,False
+PETCT_62011ff15b,Extendido · B preentrenada,B_ext_largo_pre_s3,8.48528137423857,False
+PETCT_62011ff15b,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,12.727922061357855,False
+PETCT_62011ff15b,"Sistema final (u 0,6)",ensambles/ensamble_final,13.74772708486752,False
+PETCT_6aea5c3a03,Clásica,Clásica,135.8423709685816,False
+PETCT_6aea5c3a03,Clásica + exclusión de órganos,Clásica + exclusión de órganos,128.05467582247826,False
+PETCT_6aea5c3a03,Acto 1 · A,A,52.478567053607705,False
+PETCT_6aea5c3a03,Acto 1 · A,A_s2,103.78866188989498,False
+PETCT_6aea5c3a03,Acto 1 · A,A_s3,52.04805471869242,False
+PETCT_6aea5c3a03,Acto 1 · B,B,52.478567053607705,False
+PETCT_6aea5c3a03,Acto 1 · B,B_s2,70.61798379170887,False
+PETCT_6aea5c3a03,Acto 1 · B,B_s3,81.93337607601092,False
+PETCT_6aea5c3a03,Acto 1 · C,C,82.51359479276482,False
+PETCT_6aea5c3a03,Acto 1 · C,C_s2,116.38298844762494,False
+PETCT_6aea5c3a03,Acto 1 · C,C_s3,83.24662155306964,False
+PETCT_6aea5c3a03,Acto 1 · E,E,128.59120842970142,False
+PETCT_6aea5c3a03,Acto 1 · E,E_s2,52.478567053607705,False
+PETCT_6aea5c3a03,Acto 1 · E,E_s3,83.86057394307657,False
+PETCT_6aea5c3a03,Extendido · A,A_ext_largo,101.65958061768673,False
+PETCT_6aea5c3a03,Extendido · A,A_ext_largo_s2,51.35172830587107,False
+PETCT_6aea5c3a03,Extendido · A,A_ext_largo_s3,101.19381720988493,False
+PETCT_6aea5c3a03,Extendido · A+,Aplus_ext_largo,101.19381720988493,False
+PETCT_6aea5c3a03,Extendido · A+,Aplus_ext_largo_s2,101.65958061768673,False
+PETCT_6aea5c3a03,Extendido · A+,Aplus_ext_largo_s3,101.19381720988493,False
+PETCT_6aea5c3a03,Extendido · B,B_ext_largo,81.23852238142707,False
+PETCT_6aea5c3a03,Extendido · B,B_ext_largo_s2,81.93337607601092,False
+PETCT_6aea5c3a03,Extendido · B,B_ext_largo_s3,83.86057394307657,False
+PETCT_6aea5c3a03,Extendido · C,C_ext_largo,82.51359479276482,False
+PETCT_6aea5c3a03,Extendido · C,C_ext_largo_s2,81.93337607601092,False
+PETCT_6aea5c3a03,Extendido · C,C_ext_largo_s3,85.01176389182852,False
+PETCT_6aea5c3a03,Extendido · B preentrenada,B_ext_largo_pre,35.62302626111375,False
+PETCT_6aea5c3a03,Extendido · B preentrenada,B_ext_largo_pre_s2,82.51359479276482,False
+PETCT_6aea5c3a03,Extendido · B preentrenada,B_ext_largo_pre_s3,82.51359479276482,False
+PETCT_6aea5c3a03,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,101.19381720988493,False
+PETCT_6aea5c3a03,"Sistema final (u 0,6)",ensambles/ensamble_final,101.65958061768673,False
+PETCT_791ec15924,Clásica,Clásica,134.46560898608982,False
+PETCT_791ec15924,Clásica + exclusión de órganos,Clásica + exclusión de órganos,153.2351134694656,False
+PETCT_791ec15924,Acto 1 · A,A,3.0,False
+PETCT_791ec15924,Acto 1 · A,A_s2,195.59217179430988,False
+PETCT_791ec15924,Acto 1 · A,A_s3,155.1637400030943,False
+PETCT_791ec15924,Acto 1 · B,B,516.9322968680804,False
+PETCT_791ec15924,Acto 1 · B,B_s2,6.0,False
+PETCT_791ec15924,Acto 1 · B,B_s3,4.242640687119285,False
+PETCT_791ec15924,Acto 1 · C,C,205.4945254745245,False
+PETCT_791ec15924,Acto 1 · C,C_s2,18.35111419841722,False
+PETCT_791ec15924,Acto 1 · C,C_s3,3.0,False
+PETCT_791ec15924,Acto 1 · E,E,222.64770378335368,False
+PETCT_791ec15924,Acto 1 · E,E_s2,212.06838519685107,False
+PETCT_791ec15924,Acto 1 · E,E_s3,202.99162515251075,False
+PETCT_791ec15924,Extendido · A,A_ext_largo,64.67417639031112,False
+PETCT_791ec15924,Extendido · A,A_ext_largo_s2,9.68630610738768,False
+PETCT_791ec15924,Extendido · A,A_ext_largo_s3,203.0182133987666,False
+PETCT_791ec15924,Extendido · A+,Aplus_ext_largo,62.281493036987115,False
+PETCT_791ec15924,Extendido · A+,Aplus_ext_largo_s2,5.148476835927092,False
+PETCT_791ec15924,Extendido · A+,Aplus_ext_largo_s3,62.425830990995024,False
+PETCT_791ec15924,Extendido · B,B_ext_largo,512.2301194176198,False
+PETCT_791ec15924,Extendido · B,B_ext_largo_s2,3.0,False
+PETCT_791ec15924,Extendido · B,B_ext_largo_s3,17.09164730559594,False
+PETCT_791ec15924,Extendido · C,C_ext_largo,4.242640687119285,False
+PETCT_791ec15924,Extendido · C,C_ext_largo_s2,454.4841449308379,False
+PETCT_791ec15924,Extendido · C,C_ext_largo_s3,4.242640687119285,False
+PETCT_791ec15924,Extendido · B preentrenada,B_ext_largo_pre,4.242640687119285,False
+PETCT_791ec15924,Extendido · B preentrenada,B_ext_largo_pre_s2,404.3355443002872,False
+PETCT_791ec15924,Extendido · B preentrenada,B_ext_largo_pre_s3,4.242640687119285,False
+PETCT_791ec15924,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,3.0,False
+PETCT_791ec15924,"Sistema final (u 0,6)",ensambles/ensamble_final,3.0,False
+PETCT_7a77b26403,Clásica,Clásica,120.03749414245534,False
+PETCT_7a77b26403,Clásica + exclusión de órganos,Clásica + exclusión de órganos,125.92855117089213,False
+PETCT_7a77b26403,Acto 1 · A,A,28.30194339616981,False
+PETCT_7a77b26403,Acto 1 · A,A_s2,47.24404724407086,False
+PETCT_7a77b26403,Acto 1 · A,A_s3,47.81213235152768,False
+PETCT_7a77b26403,Acto 1 · B,B,40.84846495210679,False
+PETCT_7a77b26403,Acto 1 · B,B_s2,17.4928556845359,False
+PETCT_7a77b26403,Acto 1 · B,B_s3,18.0,False
+PETCT_7a77b26403,Acto 1 · C,C,65.79513659838392,False
+PETCT_7a77b26403,Acto 1 · C,C_s2,19.209372712298546,False
+PETCT_7a77b26403,Acto 1 · C,C_s3,12.0,False
+PETCT_7a77b26403,Acto 1 · E,E,48.92851929090027,False
+PETCT_7a77b26403,Acto 1 · E,E_s2,54.16641025580336,False
+PETCT_7a77b26403,Acto 1 · E,E_s3,41.78516483155236,False
+PETCT_7a77b26403,Extendido · A,A_ext_largo,15.297058540778355,False
+PETCT_7a77b26403,Extendido · A,A_ext_largo_s2,31.0322412983658,False
+PETCT_7a77b26403,Extendido · A,A_ext_largo_s3,21.213203435596427,False
+PETCT_7a77b26403,Extendido · A+,Aplus_ext_largo,31.464265445104548,False
+PETCT_7a77b26403,Extendido · A+,Aplus_ext_largo_s2,27.820855486487112,False
+PETCT_7a77b26403,Extendido · A+,Aplus_ext_largo_s3,25.701997062022645,False
+PETCT_7a77b26403,Extendido · B,B_ext_largo,27.16615541441225,False
+PETCT_7a77b26403,Extendido · B,B_ext_largo_s2,26.899689437998425,False
+PETCT_7a77b26403,Extendido · B,B_ext_largo_s3,27.232213543620446,False
+PETCT_7a77b26403,Extendido · C,C_ext_largo,17.4928556845359,False
+PETCT_7a77b26403,Extendido · C,C_ext_largo_s2,17.84894360957922,False
+PETCT_7a77b26403,Extendido · C,C_ext_largo_s3,24.186773244895647,False
+PETCT_7a77b26403,Extendido · B preentrenada,B_ext_largo_pre,12.727922061357855,False
+PETCT_7a77b26403,Extendido · B preentrenada,B_ext_largo_pre_s2,18.0,False
+PETCT_7a77b26403,Extendido · B preentrenada,B_ext_largo_pre_s3,9.486832980505138,False
+PETCT_7a77b26403,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,28.30194339616981,False
+PETCT_7a77b26403,"Sistema final (u 0,6)",ensambles/ensamble_final,28.365365614307994,False
+PETCT_7a8a062ed5,Clásica,Clásica,251.85710234178427,False
+PETCT_7a8a062ed5,Clásica + exclusión de órganos,Clásica + exclusión de órganos,322.18938530001265,False
+PETCT_7a8a062ed5,Acto 1 · A,A,89.04493247793498,False
+PETCT_7a8a062ed5,Acto 1 · A,A_s2,70.54785609782908,False
+PETCT_7a8a062ed5,Acto 1 · A,A_s3,62.584328247568415,False
+PETCT_7a8a062ed5,Acto 1 · B,B,77.07139547199077,False
+PETCT_7a8a062ed5,Acto 1 · B,B_s2,71.32495533807668,False
+PETCT_7a8a062ed5,Acto 1 · B,B_s3,92.02716990106781,False
+PETCT_7a8a062ed5,Acto 1 · C,C,72.75315062537987,False
+PETCT_7a8a062ed5,Acto 1 · C,C_s2,36.61966684720111,False
+PETCT_7a8a062ed5,Acto 1 · C,C_s3,61.467057370881285,False
+PETCT_7a8a062ed5,Acto 1 · E,E,41.01313594005105,False
+PETCT_7a8a062ed5,Acto 1 · E,E_s2,70.45204624759026,False
+PETCT_7a8a062ed5,Acto 1 · E,E_s3,36.98648401781386,False
+PETCT_7a8a062ed5,Extendido · A,A_ext_largo,39.28727769737398,False
+PETCT_7a8a062ed5,Extendido · A,A_ext_largo_s2,31.464265445104548,False
+PETCT_7a8a062ed5,Extendido · A,A_ext_largo_s3,35.57240723610732,False
+PETCT_7a8a062ed5,Extendido · A+,Aplus_ext_largo,27.0,False
+PETCT_7a8a062ed5,Extendido · A+,Aplus_ext_largo_s2,40.07551472215896,False
+PETCT_7a8a062ed5,Extendido · A+,Aplus_ext_largo_s3,31.147979888664953,False
+PETCT_7a8a062ed5,Extendido · B,B_ext_largo,36.96814315928315,False
+PETCT_7a8a062ed5,Extendido · B,B_ext_largo_s2,54.10896321393291,False
+PETCT_7a8a062ed5,Extendido · B,B_ext_largo_s3,30.608790603188904,False
+PETCT_7a8a062ed5,Extendido · C,C_ext_largo,39.94055111330741,False
+PETCT_7a8a062ed5,Extendido · C,C_ext_largo_s2,35.34398676880623,False
+PETCT_7a8a062ed5,Extendido · C,C_ext_largo_s3,36.98648401781386,False
+PETCT_7a8a062ed5,Extendido · B preentrenada,B_ext_largo_pre,30.0,False
+PETCT_7a8a062ed5,Extendido · B preentrenada,B_ext_largo_pre_s2,33.0,False
+PETCT_7a8a062ed5,Extendido · B preentrenada,B_ext_largo_pre_s3,30.0,False
+PETCT_7a8a062ed5,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,27.0,False
+PETCT_7a8a062ed5,"Sistema final (u 0,6)",ensambles/ensamble_final,24.186773244895647,False
+PETCT_7ce196485f,Clásica,Clásica,259.68894847820695,False
+PETCT_7ce196485f,Clásica + exclusión de órganos,Clásica + exclusión de órganos,281.88827574058485,False
+PETCT_7ce196485f,Acto 1 · A,A,548.0379238671017,False
+PETCT_7ce196485f,Acto 1 · A,A_s2,568.097349540111,False
+PETCT_7ce196485f,Acto 1 · A,A_s3,557.5046177840426,False
+PETCT_7ce196485f,Acto 1 · B,B,550.2796367618747,False
+PETCT_7ce196485f,Acto 1 · B,B_s2,48.373546489791295,False
+PETCT_7ce196485f,Acto 1 · B,B_s3,561.8175832566805,False
+PETCT_7ce196485f,Acto 1 · C,C,3.4349242404917426,False
+PETCT_7ce196485f,Acto 1 · C,C_s2,220.58058641907985,False
+PETCT_7ce196485f,Acto 1 · C,C_s3,225.49456357467216,False
+PETCT_7ce196485f,Acto 1 · E,E,143.46296712240004,False
+PETCT_7ce196485f,Acto 1 · E,E_s2,552.387085644653,False
+PETCT_7ce196485f,Acto 1 · E,E_s3,560.4782938638845,False
+PETCT_7ce196485f,Extendido · A,A_ext_largo,554.3006404256382,False
+PETCT_7ce196485f,Extendido · A,A_ext_largo_s2,561.7014041997493,False
+PETCT_7ce196485f,Extendido · A,A_ext_largo_s3,269.67477281660365,False
+PETCT_7ce196485f,Extendido · A+,Aplus_ext_largo,552.0998361412524,False
+PETCT_7ce196485f,Extendido · A+,Aplus_ext_largo_s2,109.34062660879925,False
+PETCT_7ce196485f,Extendido · A+,Aplus_ext_largo_s3,99.08178065053421,False
+PETCT_7ce196485f,Extendido · B,B_ext_largo,123.07314898059609,False
+PETCT_7ce196485f,Extendido · B,B_ext_largo_s2,144.95736187717438,False
+PETCT_7ce196485f,Extendido · B,B_ext_largo_s3,220.02636164001177,False
+PETCT_7ce196485f,Extendido · C,C_ext_largo,155.27860367040014,False
+PETCT_7ce196485f,Extendido · C,C_ext_largo_s2,139.6273131173697,False
+PETCT_7ce196485f,Extendido · C,C_ext_largo_s3,547.1605343672566,False
+PETCT_7ce196485f,Extendido · B preentrenada,B_ext_largo_pre,142.67357261182963,False
+PETCT_7ce196485f,Extendido · B preentrenada,B_ext_largo_pre_s2,136.6235704408284,False
+PETCT_7ce196485f,Extendido · B preentrenada,B_ext_largo_pre_s3,3.0,False
+PETCT_7ce196485f,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,5.736396103067882,False
+PETCT_7ce196485f,"Sistema final (u 0,6)",ensambles/ensamble_final,3.0,False
+PETCT_7ed037687a,Clásica,Clásica,434.202717633135,False
+PETCT_7ed037687a,Clásica + exclusión de órganos,Clásica + exclusión de órganos,534.1398692269549,False
+PETCT_7ed037687a,Acto 1 · A,A,476.67583303696273,False
+PETCT_7ed037687a,Acto 1 · A,A_s2,576.195279397532,False
+PETCT_7ed037687a,Acto 1 · A,A_s3,478.4238166832759,False
+PETCT_7ed037687a,Acto 1 · B,B,593.6248788314156,False
+PETCT_7ed037687a,Acto 1 · B,B_s2,434.35814270720095,False
+PETCT_7ed037687a,Acto 1 · B,B_s3,459.44584425867004,False
+PETCT_7ed037687a,Acto 1 · C,C,477.2372026071914,False
+PETCT_7ed037687a,Acto 1 · C,C_s2,478.2803571045258,False
+PETCT_7ed037687a,Acto 1 · C,C_s3,432.0208328310106,False
+PETCT_7ed037687a,Acto 1 · E,E,479.63704582745436,False
+PETCT_7ed037687a,Acto 1 · E,E_s2,479.43012576473984,False
+PETCT_7ed037687a,Acto 1 · E,E_s3,486.2045858467959,False
+PETCT_7ed037687a,Extendido · A,A_ext_largo,435.7070012848411,False
+PETCT_7ed037687a,Extendido · A,A_ext_largo_s2,482.2820745970401,False
+PETCT_7ed037687a,Extendido · A,A_ext_largo_s3,431.01130984385327,False
+PETCT_7ed037687a,Extendido · A+,Aplus_ext_largo,482.50642302077296,False
+PETCT_7ed037687a,Extendido · A+,Aplus_ext_largo_s2,474.60238782037027,False
+PETCT_7ed037687a,Extendido · A+,Aplus_ext_largo_s3,482.1093377564683,False
+PETCT_7ed037687a,Extendido · B,B_ext_largo,425.8119287743772,False
+PETCT_7ed037687a,Extendido · B,B_ext_largo_s2,481.2489998681443,False
+PETCT_7ed037687a,Extendido · B,B_ext_largo_s3,426.22599620330607,False
+PETCT_7ed037687a,Extendido · C,C_ext_largo,428.2251727411473,False
+PETCT_7ed037687a,Extendido · C,C_ext_largo_s2,473.786812726499,False
+PETCT_7ed037687a,Extendido · C,C_ext_largo_s3,3.0,False
+PETCT_7ed037687a,Extendido · B preentrenada,B_ext_largo_pre,5.196152422706632,False
+PETCT_7ed037687a,Extendido · B preentrenada,B_ext_largo_pre_s2,202.320524944409,False
+PETCT_7ed037687a,Extendido · B preentrenada,B_ext_largo_pre_s3,424.26618950194467,False
+PETCT_7ed037687a,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,425.18477748603465,False
+PETCT_7ed037687a,"Sistema final (u 0,6)",ensambles/ensamble_final,421.50586133092935,False
+PETCT_84e7715ed9,Clásica,Clásica,256.8462575160479,False
+PETCT_84e7715ed9,Clásica + exclusión de órganos,Clásica + exclusión de órganos,325.26835052990333,False
+PETCT_84e7715ed9,Acto 1 · A,A,179.12536066242657,False
+PETCT_84e7715ed9,Acto 1 · A,A_s2,173.4456612760747,False
+PETCT_84e7715ed9,Acto 1 · A,A_s3,172.23240113288787,False
+PETCT_84e7715ed9,Acto 1 · B,B,183.43961896316128,False
+PETCT_84e7715ed9,Acto 1 · B,B_s2,187.91234483693083,False
+PETCT_84e7715ed9,Acto 1 · B,B_s3,184.82896989222704,False
+PETCT_84e7715ed9,Acto 1 · C,C,177.17786579884,False
+PETCT_84e7715ed9,Acto 1 · C,C_s2,285.4258666419057,False
+PETCT_84e7715ed9,Acto 1 · C,C_s3,176.49079296099274,False
+PETCT_84e7715ed9,Acto 1 · E,E,167.65142409177443,False
+PETCT_84e7715ed9,Acto 1 · E,E_s2,170.8407151911959,False
+PETCT_84e7715ed9,Acto 1 · E,E_s3,169.5769727854726,False
+PETCT_84e7715ed9,Extendido · A,A_ext_largo,217.5134460008288,False
+PETCT_84e7715ed9,Extendido · A,A_ext_largo_s2,299.41743218879856,False
+PETCT_84e7715ed9,Extendido · A,A_ext_largo_s3,295.03281089778034,False
+PETCT_84e7715ed9,Extendido · A+,Aplus_ext_largo,291.86081745034085,False
+PETCT_84e7715ed9,Extendido · A+,Aplus_ext_largo_s2,174.13184470057325,False
+PETCT_84e7715ed9,Extendido · A+,Aplus_ext_largo_s3,299.05651088531476,False
+PETCT_84e7715ed9,Extendido · B,B_ext_largo,188.5315467527009,False
+PETCT_84e7715ed9,Extendido · B,B_ext_largo_s2,187.1492685320913,False
+PETCT_84e7715ed9,Extendido · B,B_ext_largo_s3,182.2385797385652,False
+PETCT_84e7715ed9,Extendido · C,C_ext_largo,294.65741871166966,False
+PETCT_84e7715ed9,Extendido · C,C_ext_largo_s2,290.9040910569262,False
+PETCT_84e7715ed9,Extendido · C,C_ext_largo_s3,186.6568927327638,False
+PETCT_84e7715ed9,Extendido · B preentrenada,B_ext_largo_pre,293.4859603260022,False
+PETCT_84e7715ed9,Extendido · B preentrenada,B_ext_largo_pre_s2,169.90438332723286,False
+PETCT_84e7715ed9,Extendido · B preentrenada,B_ext_largo_pre_s3,180.98725917909883,False
+PETCT_84e7715ed9,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,164.7133857350352,False
+PETCT_84e7715ed9,"Sistema final (u 0,6)",ensambles/ensamble_final,162.46599134191405,False
+PETCT_870181d7fd,Clásica,Clásica,452.319024501257,False
+PETCT_870181d7fd,Clásica + exclusión de órganos,Clásica + exclusión de órganos,696.4233593138774,False
+PETCT_870181d7fd,Acto 1 · A,A,425.63705565375574,False
+PETCT_870181d7fd,Acto 1 · A,A_s2,395.33011353403094,False
+PETCT_870181d7fd,Acto 1 · A,A_s3,430.1313752796929,False
+PETCT_870181d7fd,Acto 1 · B,B,497.5326057631562,False
+PETCT_870181d7fd,Acto 1 · B,B_s2,393.8475555344156,False
+PETCT_870181d7fd,Acto 1 · B,B_s3,488.45444978758286,False
+PETCT_870181d7fd,Acto 1 · C,C,429.6655668242947,False
+PETCT_870181d7fd,Acto 1 · C,C_s2,394.0108967259199,False
+PETCT_870181d7fd,Acto 1 · C,C_s3,438.0231150829349,False
+PETCT_870181d7fd,Acto 1 · E,E,427.2141146899235,False
+PETCT_870181d7fd,Acto 1 · E,E_s2,388.65865450998473,False
+PETCT_870181d7fd,Acto 1 · E,E_s3,391.2211650716254,False
+PETCT_870181d7fd,Extendido · A,A_ext_largo,427.2014744711155,False
+PETCT_870181d7fd,Extendido · A,A_ext_largo_s2,473.2698450338414,False
+PETCT_870181d7fd,Extendido · A,A_ext_largo_s3,399.02817358223723,False
+PETCT_870181d7fd,Extendido · A+,Aplus_ext_largo,714.3030867040684,False
+PETCT_870181d7fd,Extendido · A+,Aplus_ext_largo_s2,422.33458266739575,False
+PETCT_870181d7fd,Extendido · A+,Aplus_ext_largo_s3,720.5535371213089,False
+PETCT_870181d7fd,Extendido · B,B_ext_largo,470.58133737253803,False
+PETCT_870181d7fd,Extendido · B,B_ext_largo_s2,418.34961428100723,False
+PETCT_870181d7fd,Extendido · B,B_ext_largo_s3,397.01007543889864,False
+PETCT_870181d7fd,Extendido · C,C_ext_largo,398.55877695533457,False
+PETCT_870181d7fd,Extendido · C,C_ext_largo_s2,660.853762535064,False
+PETCT_870181d7fd,Extendido · C,C_ext_largo_s3,474.29800448928455,False
+PETCT_870181d7fd,Extendido · B preentrenada,B_ext_largo_pre,473.54788550892454,False
+PETCT_870181d7fd,Extendido · B preentrenada,B_ext_largo_pre_s2,472.2451691607846,False
+PETCT_870181d7fd,Extendido · B preentrenada,B_ext_largo_pre_s3,439.3809524221465,False
+PETCT_870181d7fd,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,394.12453611814425,False
+PETCT_870181d7fd,"Sistema final (u 0,6)",ensambles/ensamble_final,394.06572861186254,False
+PETCT_901573a747,Clásica,Clásica,192.98186443290467,False
+PETCT_901573a747,Clásica + exclusión de órganos,Clásica + exclusión de órganos,253.37126722176174,False
+PETCT_901573a747,Acto 1 · A,A,45.37836981813394,False
+PETCT_901573a747,Acto 1 · A,A_s2,107.77020835794077,False
+PETCT_901573a747,Acto 1 · A,A_s3,49.839743177508446,False
+PETCT_901573a747,Acto 1 · B,B,43.87595071928293,False
+PETCT_901573a747,Acto 1 · B,B_s2,45.16965700450626,False
+PETCT_901573a747,Acto 1 · B,B_s3,46.66904755831214,False
+PETCT_901573a747,Acto 1 · C,C,39.45883931389772,False
+PETCT_901573a747,Acto 1 · C,C_s2,42.21374183841087,False
+PETCT_901573a747,Acto 1 · C,C_s3,45.39823785126467,False
+PETCT_901573a747,Acto 1 · E,E,63.63961030678928,False
+PETCT_901573a747,Acto 1 · E,E_s2,77.32495864650598,False
+PETCT_901573a747,Acto 1 · E,E_s3,42.21374183841087,False
+PETCT_901573a747,Extendido · A,A_ext_largo,42.42640687119285,False
+PETCT_901573a747,Extendido · A,A_ext_largo_s2,45.0,False
+PETCT_901573a747,Extendido · A,A_ext_largo_s3,39.45883931389772,False
+PETCT_901573a747,Extendido · A+,Aplus_ext_largo,43.68065933568311,False
+PETCT_901573a747,Extendido · A+,Aplus_ext_largo_s2,42.42640687119285,False
+PETCT_901573a747,Extendido · A+,Aplus_ext_largo_s3,48.420014877000916,False
+PETCT_901573a747,Extendido · B,B_ext_largo,43.78355855797927,False
+PETCT_901573a747,Extendido · B,B_ext_largo_s2,41.29737961229724,False
+PETCT_901573a747,Extendido · B,B_ext_largo_s3,41.9033241741984,False
+PETCT_901573a747,Extendido · C,C_ext_largo,41.855075776392724,False
+PETCT_901573a747,Extendido · C,C_ext_largo_s2,41.78516483155236,False
+PETCT_901573a747,Extendido · C,C_ext_largo_s3,42.532340636273474,False
+PETCT_901573a747,Extendido · B preentrenada,B_ext_largo_pre,41.24318125460256,False
+PETCT_901573a747,Extendido · B preentrenada,B_ext_largo_pre_s2,43.37049688440288,False
+PETCT_901573a747,Extendido · B preentrenada,B_ext_largo_pre_s3,43.37049688440288,False
+PETCT_901573a747,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,40.024992192379,False
+PETCT_901573a747,"Sistema final (u 0,6)",ensambles/ensamble_final,40.024992192379,False
+PETCT_92c5c944a5,Clásica,Clásica,61.04096984812741,False
+PETCT_92c5c944a5,Clásica + exclusión de órganos,Clásica + exclusión de órganos,55.72252686302013,False
+PETCT_92c5c944a5,Acto 1 · A,A,18.0,False
+PETCT_92c5c944a5,Acto 1 · A,A_s2,16.97056274847714,False
+PETCT_92c5c944a5,Acto 1 · A,A_s3,16.15549442140351,False
+PETCT_92c5c944a5,Acto 1 · B,B,19.209372712298546,False
+PETCT_92c5c944a5,Acto 1 · B,B_s2,16.431676725154983,False
+PETCT_92c5c944a5,Acto 1 · B,B_s3,15.0,False
+PETCT_92c5c944a5,Acto 1 · C,C,23.043437243605826,False
+PETCT_92c5c944a5,Acto 1 · C,C_s2,16.97056274847714,False
+PETCT_92c5c944a5,Acto 1 · C,C_s3,15.297058540778355,False
+PETCT_92c5c944a5,Acto 1 · E,E,23.430749027719962,False
+PETCT_92c5c944a5,Acto 1 · E,E_s2,19.209372712298546,False
+PETCT_92c5c944a5,Acto 1 · E,E_s3,17.4928556845359,False
+PETCT_92c5c944a5,Extendido · A,A_ext_largo,12.36931687685298,False
+PETCT_92c5c944a5,Extendido · A,A_ext_largo_s2,12.727922061357855,False
+PETCT_92c5c944a5,Extendido · A,A_ext_largo_s3,12.36931687685298,False
+PETCT_92c5c944a5,Extendido · A+,Aplus_ext_largo,12.36931687685298,False
+PETCT_92c5c944a5,Extendido · A+,Aplus_ext_largo_s2,13.076696830622021,False
+PETCT_92c5c944a5,Extendido · A+,Aplus_ext_largo_s3,13.076696830622021,False
+PETCT_92c5c944a5,Extendido · B,B_ext_largo,12.36931687685298,False
+PETCT_92c5c944a5,Extendido · B,B_ext_largo_s2,13.74772708486752,False
+PETCT_92c5c944a5,Extendido · B,B_ext_largo_s3,14.071247279470288,False
+PETCT_92c5c944a5,Extendido · C,C_ext_largo,12.727922061357855,False
+PETCT_92c5c944a5,Extendido · C,C_ext_largo_s2,13.076696830622021,False
+PETCT_92c5c944a5,Extendido · C,C_ext_largo_s3,12.36931687685298,False
+PETCT_92c5c944a5,Extendido · B preentrenada,B_ext_largo_pre,12.36931687685298,False
+PETCT_92c5c944a5,Extendido · B preentrenada,B_ext_largo_pre_s2,12.727922061357855,False
+PETCT_92c5c944a5,Extendido · B preentrenada,B_ext_largo_pre_s3,12.727922061357855,False
+PETCT_92c5c944a5,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,12.727922061357855,False
+PETCT_92c5c944a5,"Sistema final (u 0,6)",ensambles/ensamble_final,13.74772708486752,False
+PETCT_9b982e72cb,Clásica,Clásica,87.66983517721475,False
+PETCT_9b982e72cb,Clásica + exclusión de órganos,Clásica + exclusión de órganos,46.95742752749558,False
+PETCT_9b982e72cb,Acto 1 · A,A,13.74772708486752,False
+PETCT_9b982e72cb,Acto 1 · A,A_s2,14.071247279470288,False
+PETCT_9b982e72cb,Acto 1 · A,A_s3,11.224972160321824,False
+PETCT_9b982e72cb,Acto 1 · B,B,11.224972160321824,False
+PETCT_9b982e72cb,Acto 1 · B,B_s2,7.3484692283495345,False
+PETCT_9b982e72cb,Acto 1 · B,B_s3,6.708203932499369,False
+PETCT_9b982e72cb,Acto 1 · C,C,24.186773244895647,False
+PETCT_9b982e72cb,Acto 1 · C,C_s2,10.392304845413264,False
+PETCT_9b982e72cb,Acto 1 · C,C_s3,11.224972160321824,False
+PETCT_9b982e72cb,Acto 1 · E,E,27.0,False
+PETCT_9b982e72cb,Acto 1 · E,E_s2,35.73611838277935,False
+PETCT_9b982e72cb,Acto 1 · E,E_s3,12.727922061357855,False
+PETCT_9b982e72cb,Extendido · A,A_ext_largo,6.708203932499369,False
+PETCT_9b982e72cb,Extendido · A,A_ext_largo_s2,6.708203932499369,False
+PETCT_9b982e72cb,Extendido · A,A_ext_largo_s3,7.689512872115418,False
+PETCT_9b982e72cb,Extendido · A+,Aplus_ext_largo,6.0,False
+PETCT_9b982e72cb,Extendido · A+,Aplus_ext_largo_s2,6.708203932499369,False
+PETCT_9b982e72cb,Extendido · A+,Aplus_ext_largo_s3,6.708203932499369,False
+PETCT_9b982e72cb,Extendido · B,B_ext_largo,7.3484692283495345,False
+PETCT_9b982e72cb,Extendido · B,B_ext_largo_s2,7.3484692283495345,False
+PETCT_9b982e72cb,Extendido · B,B_ext_largo_s3,6.0,False
+PETCT_9b982e72cb,Extendido · C,C_ext_largo,6.708203932499369,False
+PETCT_9b982e72cb,Extendido · C,C_ext_largo_s2,6.708203932499369,False
+PETCT_9b982e72cb,Extendido · C,C_ext_largo_s3,7.3484692283495345,False
+PETCT_9b982e72cb,Extendido · B preentrenada,B_ext_largo_pre,6.0,False
+PETCT_9b982e72cb,Extendido · B preentrenada,B_ext_largo_pre_s2,6.708203932499369,False
+PETCT_9b982e72cb,Extendido · B preentrenada,B_ext_largo_pre_s3,5.196152422706632,False
+PETCT_9b982e72cb,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,8.48528137423857,False
+PETCT_9b982e72cb,"Sistema final (u 0,6)",ensambles/ensamble_final,9.486832980505138,False
+PETCT_a1bc00ad60,Clásica,Clásica,305.48486050866745,False
+PETCT_a1bc00ad60,Clásica + exclusión de órganos,Clásica + exclusión de órganos,547.9896423690838,False
+PETCT_a1bc00ad60,Acto 1 · A,A,375.61509536943043,False
+PETCT_a1bc00ad60,Acto 1 · A,A_s2,428.42149501654785,False
+PETCT_a1bc00ad60,Acto 1 · A,A_s3,918.5106414621521,False
+PETCT_a1bc00ad60,Acto 1 · B,B,381.945137775288,False
+PETCT_a1bc00ad60,Acto 1 · B,B_s2,377.66532799957065,False
+PETCT_a1bc00ad60,Acto 1 · B,B_s3,852.6546776576822,False
+PETCT_a1bc00ad60,Acto 1 · C,C,381.4794180510095,False
+PETCT_a1bc00ad60,Acto 1 · C,C_s2,840.2072954063018,False
+PETCT_a1bc00ad60,Acto 1 · C,C_s3,852.6723529442376,False
+PETCT_a1bc00ad60,Acto 1 · E,E,353.4529671681934,False
+PETCT_a1bc00ad60,Acto 1 · E,E_s2,821.5208344491538,False
+PETCT_a1bc00ad60,Acto 1 · E,E_s3,899.4567573620734,False
+PETCT_a1bc00ad60,Extendido · A,A_ext_largo,389.44690072738365,False
+PETCT_a1bc00ad60,Extendido · A,A_ext_largo_s2,848.3743276591943,False
+PETCT_a1bc00ad60,Extendido · A,A_ext_largo_s3,910.6658003878772,False
+PETCT_a1bc00ad60,Extendido · A+,Aplus_ext_largo,920.664513855313,False
+PETCT_a1bc00ad60,Extendido · A+,Aplus_ext_largo_s2,913.011198995491,False
+PETCT_a1bc00ad60,Extendido · A+,Aplus_ext_largo_s3,930.1461174811076,False
+PETCT_a1bc00ad60,Extendido · B,B_ext_largo,809.9499984566949,False
+PETCT_a1bc00ad60,Extendido · B,B_ext_largo_s2,356.02005313088745,False
+PETCT_a1bc00ad60,Extendido · B,B_ext_largo_s3,840.9771102328393,False
+PETCT_a1bc00ad60,Extendido · C,C_ext_largo,852.46261659233,False
+PETCT_a1bc00ad60,Extendido · C,C_ext_largo_s2,838.6046334296601,False
+PETCT_a1bc00ad60,Extendido · C,C_ext_largo_s3,366.9998986681086,False
+PETCT_a1bc00ad60,Extendido · B preentrenada,B_ext_largo_pre,856.4419357973651,False
+PETCT_a1bc00ad60,Extendido · B preentrenada,B_ext_largo_pre_s2,856.0690606033257,False
+PETCT_a1bc00ad60,Extendido · B preentrenada,B_ext_largo_pre_s3,846.383936565912,False
+PETCT_a1bc00ad60,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,266.9947325157844,False
+PETCT_a1bc00ad60,"Sistema final (u 0,6)",ensambles/ensamble_final,3.0,False
+PETCT_a3df01d3a3,Clásica,Clásica,253.21137415211032,False
+PETCT_a3df01d3a3,Clásica + exclusión de órganos,Clásica + exclusión de órganos,331.4911761196802,False
+PETCT_a3df01d3a3,Acto 1 · A,A,12.692061542907238,False
+PETCT_a3df01d3a3,Acto 1 · A,A_s2,12.36931687685298,False
+PETCT_a3df01d3a3,Acto 1 · A,A_s3,11.18414032692869,False
+PETCT_a3df01d3a3,Acto 1 · B,B,13.416407864998739,False
+PETCT_a3df01d3a3,Acto 1 · B,B_s2,13.74772708486752,False
+PETCT_a3df01d3a3,Acto 1 · B,B_s3,16.15549442140351,False
+PETCT_a3df01d3a3,Acto 1 · C,C,27.80463327502621,False
+PETCT_a3df01d3a3,Acto 1 · C,C_s2,14.038895260009895,False
+PETCT_a3df01d3a3,Acto 1 · C,C_s3,15.588457268119896,False
+PETCT_a3df01d3a3,Acto 1 · E,E,21.798725229620104,False
+PETCT_a3df01d3a3,Acto 1 · E,E_s2,12.36931687685298,False
+PETCT_a3df01d3a3,Acto 1 · E,E_s3,13.74772708486752,False
+PETCT_a3df01d3a3,Extendido · A,A_ext_largo,48.70256835327483,False
+PETCT_a3df01d3a3,Extendido · A,A_ext_largo_s2,11.224972160321824,False
+PETCT_a3df01d3a3,Extendido · A,A_ext_largo_s3,14.634369338975963,False
+PETCT_a3df01d3a3,Extendido · A+,Aplus_ext_largo,13.416407864998739,False
+PETCT_a3df01d3a3,Extendido · A+,Aplus_ext_largo_s2,11.224972160321824,False
+PETCT_a3df01d3a3,Extendido · A+,Aplus_ext_largo_s3,12.0,False
+PETCT_a3df01d3a3,Extendido · B,B_ext_largo,21.0,False
+PETCT_a3df01d3a3,Extendido · B,B_ext_largo_s2,13.74772708486752,False
+PETCT_a3df01d3a3,Extendido · B,B_ext_largo_s3,16.91667414614473,False
+PETCT_a3df01d3a3,Extendido · C,C_ext_largo,16.404058494779736,False
+PETCT_a3df01d3a3,Extendido · C,C_ext_largo_s2,16.431676725154983,False
+PETCT_a3df01d3a3,Extendido · C,C_ext_largo_s3,19.8997487421324,False
+PETCT_a3df01d3a3,Extendido · B preentrenada,B_ext_largo_pre,15.559317395385635,False
+PETCT_a3df01d3a3,Extendido · B preentrenada,B_ext_largo_pre_s2,12.727922061357855,False
+PETCT_a3df01d3a3,Extendido · B preentrenada,B_ext_largo_pre_s3,16.431676725154983,False
+PETCT_a3df01d3a3,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,16.431676725154983,False
+PETCT_a3df01d3a3,"Sistema final (u 0,6)",ensambles/ensamble_final,17.233687939614086,False
+PETCT_a9d7a14ba1,Clásica,Clásica,103.05337497248694,False
+PETCT_a9d7a14ba1,Clásica + exclusión de órganos,Clásica + exclusión de órganos,117.03845521878696,False
+PETCT_a9d7a14ba1,Acto 1 · A,A,75.59761901012492,False
+PETCT_a9d7a14ba1,Acto 1 · A,A_s2,73.60706487831179,False
+PETCT_a9d7a14ba1,Acto 1 · A,A_s3,21.213203435596427,False
+PETCT_a9d7a14ba1,Acto 1 · B,B,23.62202362203543,False
+PETCT_a9d7a14ba1,Acto 1 · B,B_s2,80.71059101765228,False
+PETCT_a9d7a14ba1,Acto 1 · B,B_s3,71.61144718455577,False
+PETCT_a9d7a14ba1,Acto 1 · C,C,46.861498055439924,False
+PETCT_a9d7a14ba1,Acto 1 · C,C_s2,78.28793010419933,False
+PETCT_a9d7a14ba1,Acto 1 · C,C_s3,21.42428528562855,False
+PETCT_a9d7a14ba1,Acto 1 · E,E,42.827540566270606,False
+PETCT_a9d7a14ba1,Acto 1 · E,E_s2,18.49324200890693,False
+PETCT_a9d7a14ba1,Acto 1 · E,E_s3,34.178900217339546,False
+PETCT_a9d7a14ba1,Extendido · A,A_ext_largo,12.727922061357855,False
+PETCT_a9d7a14ba1,Extendido · A,A_ext_largo_s2,70.61161377563892,False
+PETCT_a9d7a14ba1,Extendido · A,A_ext_largo_s3,22.045407685048602,False
+PETCT_a9d7a14ba1,Extendido · A+,Aplus_ext_largo,70.54774043714288,False
+PETCT_a9d7a14ba1,Extendido · A+,Aplus_ext_largo_s2,70.67531393633848,False
+PETCT_a9d7a14ba1,Extendido · A+,Aplus_ext_largo_s3,18.0,False
+PETCT_a9d7a14ba1,Extendido · B,B_ext_largo,21.0,False
+PETCT_a9d7a14ba1,Extendido · B,B_ext_largo_s2,70.61161377563892,False
+PETCT_a9d7a14ba1,Extendido · B,B_ext_largo_s3,72.99315036357864,False
+PETCT_a9d7a14ba1,Extendido · C,C_ext_largo,16.15549442140351,False
+PETCT_a9d7a14ba1,Extendido · C,C_ext_largo_s2,16.431676725154983,False
+PETCT_a9d7a14ba1,Extendido · C,C_ext_largo_s3,14.071247279470288,False
+PETCT_a9d7a14ba1,Extendido · B preentrenada,B_ext_largo_pre,71.15755362377475,False
+PETCT_a9d7a14ba1,Extendido · B preentrenada,B_ext_largo_pre_s2,70.54774043714288,False
+PETCT_a9d7a14ba1,Extendido · B preentrenada,B_ext_largo_pre_s3,70.67531393633848,False
+PETCT_a9d7a14ba1,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,72.04997831742865,False
+PETCT_a9d7a14ba1,"Sistema final (u 0,6)",ensambles/ensamble_final,72.99315036357864,False
+PETCT_aa27cb9156,Clásica,Clásica,319.4260477794508,False
+PETCT_aa27cb9156,Clásica + exclusión de órganos,Clásica + exclusión de órganos,321.7980733317091,False
+PETCT_aa27cb9156,Acto 1 · A,A,24.73863375370596,False
+PETCT_aa27cb9156,Acto 1 · A,A_s2,20.12461179749811,False
+PETCT_aa27cb9156,Acto 1 · A,A_s3,28.930952282978865,False
+PETCT_aa27cb9156,Acto 1 · B,B,25.80697580112788,False
+PETCT_aa27cb9156,Acto 1 · B,B_s2,19.44222209522358,False
+PETCT_aa27cb9156,Acto 1 · B,B_s3,33.0,False
+PETCT_aa27cb9156,Acto 1 · C,C,29.96992462263961,False
+PETCT_aa27cb9156,Acto 1 · C,C_s2,23.62202362203543,False
+PETCT_aa27cb9156,Acto 1 · C,C_s3,24.73863375370596,False
+PETCT_aa27cb9156,Acto 1 · E,E,43.474130238568314,False
+PETCT_aa27cb9156,Acto 1 · E,E_s2,18.49324200890693,False
+PETCT_aa27cb9156,Acto 1 · E,E_s3,25.80697580112788,False
+PETCT_aa27cb9156,Extendido · A,A_ext_largo,31.464265445104548,False
+PETCT_aa27cb9156,Extendido · A,A_ext_largo_s2,25.632011235952593,False
+PETCT_aa27cb9156,Extendido · A,A_ext_largo_s3,25.45584412271571,False
+PETCT_aa27cb9156,Extendido · A+,Aplus_ext_largo,25.98076211353316,False
+PETCT_aa27cb9156,Extendido · A+,Aplus_ext_largo_s2,27.0,False
+PETCT_aa27cb9156,Extendido · A+,Aplus_ext_largo_s3,39.0,False
+PETCT_aa27cb9156,Extendido · B,B_ext_largo,23.62202362203543,False
+PETCT_aa27cb9156,Extendido · B,B_ext_largo_s2,24.186773244895647,False
+PETCT_aa27cb9156,Extendido · B,B_ext_largo_s3,24.186773244895647,False
+PETCT_aa27cb9156,Extendido · C,C_ext_largo,24.186773244895647,False
+PETCT_aa27cb9156,Extendido · C,C_ext_largo_s2,24.372115213907882,False
+PETCT_aa27cb9156,Extendido · C,C_ext_largo_s3,23.043437243605826,False
+PETCT_aa27cb9156,Extendido · B preentrenada,B_ext_largo_pre,23.62202362203543,False
+PETCT_aa27cb9156,Extendido · B preentrenada,B_ext_largo_pre_s2,24.186773244895647,False
+PETCT_aa27cb9156,Extendido · B preentrenada,B_ext_largo_pre_s3,24.186773244895647,False
+PETCT_aa27cb9156,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,23.430749027719962,False
+PETCT_aa27cb9156,"Sistema final (u 0,6)",ensambles/ensamble_final,22.847319317591726,False
+PETCT_b7c1533a39,Clásica,Clásica,154.8621962348087,False
+PETCT_b7c1533a39,Clásica + exclusión de órganos,Clásica + exclusión de órganos,123.63312540994478,False
+PETCT_b7c1533a39,Acto 1 · A,A,117.65202930676547,False
+PETCT_b7c1533a39,Acto 1 · A,A_s2,72.2993733018817,False
+PETCT_b7c1533a39,Acto 1 · A,A_s3,117.65202930676547,False
+PETCT_b7c1533a39,Acto 1 · B,B,113.38848976050433,False
+PETCT_b7c1533a39,Acto 1 · B,B_s2,35.6984153144361,False
+PETCT_b7c1533a39,Acto 1 · B,B_s3,112.04106274863224,False
+PETCT_b7c1533a39,Acto 1 · C,C,64.3241066110301,False
+PETCT_b7c1533a39,Acto 1 · C,C_s2,117.15374513859982,False
+PETCT_b7c1533a39,Acto 1 · C,C_s3,73.34499554897636,False
+PETCT_b7c1533a39,Acto 1 · E,E,44.19275958796871,False
+PETCT_b7c1533a39,Acto 1 · E,E_s2,111.15799426227082,False
+PETCT_b7c1533a39,Acto 1 · E,E_s3,4.242640687119285,False
+PETCT_b7c1533a39,Extendido · A,A_ext_largo,69.06518659932803,False
+PETCT_b7c1533a39,Extendido · A,A_ext_largo_s2,42.1070065428546,False
+PETCT_b7c1533a39,Extendido · A,A_ext_largo_s3,66.27216610312357,False
+PETCT_b7c1533a39,Extendido · A+,Aplus_ext_largo,66.0442953138132,False
+PETCT_b7c1533a39,Extendido · A+,Aplus_ext_largo_s2,63.192526365921275,False
+PETCT_b7c1533a39,Extendido · A+,Aplus_ext_largo_s3,68.52864593677168,False
+PETCT_b7c1533a39,Extendido · B,B_ext_largo,69.32532004974806,False
+PETCT_b7c1533a39,Extendido · B,B_ext_largo_s2,68.9738136631539,False
+PETCT_b7c1533a39,Extendido · B,B_ext_largo_s3,56.64358092336774,False
+PETCT_b7c1533a39,Extendido · C,C_ext_largo,60.27683761281,False
+PETCT_b7c1533a39,Extendido · C,C_ext_largo_s2,74.19728846324386,False
+PETCT_b7c1533a39,Extendido · C,C_ext_largo_s3,41.40556597377863,False
+PETCT_b7c1533a39,Extendido · B preentrenada,B_ext_largo_pre,187.96143183298577,False
+PETCT_b7c1533a39,Extendido · B preentrenada,B_ext_largo_pre_s2,60.26189353686657,False
+PETCT_b7c1533a39,Extendido · B preentrenada,B_ext_largo_pre_s3,55.471609017834496,False
+PETCT_b7c1533a39,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,60.11612606458572,False
+PETCT_b7c1533a39,"Sistema final (u 0,6)",ensambles/ensamble_final,48.373546489791295,False
+PETCT_c73c2685c0,Clásica,Clásica,142.697229315458,False
+PETCT_c73c2685c0,Clásica + exclusión de órganos,Clásica + exclusión de órganos,268.3650494873668,False
+PETCT_c73c2685c0,Acto 1 · A,A,126.88793253957543,False
+PETCT_c73c2685c0,Acto 1 · A,A_s2,127.77323663428112,False
+PETCT_c73c2685c0,Acto 1 · A,A_s3,126.88793253957543,False
+PETCT_c73c2685c0,Acto 1 · B,B,126.88793253957543,False
+PETCT_c73c2685c0,Acto 1 · B,B_s2,127.77323663428112,False
+PETCT_c73c2685c0,Acto 1 · B,B_s3,127.77323663428112,False
+PETCT_c73c2685c0,Acto 1 · C,C,126.88793253957543,False
+PETCT_c73c2685c0,Acto 1 · C,C_s2,126.64122551523259,False
+PETCT_c73c2685c0,Acto 1 · C,C_s3,127.63228431709588,False
+PETCT_c73c2685c0,Acto 1 · E,E,127.25446499776587,False
+PETCT_c73c2685c0,Acto 1 · E,E_s2,126.88793253957543,False
+PETCT_c73c2685c0,Acto 1 · E,E_s3,127.1607239483598,False
+PETCT_c73c2685c0,Extendido · A,A_ext_largo,33.27160951922825,False
+PETCT_c73c2685c0,Extendido · A,A_ext_largo_s2,33.27160951922825,False
+PETCT_c73c2685c0,Extendido · A,A_ext_largo_s3,33.54101966249684,False
+PETCT_c73c2685c0,Extendido · A+,Aplus_ext_largo,31.270517780059514,False
+PETCT_c73c2685c0,Extendido · A+,Aplus_ext_largo_s2,36.24913792078372,False
+PETCT_c73c2685c0,Extendido · A+,Aplus_ext_largo_s3,31.0322412983658,False
+PETCT_c73c2685c0,Extendido · B,B_ext_largo,30.49065628829207,False
+PETCT_c73c2685c0,Extendido · B,B_ext_largo_s2,40.80441152620633,False
+PETCT_c73c2685c0,Extendido · B,B_ext_largo_s3,24.186773244895647,False
+PETCT_c73c2685c0,Extendido · C,C_ext_largo,40.13726448077895,False
+PETCT_c73c2685c0,Extendido · C,C_ext_largo_s2,37.22902093797257,False
+PETCT_c73c2685c0,Extendido · C,C_ext_largo_s3,19.672315572906,False
+PETCT_c73c2685c0,Extendido · B preentrenada,B_ext_largo_pre,22.045407685048602,False
+PETCT_c73c2685c0,Extendido · B preentrenada,B_ext_largo_pre_s2,127.34991166074674,False
+PETCT_c73c2685c0,Extendido · B preentrenada,B_ext_largo_pre_s3,20.12461179749811,False
+PETCT_c73c2685c0,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,33.67491648096547,False
+PETCT_c73c2685c0,"Sistema final (u 0,6)",ensambles/ensamble_final,42.35197410971918,False
+PETCT_caae8d63f0,Clásica,Clásica,169.38713056191725,False
+PETCT_caae8d63f0,Clásica + exclusión de órganos,Clásica + exclusión de órganos,175.49358962651598,False
+PETCT_caae8d63f0,Acto 1 · A,A,76.92528286907087,False
+PETCT_caae8d63f0,Acto 1 · A,A_s2,90.23468281566181,False
+PETCT_caae8d63f0,Acto 1 · A,A_s3,84.89257607697851,False
+PETCT_caae8d63f0,Acto 1 · B,B,83.71827433775991,False
+PETCT_caae8d63f0,Acto 1 · B,B_s2,60.73795316576087,False
+PETCT_caae8d63f0,Acto 1 · B,B_s3,94.43089639277221,False
+PETCT_caae8d63f0,Acto 1 · C,C,66.30258231940842,False
+PETCT_caae8d63f0,Acto 1 · C,C_s2,75.94207949443458,False
+PETCT_caae8d63f0,Acto 1 · C,C_s3,81.88681124967451,False
+PETCT_caae8d63f0,Acto 1 · E,E,87.66983517721475,False
+PETCT_caae8d63f0,Acto 1 · E,E_s2,174.4313448624991,False
+PETCT_caae8d63f0,Acto 1 · E,E_s3,79.71198153351854,False
+PETCT_caae8d63f0,Extendido · A,A_ext_largo,4.242640687119285,False
+PETCT_caae8d63f0,Extendido · A,A_ext_largo_s2,3.0,False
+PETCT_caae8d63f0,Extendido · A,A_ext_largo_s3,16.886887538091894,False
+PETCT_caae8d63f0,Extendido · A+,Aplus_ext_largo,57.3306115007281,False
+PETCT_caae8d63f0,Extendido · A+,Aplus_ext_largo_s2,4.242640687119285,False
+PETCT_caae8d63f0,Extendido · A+,Aplus_ext_largo_s3,59.672847307227535,False
+PETCT_caae8d63f0,Extendido · B,B_ext_largo,53.75778427483398,False
+PETCT_caae8d63f0,Extendido · B,B_ext_largo_s2,54.365339204481536,False
+PETCT_caae8d63f0,Extendido · B,B_ext_largo_s3,38.49476442700594,False
+PETCT_caae8d63f0,Extendido · C,C_ext_largo,31.32091952673165,False
+PETCT_caae8d63f0,Extendido · C,C_ext_largo_s2,34.39543233038099,False
+PETCT_caae8d63f0,Extendido · C,C_ext_largo_s3,32.03123475609393,False
+PETCT_caae8d63f0,Extendido · B preentrenada,B_ext_largo_pre,55.60121473641087,False
+PETCT_caae8d63f0,Extendido · B preentrenada,B_ext_largo_pre_s2,34.72751070837067,False
+PETCT_caae8d63f0,Extendido · B preentrenada,B_ext_largo_pre_s3,34.07345007480164,False
+PETCT_caae8d63f0,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,27.820855486487112,False
+PETCT_caae8d63f0,"Sistema final (u 0,6)",ensambles/ensamble_final,22.394173975203874,False
+PETCT_d674a028b1,Clásica,Clásica,295.4200399431291,False
+PETCT_d674a028b1,Clásica + exclusión de órganos,Clásica + exclusión de órganos,332.0628563959384,False
+PETCT_d674a028b1,Acto 1 · A,A,670.9199785634164,False
+PETCT_d674a028b1,Acto 1 · A,A_s2,607.0787340518036,False
+PETCT_d674a028b1,Acto 1 · A,A_s3,148.76491521860925,False
+PETCT_d674a028b1,Acto 1 · B,B,237.73654916256498,False
+PETCT_d674a028b1,Acto 1 · B,B_s2,224.88474364236507,False
+PETCT_d674a028b1,Acto 1 · B,B_s3,450.1519739646143,False
+PETCT_d674a028b1,Acto 1 · C,C,601.5508268111854,False
+PETCT_d674a028b1,Acto 1 · C,C_s2,443.511416106522,False
+PETCT_d674a028b1,Acto 1 · C,C_s3,251.29270053982626,False
+PETCT_d674a028b1,Acto 1 · E,E,76.13146524269712,False
+PETCT_d674a028b1,Acto 1 · E,E_s2,200.25265635002026,False
+PETCT_d674a028b1,Acto 1 · E,E_s3,116.2814147558384,False
+PETCT_d674a028b1,Extendido · A,A_ext_largo,3.0,False
+PETCT_d674a028b1,Extendido · A,A_ext_largo_s2,335.2934534227312,False
+PETCT_d674a028b1,Extendido · A,A_ext_largo_s3,332.6687386987784,False
+PETCT_d674a028b1,Extendido · A+,Aplus_ext_largo,335.2780152732737,False
+PETCT_d674a028b1,Extendido · A+,Aplus_ext_largo_s2,535.5026905889631,False
+PETCT_d674a028b1,Extendido · A+,Aplus_ext_largo_s3,338.1287242661168,False
+PETCT_d674a028b1,Extendido · B,B_ext_largo,3.0,False
+PETCT_d674a028b1,Extendido · B,B_ext_largo_s2,3.0,False
+PETCT_d674a028b1,Extendido · B,B_ext_largo_s3,80.81645469039668,False
+PETCT_d674a028b1,Extendido · C,C_ext_largo,334.68492646069376,False
+PETCT_d674a028b1,Extendido · C,C_ext_largo_s2,447.1150601404893,False
+PETCT_d674a028b1,Extendido · C,C_ext_largo_s3,56.75414042335167,False
+PETCT_d674a028b1,Extendido · B preentrenada,B_ext_largo_pre,3.0,False
+PETCT_d674a028b1,Extendido · B preentrenada,B_ext_largo_pre_s2,80.75515784557433,False
+PETCT_d674a028b1,Extendido · B preentrenada,B_ext_largo_pre_s3,37.99986244815757,False
+PETCT_d674a028b1,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,3.0,False
+PETCT_d674a028b1,"Sistema final (u 0,6)",ensambles/ensamble_final,3.0,False
+PETCT_ddbb3c69f0,Clásica,Clásica,97.67292357659824,False
+PETCT_ddbb3c69f0,Clásica + exclusión de órganos,Clásica + exclusión de órganos,42.532340636273474,False
+PETCT_ddbb3c69f0,Acto 1 · A,A,41.24318125460256,False
+PETCT_ddbb3c69f0,Acto 1 · A,A_s2,48.187135212627034,False
+PETCT_ddbb3c69f0,Acto 1 · A,A_s3,40.24922359499622,False
+PETCT_ddbb3c69f0,Acto 1 · B,B,46.76537180435969,False
+PETCT_ddbb3c69f0,Acto 1 · B,B_s2,58.9406481131655,False
+PETCT_ddbb3c69f0,Acto 1 · B,B_s3,81.93900170248598,False
+PETCT_ddbb3c69f0,Acto 1 · C,C,36.373066958946424,False
+PETCT_ddbb3c69f0,Acto 1 · C,C_s2,74.57881736793632,False
+PETCT_ddbb3c69f0,Acto 1 · C,C_s3,45.89117562233506,False
+PETCT_ddbb3c69f0,Acto 1 · E,E,38.06573262134856,False
+PETCT_ddbb3c69f0,Acto 1 · E,E_s2,69.45502141674135,False
+PETCT_ddbb3c69f0,Acto 1 · E,E_s3,68.16670070634574,False
+PETCT_ddbb3c69f0,Extendido · A,A_ext_largo,66.51615519046621,False
+PETCT_ddbb3c69f0,Extendido · A,A_ext_largo_s2,59.2983538002407,False
+PETCT_ddbb3c69f0,Extendido · A,A_ext_largo_s3,64.96922348312314,False
+PETCT_ddbb3c69f0,Extendido · A+,Aplus_ext_largo,49.25848146550691,False
+PETCT_ddbb3c69f0,Extendido · A+,Aplus_ext_largo_s2,47.81213235152768,False
+PETCT_ddbb3c69f0,Extendido · A+,Aplus_ext_largo_s3,47.52893855326458,False
+PETCT_ddbb3c69f0,Extendido · B,B_ext_largo,80.38656604184557,False
+PETCT_ddbb3c69f0,Extendido · B,B_ext_largo_s2,58.557663887829406,False
+PETCT_ddbb3c69f0,Extendido · B,B_ext_largo_s3,90.29950165975447,False
+PETCT_ddbb3c69f0,Extendido · C,C_ext_largo,76.48529270389177,False
+PETCT_ddbb3c69f0,Extendido · C,C_ext_largo_s2,71.05631569396206,False
+PETCT_ddbb3c69f0,Extendido · C,C_ext_largo_s3,72.3118247591637,False
+PETCT_ddbb3c69f0,Extendido · B preentrenada,B_ext_largo_pre,65.31462317123173,False
+PETCT_ddbb3c69f0,Extendido · B preentrenada,B_ext_largo_pre_s2,84.38747061539851,False
+PETCT_ddbb3c69f0,Extendido · B preentrenada,B_ext_largo_pre_s3,66.1362230551458,False
+PETCT_ddbb3c69f0,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,65.52098900352466,False
+PETCT_ddbb3c69f0,"Sistema final (u 0,6)",ensambles/ensamble_final,58.01723881744115,False
+PETCT_e0aa99fa04,Clásica,Clásica,432.69215375238997,False
+PETCT_e0aa99fa04,Clásica + exclusión de órganos,Clásica + exclusión de órganos,478.17496795775673,False
+PETCT_e0aa99fa04,Acto 1 · A,A,4.242640687119285,False
+PETCT_e0aa99fa04,Acto 1 · A,A_s2,230.91325796688966,False
+PETCT_e0aa99fa04,Acto 1 · A,A_s3,4.242640687119285,False
+PETCT_e0aa99fa04,Acto 1 · B,B,236.86514595934187,False
+PETCT_e0aa99fa04,Acto 1 · B,B_s2,233.0133037327803,False
+PETCT_e0aa99fa04,Acto 1 · B,B_s3,3.0,False
+PETCT_e0aa99fa04,Acto 1 · C,C,243.87615522273867,False
+PETCT_e0aa99fa04,Acto 1 · C,C_s2,3.0,False
+PETCT_e0aa99fa04,Acto 1 · C,C_s3,3.0,False
+PETCT_e0aa99fa04,Acto 1 · E,E,219.68489271896433,False
+PETCT_e0aa99fa04,Acto 1 · E,E_s2,4.242640687119285,False
+PETCT_e0aa99fa04,Acto 1 · E,E_s3,223.42645083878568,False
+PETCT_e0aa99fa04,Extendido · A,A_ext_largo,3.0,False
+PETCT_e0aa99fa04,Extendido · A,A_ext_largo_s2,261.7505516760303,False
+PETCT_e0aa99fa04,Extendido · A,A_ext_largo_s3,231.0037699752216,False
+PETCT_e0aa99fa04,Extendido · A+,Aplus_ext_largo,3.0,False
+PETCT_e0aa99fa04,Extendido · A+,Aplus_ext_largo_s2,4.242640687119285,False
+PETCT_e0aa99fa04,Extendido · A+,Aplus_ext_largo_s3,226.79285703037473,False
+PETCT_e0aa99fa04,Extendido · B,B_ext_largo,125.04096381045261,False
+PETCT_e0aa99fa04,Extendido · B,B_ext_largo_s2,131.08488856670178,False
+PETCT_e0aa99fa04,Extendido · B,B_ext_largo_s3,130.0076920801227,False
+PETCT_e0aa99fa04,Extendido · C,C_ext_largo,127.5687924705539,False
+PETCT_e0aa99fa04,Extendido · C,C_ext_largo_s2,3.0,False
+PETCT_e0aa99fa04,Extendido · C,C_ext_largo_s3,6.708203932499369,False
+PETCT_e0aa99fa04,Extendido · B preentrenada,B_ext_largo_pre,127.3675476655333,False
+PETCT_e0aa99fa04,Extendido · B preentrenada,B_ext_largo_pre_s2,266.6120520882722,False
+PETCT_e0aa99fa04,Extendido · B preentrenada,B_ext_largo_pre_s3,3.0,False
+PETCT_e0aa99fa04,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,3.0,False
+PETCT_e0aa99fa04,"Sistema final (u 0,6)",ensambles/ensamble_final,3.0,False
+PETCT_eafa147e24,Clásica,Clásica,368.5118722646531,False
+PETCT_eafa147e24,Clásica + exclusión de órganos,Clásica + exclusión de órganos,532.5190109122461,False
+PETCT_eafa147e24,Acto 1 · A,A,360.8053438489012,False
+PETCT_eafa147e24,Acto 1 · A,A_s2,484.70986165850854,False
+PETCT_eafa147e24,Acto 1 · A,A_s3,486.82568549872394,False
+PETCT_eafa147e24,Acto 1 · B,B,489.51138836333786,False
+PETCT_eafa147e24,Acto 1 · B,B_s2,488.4475406837463,False
+PETCT_eafa147e24,Acto 1 · B,B_s3,486.8926985855651,False
+PETCT_eafa147e24,Acto 1 · C,C,489.0202433898451,False
+PETCT_eafa147e24,Acto 1 · C,C_s2,372.6308816797826,False
+PETCT_eafa147e24,Acto 1 · C,C_s3,487.2442400992031,False
+PETCT_eafa147e24,Acto 1 · E,E,60.28430965078183,False
+PETCT_eafa147e24,Acto 1 · E,E_s2,357.85548296121596,False
+PETCT_eafa147e24,Acto 1 · E,E_s3,347.86026077863863,False
+PETCT_eafa147e24,Extendido · A,A_ext_largo,358.70579816002197,False
+PETCT_eafa147e24,Extendido · A,A_ext_largo_s2,392.36972360262456,False
+PETCT_eafa147e24,Extendido · A,A_ext_largo_s3,390.4497379626515,False
+PETCT_eafa147e24,Extendido · A+,Aplus_ext_largo,357.0504166080751,False
+PETCT_eafa147e24,Extendido · A+,Aplus_ext_largo_s2,390.4128574146551,False
+PETCT_eafa147e24,Extendido · A+,Aplus_ext_largo_s3,386.52296180175375,False
+PETCT_eafa147e24,Extendido · B,B_ext_largo,484.34300790544984,False
+PETCT_eafa147e24,Extendido · B,B_ext_largo_s2,391.353374846772,False
+PETCT_eafa147e24,Extendido · B,B_ext_largo_s3,389.15215415781796,False
+PETCT_eafa147e24,Extendido · C,C_ext_largo,364.0491035815497,False
+PETCT_eafa147e24,Extendido · C,C_ext_largo_s2,392.83049323080775,False
+PETCT_eafa147e24,Extendido · C,C_ext_largo_s3,361.4562695275097,False
+PETCT_eafa147e24,Extendido · B preentrenada,B_ext_largo_pre,486.49188070212557,False
+PETCT_eafa147e24,Extendido · B preentrenada,B_ext_largo_pre_s2,392.10355466684115,False
+PETCT_eafa147e24,Extendido · B preentrenada,B_ext_largo_pre_s3,389.6051777558041,False
+PETCT_eafa147e24,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,370.0764725406049,False
+PETCT_eafa147e24,"Sistema final (u 0,6)",ensambles/ensamble_final,370.091065270206,False
+PETCT_fde66dd53a,Clásica,Clásica,220.96379793984352,False
+PETCT_fde66dd53a,Clásica + exclusión de órganos,Clásica + exclusión de órganos,235.78167867754271,False
+PETCT_fde66dd53a,Acto 1 · A,A,168.39592306966873,False
+PETCT_fde66dd53a,Acto 1 · A,A_s2,197.6587969203496,False
+PETCT_fde66dd53a,Acto 1 · A,A_s3,197.95680394910073,False
+PETCT_fde66dd53a,Acto 1 · B,B,196.25135784993532,False
+PETCT_fde66dd53a,Acto 1 · B,B_s2,224.3128955951533,False
+PETCT_fde66dd53a,Acto 1 · B,B_s3,198.45855943985316,False
+PETCT_fde66dd53a,Acto 1 · C,C,189.00476160485607,False
+PETCT_fde66dd53a,Acto 1 · C,C_s2,195.53004884160387,False
+PETCT_fde66dd53a,Acto 1 · C,C_s3,226.12618137222526,False
+PETCT_fde66dd53a,Acto 1 · E,E,175.55471637856598,False
+PETCT_fde66dd53a,Acto 1 · E,E_s2,197.30787934374732,False
+PETCT_fde66dd53a,Acto 1 · E,E_s3,200.2946074580569,False
+PETCT_fde66dd53a,Extendido · A,A_ext_largo,220.34659877023333,False
+PETCT_fde66dd53a,Extendido · A,A_ext_largo_s2,223.57544434290054,False
+PETCT_fde66dd53a,Extendido · A,A_ext_largo_s3,224.27479498844394,False
+PETCT_fde66dd53a,Extendido · A+,Aplus_ext_largo,224.78485954658962,False
+PETCT_fde66dd53a,Extendido · A+,Aplus_ext_largo_s2,225.83046717549666,False
+PETCT_fde66dd53a,Extendido · A+,Aplus_ext_largo_s3,222.27246770249423,False
+PETCT_fde66dd53a,Extendido · B,B_ext_largo,228.47318977918258,False
+PETCT_fde66dd53a,Extendido · B,B_ext_largo_s2,226.88608002862722,False
+PETCT_fde66dd53a,Extendido · B,B_ext_largo_s3,222.584016490258,False
+PETCT_fde66dd53a,Extendido · C,C_ext_largo,226.1580145110756,False
+PETCT_fde66dd53a,Extendido · C,C_ext_largo_s2,226.77298298763978,False
+PETCT_fde66dd53a,Extendido · C,C_ext_largo_s3,222.3908564512689,False
+PETCT_fde66dd53a,Extendido · B preentrenada,B_ext_largo_pre,226.1649771679298,False
+PETCT_fde66dd53a,Extendido · B preentrenada,B_ext_largo_pre_s2,228.73008105978553,False
+PETCT_fde66dd53a,Extendido · B preentrenada,B_ext_largo_pre_s3,228.41409424086416,False
+PETCT_fde66dd53a,"Ensamble + TTA (u 0,5)",ensambles/ensamble_B_ens_tta,227.22496097326075,False
+PETCT_fde66dd53a,"Sistema final (u 0,6)",ensambles/ensamble_final,227.35157352472606,False

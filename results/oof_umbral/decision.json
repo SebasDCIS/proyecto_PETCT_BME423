@@ -1,0 +1,14 @@
+{
+  "umbral": 0.6,
+  "regla_higado": false,
+  "k_higado": 2.0,
+  "motivo": {
+    "sens_u05": 0.6307,
+    "sens_u": 0.6189,
+    "dice_u": 0.6989,
+    "dice_u05": 0.6984,
+    "baja_marcas_higado": 0.2222,
+    "perdida_lesiones_higado": 0.0635,
+    "dice_con_higado": 0.6941
+  }
+}

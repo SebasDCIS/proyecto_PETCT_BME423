@@ -1,0 +1,46 @@
+\section{Análisis crítico}
+
+\subsection{Sobre la hipótesis original}
+
+La hipótesis decía que la atención cruzada reduce el FPV frente a la fusión temprana sin aumentar el FNV. En la prueba, la media del FPV de C bajó frente a A del acto 1 y el FNV subió 0,9 mL sin significancia, lo que a primera vista la apoya. Pero B logra lo mismo sin atención, y la ablación de C dio cero. Tal como estaba escrita, la hipótesis no se sostiene en su mecanismo: lo que baja el falso positivo es separar los codificadores, no la atención.
+
+El fracaso de la atención tiene una causa estructural y no de entrenamiento, porque se repitió con $\gamma$ inicial en 0 y en 1, con 25\,000 y con 100\,000 iteraciones, en las siete corridas de C. En el cuello, cada posición resume 48 mm y el CT de todo el parche cabe en 216 posiciones; un promedio de esas posiciones ya describe bien la anatomía general del parche, y eso es lo que la atención aprendió a devolver. La normalización de instancia que viene después borra justamente lo que es igual en todas las posiciones. Para que la anatomía module al PET por esta vía habría que llevar la atención a una resolución mayor, cambiar la normalización o modular la escala y el desplazamiento de la normalización en vez de sumar. Esto no dice que la atención no sirva en PET/CT \citep{fu2021,huang2025,zhao2024}; dice que este diseño concreto no tenía cómo aportar.
+
+\subsection{Por qué se invirtió el orden de las arquitecturas}
+
+Con 25\,000 iteraciones ganaba el modelo chico; con 100\,000, los de doble codificador. Los modelos de 24 M parámetros necesitan más entrenamiento para llegar a su mejor punto, y comparar todo con el mismo presupuesto corto los evaluaba a medio camino. Es el mismo punto que hace la revisión de nnU-Net sobre comparaciones de arquitecturas con entrenamiento insuficiente \citep{isensee2024revisited}: una comparación justa necesita que todos los brazos converjan. El diseño 2\,×\,2 y el control A+ permiten decirlo con evidencia, y no como suposición: el efecto de las iteraciones se repitió en las dos condiciones de datos, y el efecto del tamaño, aislado, fue nulo.
+
+\subsection{Comparación con lo publicado}
+
+El sistema final llega a \dmas{} 0,705 con la métrica cruda del reto y 9,5 mL de FPV. El ganador de autoPET 2022 llegó a 0,623 y 2,84 mL, y la nnU-Net de base a 0,690 y 5,78 mL \citep{gatidis2024challenge,alloula2023}. Esas cifras son de otro conjunto de prueba, con otros pacientes y en parte de otros centros, así que sirven de orientación y no de comparación directa. Con esa salvedad, el Dice está en el rango de lo publicado y el falso positivo sigue siendo entre dos y tres veces mayor. La diferencia principal con nnU-Net que quedó es el aumento de datos: aquí solo hubo volteos, y nnU-Net agrega rotaciones, escalado, ruido y cambios de contraste. También entrena 250\,000 iteraciones por defecto, contra 100\,000 de este trabajo.
+
+\subsection{Lo que aprendí sobre el método}
+
+Tres veces una sola semilla mostró algo que no se repitió: la primera C con 16 mL de FPV, la primera B extendida con +0,033 sobre A y el preentrenamiento con 0,724. Las tres desaparecieron con más semillas. El criterio de checkpoint, a su vez, fabricó la ventaja de E en el acto 1. Por eso todas las comparaciones de este informe usan tres semillas, y las que no las tienen lo dicen. La validación de 26 estudios también engañó con el umbral: decidirlo con los 825 fuera de pliegue evitó llevar a la prueba un umbral de 0,7 que solo era ruido.
+
+\subsection{Fallas que encontré al revisar el trabajo}
+\label{sec:fallas}
+
+Antes de cerrar revisé el código y el diseño buscando errores propios. Ninguno de los siguientes cambia las conclusiones de la prueba, pero los declaro porque afectan cómo se leen algunos números.
+
+\begin{itemize}
+\item \textbf{Fuga en la validación del acto 1.} La validación rápida que elegía \texttt{mejor.pt} usaba los primeros 12 de los 26 estudios de validación, y la Tabla~\ref{tab:acto1} reporta esos mismos 26. Las cifras de \texttt{mejor.pt} quedan algo optimistas. La columna \texttt{ultimo.pt}, que no pasó por ninguna elección, muestra el mismo empate, y la prueba nunca se usó para elegir nada. Lo correcto habría sido validar durante el entrenamiento con un grupo separado del entrenamiento, no de la validación.
+\item \textbf{El factor ``más datos'' del diseño 2\,×\,2 cambió también la proporción de controles}: 20\,\% en los 176 estudios y 50\,\% en los 825. Como en un control los parches se recortan al azar, la fracción de parches centrados en lesión bajó de cerca de 0,56 a 0,35. El efecto de las iteraciones se sostiene, pero el de los datos quedó confundido con ese cambio. Habría que mantener la misma proporción en las dos condiciones.
+\item \textbf{Los intervalos no incluyen la variación entre semillas.} El bootstrap remuestrea pacientes sobre el promedio de tres semillas, así que los IC de las comparaciones entre arquitecturas son algo más estrechos de lo que deberían. Un bootstrap jerárquico, que remuestree semillas y pacientes, lo corregiría.
+\item \textbf{Las comparaciones secundarias no tienen corrección por multiplicidad.} H1 y H2 están protegidas por el preregistro; S1 a S8 son ocho comparaciones exploratorias, y algunas, como B contra A en el extendido, quedan cerca del límite.
+\item \textbf{El ensamble usa 20 veces más cómputo al predecir que B.} Parte de su ventaja viene de ese costo. Una comparación justa sería contra un B con TTA o con el mismo presupuesto de inferencia.
+\item \textbf{E solo se entrenó en el acto 1.} Es el único brazo que no se probó con entrenamiento suficiente, así que no sé si con 100\,000 iteraciones habría aportado, como pasó con B.
+\item \textbf{La ventana del CT, de $-200$ a 300 HU, deja el pulmón igual que el aire y satura el hueso.} La red pierde anatomía justo en pulmón y hueso, donde queda parte del falso positivo. Una ventana más amplia o dos canales de CT con ventanas distintas lo evitarían.
+\end{itemize}
+
+\subsection{Limitaciones}
+
+\begin{itemize}
+\item \textbf{Un solo centro y una sola anotación.} autoPET viene de un hospital y cada estudio tiene un anotador. No hay medida de variabilidad entre expertos.
+\item \textbf{La anotación no marca inflamación.} Cuando una red marca un ganglio del mediastino en un control, no se puede saber si es error o un hallazgo no anotado. Evité las preguntas que la anotación no puede contestar.
+\item \textbf{Zona anonimizada excluida.} El trabajo no dice nada sobre cabeza, cuello ni encéfalo.
+\item \textbf{Resolución de 3 mm y tope de SUV en 30.} Las lesiones de menos de 1 mL tienen pocos vóxeles, y el SUVmax de cuatro estudios queda truncado.
+\item \textbf{Métricas propias}, contrastadas con el script oficial con diferencias menores a 1 mL en las redes.
+\item \textbf{La MTV automática no sirve todavía para seguimiento} en pacientes de carga alta: en el acto 1 los límites de concordancia fueron de $-244$ a $+184$ mL.
+\item \textbf{El umbral se decidió fuera de pliegue}, con un solo miembro del ensamble por estudio, que es un sustituto del ensamble completo.
+\end{itemize}

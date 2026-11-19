@@ -50,6 +50,13 @@ def main():
                     help="CSV de referencias internas (hígado propio de cada paciente). "
                          "Solo lo usa el modelo E; los demás lo ignoran.")
     ap.add_argument("--sin-reanudar", action="store_true")
+    # rama `extendido`, paso 3 (anatomía); ver docs/PASO3_ANATOMIA.md
+    ap.add_argument("--enc-ct-preentrenado", default=None,
+                    help="pesos del codificador de CT preentrenado en anatomía (scripts/29); solo B o C")
+    ap.add_argument("--peso-organos", type=float, default=None,
+                    help=">1 activa la pérdida pesada por órgano: el fondo dentro de órganos con "
+                         "captación fisiológica cuesta este factor más (petct.losses)")
+    ap.add_argument("--organos", default=None, help="mapas de órganos (data/processed_organos)")
     a = ap.parse_args()
 
     cfg_yaml = yaml.safe_load(open(a.config))
@@ -58,7 +65,8 @@ def main():
         parche=(a.parche,) * 3 if a.parche else None, validar_cada=a.validar_cada,
         checkpoint_cada=a.checkpoint_cada, max_estudios_val=a.max_estudios_val, workers=a.workers,
         cache_estudios=a.cache_estudios, max_minutos=a.max_minutos, small=a.small or None,
-        semilla=a.semilla, referencias=a.referencias)
+        semilla=a.semilla, referencias=a.referencias,
+        enc_ct_preentrenado=a.enc_ct_preentrenado, peso_organos=a.peso_organos, organos=a.organos)
     device = pick_device(a.dispositivo)
     print("dispositivo:", describe_device() if a.dispositivo is None else device, flush=True)
 

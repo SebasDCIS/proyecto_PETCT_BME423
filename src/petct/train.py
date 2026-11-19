@@ -47,6 +47,7 @@ from torch.utils.data import DataLoader
 
 from .data import PatchDataset
 from .infer import evaluate_files, summarize
+from .losses import OrganWeightedDiceCE
 from .models import build_model, count_parameters, needs_reference
 from .reference import load_reference_table
 
@@ -71,6 +72,10 @@ class TrainConfig:
     referencias: Optional[str] = None   # CSV de referencias internas; obligatorio para el modelo E
     max_minutos: Optional[float] = None  # parar con gracia (sesiones de Colab)
     log_cada: int = 20
+    # Rama `extendido`, paso 3 (anatomía). Ninguno cambia nada si queda en su valor por defecto.
+    enc_ct_preentrenado: Optional[str] = None  # pesos de `Encoder` (scripts/29) para `model.enc_ct` de B/C
+    peso_organos: float = 1.0                  # >1: entropía cruzada pesada en órganos fisiológicos (petct.losses)
+    organos: str = "data/processed_organos"    # mapas de órganos; solo se leen si peso_organos > 1
 
     @classmethod
     def from_yaml(cls, cfg: dict, **overrides) -> "TrainConfig":
@@ -151,10 +156,26 @@ def train(cfg: TrainConfig, train_files: Sequence[Path], val_files: Sequence[Pat
     n_params = count_parameters(model)
     optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
     scaler = torch.amp.GradScaler("cuda") if use_amp else None
-    loss_fn = DiceCELoss(softmax=True, to_onehot_y=True, include_background=False)
+    usa_organos = cfg.peso_organos > 1.0
+    if usa_organos:
+        loss_fn = OrganWeightedDiceCE(peso=cfg.peso_organos).to(device)
+    else:
+        loss_fn = DiceCELoss(softmax=True, to_onehot_y=True, include_background=False)
 
     start_it, best = 0, -1.0
     last_ck = out_dir / "ultimo.pt"
+    # Codificador de CT preentrenado en anatomía (scripts/29). Se carga solo al empezar: si la
+    # corrida se reanuda, `ultimo.pt` ya trae esos pesos (más lo aprendido después).
+    if cfg.enc_ct_preentrenado and not (resume and last_ck.exists()):
+        if not hasattr(model, "enc_ct"):
+            raise SystemExit(f"el modelo {cfg.modelo} no tiene codificador de CT separado; "
+                             "--enc-ct-preentrenado solo tiene sentido en B o C")
+        pre = torch.load(cfg.enc_ct_preentrenado, map_location=device, weights_only=False)
+        model.enc_ct.load_state_dict(pre["enc_ct"])          # estricto: cualquier desajuste de forma corta acá
+        if verbose:
+            print(f"[anatomía] enc_ct cargado desde {cfg.enc_ct_preentrenado} "
+                  f"(iteración {pre.get('iter', '?')} del preentrenamiento, "
+                  f"Dice anatómico {pre.get('dice_val', float('nan')):.3f})", flush=True)
     if resume and last_ck.exists():
         ck = torch.load(last_ck, map_location=device, weights_only=False)
         model.load_state_dict(ck["model"])
@@ -167,7 +188,8 @@ def train(cfg: TrainConfig, train_files: Sequence[Path], val_files: Sequence[Pat
 
     ds = PatchDataset(train_files, cfg.parche, cfg.prob_parche_con_lesion,
                       length=max(cfg.iteraciones * cfg.lote, 1000), cache_size=cfg.cache_estudios,
-                      augment=True, seed=cfg.semilla + start_it, refs=refs)
+                      augment=True, seed=cfg.semilla + start_it, refs=refs,
+                      organs_dir=cfg.organos if usa_organos else None)
     loader = DataLoader(ds, batch_size=cfg.lote, shuffle=False, num_workers=cfg.workers,
                         pin_memory=(device.type == "cuda"), persistent_workers=cfg.workers > 0,
                         drop_last=True)
@@ -177,7 +199,8 @@ def train(cfg: TrainConfig, train_files: Sequence[Path], val_files: Sequence[Pat
         print(f"modelo {cfg.modelo} ({'chico' if cfg.small else 'completo'}): {n_params / 1e6:.1f} M parámetros | "
               f"{len(train_files)} estudios de entrenamiento, {len(val_subset)} de validación rápida | "
               f"entrada de {3 if refs is not None else 2} canales | "
-              f"dispositivo {device} | AMP {'sí' if use_amp else 'no'} | lote {cfg.lote} | parche {tuple(cfg.parche)}", flush=True)
+              f"dispositivo {device} | AMP {'sí' if use_amp else 'no'} | lote {cfg.lote} | parche {tuple(cfg.parche)}"
+              + (f" | pérdida pesada por órgano ×{cfg.peso_organos:g}" if usa_organos else ""), flush=True)
 
     log_hdr = ["iter", "loss", "lr", "seg_por_iter", "minutos"]
     val_hdr = ["iter", "n", "n_pos", "dice_pos", "dice_pos_mediana", "fpv_ml", "fnv_ml_pos", "fpv_ml_neg", "mejor"]
@@ -191,18 +214,19 @@ def train(cfg: TrainConfig, train_files: Sequence[Path], val_files: Sequence[Pat
 
     while it < cfg.iteraciones:
         try:
-            x, y = next(data_iter)
+            batch = next(data_iter)
         except StopIteration:
             data_iter = iter(loader)
-            x, y = next(data_iter)
-        x, y = x.to(device, non_blocking=True), y.to(device, non_blocking=True)
+            batch = next(data_iter)
+        x, y = batch[0].to(device, non_blocking=True), batch[1].to(device, non_blocking=True)
+        grupos = batch[2].to(device, non_blocking=True) if usa_organos else None
         lr = poly_lr(cfg.lr, it, cfg.iteraciones)
         for g in optimizer.param_groups:
             g["lr"] = lr
         optimizer.zero_grad(set_to_none=True)
         with torch.autocast(device_type=device.type, dtype=torch.float16, enabled=use_amp):
             logits = model(x)
-            loss = loss_fn(logits, y)
+            loss = loss_fn(logits, y, grupos) if usa_organos else loss_fn(logits, y)
         if scaler is not None:
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)

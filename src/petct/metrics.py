@@ -12,8 +12,10 @@ Y dos clínicas:
   MTV    volumen tumoral metabólico: vóxeles de la máscara por mL/vóxel.
   SUVmax el SUV más alto dentro de la máscara.
 
-Las componentes conexas se calculan con vecindad 3D completa (26 vecinos), como en
-el script oficial (scipy.ndimage.label con estructura de 3x3x3).
+Las componentes conexas se calculan con vecindad 3D completa (26 vecinos: cara, arista y
+esquina; scipy.ndimage.label con estructura de 3x3x3). El script oficial del reto
+(scripts/oficial_autopet/val_script.py) usa cc3d con conectividad 18 (cara y arista); la
+diferencia entre las dos se mide en scripts/40_metricas_complementarias.py.
 """
 from __future__ import annotations
 

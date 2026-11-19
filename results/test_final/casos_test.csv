@@ -1,0 +1,13 @@
+estudio,regla,diagnostico,metodo,dice,fpv_ml,fnv_ml,mtv_gt_ml
+PETCT_aa27cb9156,"caso típico (Dice cercano a la mediana, 0,81)",linfoma,"Umbral clásico (SUV 2,5)",0.5863905920192984,302.832,0.243,397.71
+PETCT_aa27cb9156,"caso típico (Dice cercano a la mediana, 0,81)",linfoma,B extendido · semilla 423,0.788556271314892,13.5,0.0,397.71
+PETCT_aa27cb9156,"caso típico (Dice cercano a la mediana, 0,81)",linfoma,"Sistema final · ensamble + TTA, u 0,6",0.8063756063756063,8.586,0.0,397.71
+PETCT_ddbb3c69f0,mayor falso positivo del sistema final,linfoma,"Umbral clásico (SUV 2,5)",0.5664187420633893,842.967,0.324,1488.186
+PETCT_ddbb3c69f0,mayor falso positivo del sistema final,linfoma,B extendido · semilla 423,0.7208715897393383,229.635,2.241,1488.186
+PETCT_ddbb3c69f0,mayor falso positivo del sistema final,linfoma,"Sistema final · ensamble + TTA, u 0,6",0.7605692915333249,153.873,2.268,1488.186
+PETCT_39159c05c2,mayor falso negativo del sistema final,cáncer de pulmón,"Umbral clásico (SUV 2,5)",0.2747321841671313,307.449,10.26,569.781
+PETCT_39159c05c2,mayor falso negativo del sistema final,cáncer de pulmón,B extendido · semilla 423,0.7181320396062076,0.783,8.775,569.781
+PETCT_39159c05c2,mayor falso negativo del sistema final,cáncer de pulmón,"Sistema final · ensamble + TTA, u 0,6",0.6833431777909037,0.0,25.974,569.781
+PETCT_05d5a79faf,mayor corrección del ensamble frente a B solo,control sin lesión,"Umbral clásico (SUV 2,5)",0.0,935.442,0.0,0.0
+PETCT_05d5a79faf,mayor corrección del ensamble frente a B solo,control sin lesión,B extendido · semilla 423,0.0,171.288,0.0,0.0
+PETCT_05d5a79faf,mayor corrección del ensamble frente a B solo,control sin lesión,"Sistema final · ensamble + TTA, u 0,6",0.0,65.88,0.0,0.0

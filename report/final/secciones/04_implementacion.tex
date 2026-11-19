@@ -1,0 +1,40 @@
+\section{Implementación}
+
+\subsection{Organización del repositorio}
+
+El código está en Python y separa una biblioteca, \texttt{src/petct}, de los scripts numerados que la usan en el orden del proyecto. La biblioteca no conoce los datos de ningún estudio en particular; los scripts leen un manifiesto, llaman a la biblioteca y escriben tablas en \texttt{results/} y figuras en \texttt{docs/figuras/}. La Tabla~\ref{tab:modulos} resume los módulos.
+
+\begin{table}[h]
+\centering\small
+\caption{Módulos de \texttt{src/petct}.}
+\label{tab:modulos}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+Módulo & Qué hace \\
+\midrule
+\texttt{suv.py}, \texttt{convert.py}, \texttt{geometry.py} & SUV por peso desde DICOM con corrección de decaimiento; DICOM a NIfTI; CT a la grilla del PET; DICOM SEG ubicado por posición física. \\
+\texttt{tcia.py} & Selección estratificada y reproducible del subconjunto; descarga desde TCIA. \\
+\texttt{preprocess.py}, \texttt{data.py} & Remuestreo, ventana, escalado, máscara corporal, recorte; muestreo de parches con sesgo a lesión y volteos. \\
+\texttt{classical.py} & Referencia clásica: umbral, apertura, tamaño mínimo y exclusión opcional de órganos. \\
+\texttt{models.py} & Los brazos A, A+, B, C y E sobre bloques de MONAI; atención cruzada con codificación de posición 3D. \\
+\texttt{losses.py}, \texttt{train.py}, \texttt{device.py} & Dice más entropía cruzada (con peso opcional por órgano); bucle de entrenamiento con checkpoints; selección del acelerador. \\
+\texttt{infer.py}, \texttt{postproc.py} & Ventana deslizante con ponderación gaussiana y TTA; reglas de posproceso. \\
+\texttt{metrics.py}, \texttt{organs.py} & Dice, FPV y FNV por componentes 26-conexas; zona anonimizada; reparto de errores por órgano con TotalSegmentator. \\
+\texttt{reference.py} & Referencia hepática del paciente para el brazo E. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Los scripts siguen el orden de trabajo: 01 a 04 seleccionan, descargan, convierten y preprocesan; 05 es la referencia clásica; 07 entrena; 09 evalúa y guarda máscaras; 11 a 20 son los análisis del acto 1; 24 a 39 son la etapa extendida, el ensamble, la decisión del umbral y la prueba; 40 a 43 son los análisis secundarios, los casos y el falso positivo por órgano de todos los brazos. Las pruebas de \texttt{tests/} cubren el cálculo del SUV, la geometría con un fantoma sintético, el preprocesamiento, la forma de las salidas de los modelos y el reparto por órgano.
+
+\subsection{Decisiones de diseño}
+
+\textbf{Un solo equipo, sin GPU de servidor.} Todo se entrenó en un MacBook Pro con chip M5 y 24 GB de memoria compartida, con el acelerador \texttt{mps} de PyTorch en precisión simple. A tarda 0,65 s por iteración y B y C 0,79 s: entre 4,8 y 6,5 horas por corrida de 25\,000 iteraciones y cerca de un día por corrida de 100\,000. En total hice 38 corridas de entrenamiento. Este límite explica el tamaño de los parches, el lote de 2 y que la atención vaya solo en el cuello.
+
+\textbf{Reproducibilidad y fugas.} La partición es por paciente y se guarda como manifiesto con su md5. El preprocesamiento usa constantes fijas. El 6 de septiembre congelé el protocolo de entrenamiento (\texttt{docs/PROTOCOLO\_CONGELADO.md}) y audité las fugas: ningún paciente en dos particiones, ninguna estadística calculada sobre validación o prueba. TotalSegmentator y la referencia hepática se calculan solo desde el CT y el PET, sin la anotación.
+
+\textbf{Una prueba con candado.} Antes de abrir la prueba escribí y versioné en git las hipótesis, los brazos, los checkpoints, el umbral y los criterios de confirmación (\texttt{docs/TEST\_PREREGISTRO.md}). El script de la prueba se niega a correr si esos archivos tienen cambios sin registrar, y deja un acta con la hora y el commit de apertura. La abrí una sola vez, el 12 de octubre.
+
+\textbf{Métricas propias contrastadas.} Implementé Dice, FPV y FNV con las definiciones del reto y las contrasté al final con el script oficial \citep{labmidas}, copiado sin cambios en \texttt{scripts/oficial\_autopet/} (sección~\ref{sec:secundarios}).
+
+\textbf{Datos fuera del repositorio.} La colección completa en DICOM pesa cerca de 419 GB y cada estudio preprocesado unos 12 MB. Ninguno se sube a git; el README explica cómo descargarlos y regenerarlos con los scripts.

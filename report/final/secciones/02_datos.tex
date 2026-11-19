@@ -1,0 +1,25 @@
+\section{Datos}
+
+Usé la colección FDG-PET-CT-Lesions de TCIA, la versión pública de autoPET, con licencia CC BY 4.0 \citep{gatidis2022data}. Tiene 1\,014 estudios de 900 pacientes de un solo centro, con cáncer de pulmón, linfoma, melanoma y controles sin hallazgos. Cada estudio trae el PET, el CT y la máscara de lesiones del experto en DICOM SEG. Los datos están anonimizados: una caja que cubre la cabeza y la cara quedó borrada, con valor cero en el PET.
+
+Trabajé con un estudio por paciente y particioné por paciente, de modo que ningún paciente aparece en dos conjuntos. La validación (26 estudios) y la prueba (49) se sortearon el 4 de septiembre con semilla 423, estratificadas por diagnóstico, y no cambiaron en todo el proyecto. El entrenamiento tuvo dos tamaños (Tabla~\ref{tab:datos}): 176 estudios en la primera etapa y todos los pacientes restantes, 825, en la segunda.
+
+\begin{table}[h]
+\centering\small
+\caption{Estudios por partición y diagnóstico. Un estudio por paciente. Validación y prueba son las mismas en las dos etapas.}
+\label{tab:datos}
+\begin{tabular}{lccccc}
+\toprule
+ & Pulmón & Linfoma & Melanoma & Controles & Total \\
+\midrule
+Entrenamiento, acto 1 & 47 & 47 & 47 & 35 & 176 \\
+Entrenamiento, etapa extendida & 148 & 117 & 149 & 411 & 825 \\
+Validación & 7 & 7 & 7 & 5 & 26 \\
+Prueba & 13 & 13 & 13 & 10 & 49 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Al revisar los datos encontré lesiones anotadas dentro de la caja anonimizada, donde el PET vale cero: 1\,651 de los 44\,414 mL anotados en los 251 estudios de la primera etapa (3,7\,\%). La anotación se hizo sobre la imagen original, antes de anonimizar. Ningún método puede detectar esas lesiones porque no queda señal. Las excluyo de la predicción y de la verdad al evaluar, con la misma regla para todos los brazos, y llamo a esto métrica corregida. Reporto también la métrica cruda del reto, sin esa exclusión. Con esto el trabajo no dice nada sobre lesiones de cabeza y cuello ni sobre la captación cerebral.
+
+En la prueba quedan 38 estudios con lesión evaluable (13 de pulmón, 13 de linfoma y 12 de melanoma) y 435 lesiones fuera de la zona borrada.

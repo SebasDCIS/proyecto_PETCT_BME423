@@ -1008,3 +1008,71 @@ en ningún punto del entrenamiento.
 
 Tabla en `results/comparacion_criterio_checkpoint_val.csv`. Las nueve evaluaciones se guardaron
 con el sufijo `_ultimo` para que no se mezclen con la comparación principal.
+
+## 2026-10-12. Test abierto una vez: H1 y H2 confirmadas
+
+Se abrió el test con el preregistro del commit `90a35e1` (`results/test/APERTURA.txt`) y
+`scripts/35_test_final.sh` corrió entero en unas dos horas. H1 (ensamble + TTA contra B):
+ΔDice⁺ +0,028 [+0,011, +0,048], ΔFPV −7,0 mL [−12,4, −3,4]. H2 (sistema final, umbral 0,6):
++0,029 [+0,006, +0,054] y −9,4 mL [−16,4, −4,5]. Ambas confirmadas. Sistema final: Dice⁺ 0,727,
+FPV 9,5 mL. En el acto 1 el empate en Dice se sostiene; en FPV los dos codificadores evitan unos
+pocos fallos grandes de A. En la etapa extendida B y C le ganan a A (+0,038 y +0,034) y A+ no.
+Lectura completa en `docs/RESULTADOS_TEST.md`.
+
+## 2026-11-02. Casos cualitativos de la prueba (`scripts/42`)
+
+Comprometidos en la parcial. Cuatro estudios de la prueba elegidos con una regla fija sobre las
+métricas del sistema final, escrita en el script antes de mirar las imágenes: el caso típico
+(Dice más cercano a la mediana, 0,81), el de mayor FPV, el de mayor FNV y el de mayor caída de
+FPV entre B solo y el ensamble. Columnas: experto, umbral clásico, B extendido (semilla 423) y
+sistema final, sobre el MIP coronal del SUV. Sin entrenar ni predecir: máscaras ya guardadas.
+Figura en `docs/figuras/casos_test.png`; cifras por caso en `results/test_final/casos_test.csv`.
+
+Lo que se ve, sin sobreinterpretar:
+
+- A (linfoma, caso típico): la clásica pinta columna, médula y vejiga (FPV 303 mL); B deja 13,5
+  y el sistema final 8,6 mL, con Dice 0,79 y 0,81.
+- B (linfoma, mayor FPV): el falso positivo de las redes cae sobre todo en el bazo. En linfoma
+  la captación esplénica puede ser enfermedad no anotada; con estos datos no se puede saber.
+- C (pulmón, mayor FNV): el sistema final pierde varias lesiones pequeñas que B sí tocaba (FNV
+  26,0 contra 8,8 mL). Es el costo del umbral 0,6 y del promedio, visto en un paciente.
+- D (control sin lesión): el ensamble baja el FPV de B de 171 a 66 mL; lo que queda está en la
+  médula ósea de la pelvis.
+
+## 2026-11-02. FP por órgano de todos los brazos en la prueba (`scripts/43`)
+
+La tabla de la prueba (`scripts/37`, S4) tenía solo B, el ensamble y el sistema final; la
+parcial avisó que E faltaba. Se completó con la clásica, A, B, C y E del acto 1 y A, A+ y C del
+extendido, con la misma convención (incluida la zona anonimizada; por eso A del acto 1 suma
+39,1 mL y no los 38,4 de la métrica corregida). Totales iguales a los de la tabla anterior
+donde se solapan (B 19,10; sistema final 9,50). Descriptivo, fuera del preregistro.
+Tabla en `results/test_final/fp_por_organo_todos.csv`.
+
+- La clásica pone su error en órganos de captación fisiológica: hígado 167, riñones 111,
+  vejiga 110, corazón 107 e intestino 90 mL por estudio. Las redes dejan menos de 1 mL en
+  hígado, riñones, vejiga y corazón; en el intestino, entre 0,3 y 9 mL (más en el acto 1).
+- Lo que les queda a las redes está en tejido sin órgano asignado ("otro"), hueso, bazo y
+  borde del cuerpo ("fuera"); el sistema final baja todos a menos de 3 mL.
+- E del acto 1 deja 28,6 mL contra 39,1 de A, sobre todo por menos FP fuera del cuerpo y en el
+  intestino; contra B (23,6) no se distingue. No cambia la lectura del acto 1: su ventaja de
+  validación venía del checkpoint.
+
+## 2026-11-19. Revisión crítica antes de cerrar
+
+Revisé el código y el diseño buscando fallas propias. Ninguna cambia las conclusiones de la
+prueba; las que afectan la lectura de algún número quedaron declaradas en el informe final
+(sección "Fallas que encontré al revisar el trabajo"):
+
+- La validación rápida que elegía `mejor.pt` en el acto 1 usaba los primeros 12 de los 26
+  estudios de validación (`val_files[:12]` en `train.py`), y la tabla del acto 1 reporta esos
+  26: las cifras de `mejor.pt` en validación quedan algo optimistas. `ultimo.pt` y la prueba no
+  están afectados.
+- En el 2 × 2, pasar de 176 a 825 estudios cambió también la proporción de controles (20 % a
+  50 %) y con ella la fracción de parches centrados en lesión (≈ 0,56 a 0,35).
+- Los IC no incluyen la variación entre semillas; las secundarias S1–S8 no tienen corrección por
+  multiplicidad; el ensamble usa 20× más cómputo de inferencia que B; E solo existe en el acto 1;
+  la ventana de CT −200/300 HU iguala pulmón y aire y satura el hueso.
+
+Verificado sin problemas: interpolación de la máscara (vecino más cercano), ejes de volteo
+iguales en entrenamiento y TTA, partición por paciente, pliegues estratificados, predicción fuera
+de pliegue correcta, métricas iguales al script oficial, referencias calculadas sin la anotación.
