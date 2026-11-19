@@ -1092,4 +1092,7 @@ en `results/reanalisis/reanalisis.md`, resumidos en el informe:
 - **Holm** sobre 18 pruebas secundarias: siguen significativas S6 Dice⁺ B−A y C−A (p 0,037),
   S6 FPV C−A (0,029), S1 FPV y S2. S6 FPV B−A deja de serlo (0,128); ninguna del acto 1 lo es.
 
-Pendiente opcional (solo predicción, en la Terminal del Mac): ensamble + TTA contra B + TTA.
+- **Ensamble + TTA contra B + TTA** (solo predicción, cada B del extendido con espejos, umbral 0,5):
+  B + TTA da Dice⁺ 0,709 y FPV 17,6 mL (sin TTA 0,698 y 18,9). El ensamble lo sigue superando:
+  ΔDice⁺ +0,018 [+0,004, +0,035], ΔFPV −5,7 mL [−11,4, −2,2]. Cerca de 0,01 de la ganancia de H1
+  viene de los espejos; el resto, y casi toda la baja de FP, del ensamble.

@@ -213,7 +213,7 @@ def main():
     else:
         t4, rb = p4
         t4.to_csv(OUT / "p4_ensamble_vs_btta.csv", index=False)
-        md.append(f"B + TTA (media de tres semillas): Dice⁺ {rb['dice']:.3f}, FPV {rb['fpv']:.2f} mL.\n".replace(".", ","))
+        md.append(f"B + TTA (media de tres semillas): Dice⁺ {rb['dice']:.3f}; FPV {rb['fpv']:.2f} mL".replace(".", ",") + ".\n")
         md += ["| métrica | Δ (ensamble+TTA − B+TTA) | IC jerárquico | p Wilcoxon |", "|---|---|---|---|"]
         for r in t4.itertuples():
             fm = f3 if r.metrica == "Dice⁺" else f2

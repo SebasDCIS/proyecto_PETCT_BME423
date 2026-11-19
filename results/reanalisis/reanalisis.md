@@ -72,4 +72,9 @@ IC simple: bootstrap de pacientes sobre el promedio de semillas (el del preregis
 
 ## 4. Ensamble + TTA contra B + TTA
 
-Pendiente: faltan `results/B_ext_tta_{s423,s2,s3}_test.csv` (ver README del análisis).
+B + TTA (media de tres semillas): Dice⁺ 0,709; FPV 17,57 mL.
+
+| métrica | Δ (ensamble+TTA − B+TTA) | IC jerárquico | p Wilcoxon |
+|---|---|---|---|
+| Dice⁺ | +0,018 | [+0,004, +0,035] | 0,001 |
+| FPV | -5,70 | [-11,42, -2,20] | 0,000 |
